@@ -81,10 +81,10 @@ function Footer() {
           </ul>
 
           <div className="mt-4 flex gap-3 text-sm">
-            <a href="#" className="hover:text-red-500">
+            <a href="https://www.facebook.com/redswans2016" className="hover:text-red-500">
               Facebook
             </a>
-            <a href="#" className="hover:text-red-500">
+            <a href="https://www.instagram.com/valenciennes_handball_club/" className="hover:text-red-500">
               Instagram
             </a>
           </div>

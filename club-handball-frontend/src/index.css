@@ -12,3 +12,21 @@ body {
 button {
   font-family: inherit;
 }
+@font-face {
+  font-family: "textnavbar";
+  src: url("./assets/Gobold Regular.otf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+.navbar-font {
+  font-family: "textnavbar", sans-serif;
+}
+@font-face {
+  font-family: "textesousmenu";
+  src: url("./assets/Montserrat-VariableFont_wght.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+.section-font{
+  font-family: "textesousmenu", sans-serif;
+}

@@ -16,7 +16,7 @@ function HeroSection() {
   <div className="relative z-10 flex min-h-[620px] items-center">
     <div className="mx-auto w-full max-w-7xl px-6">
       <div className="relative z-20 mx-auto flex max-w-3xl flex-col items-center text-center">
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
+        <p className="mt-10 max-w-3x2 text-lg leading-8 section-font text-white">
           Un club, une équipe, une famille. Retrouvez les matchs,
           les équipes, les actualités et toute la vie du club.
         </p>

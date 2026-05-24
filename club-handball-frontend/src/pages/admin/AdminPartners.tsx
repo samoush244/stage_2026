@@ -1,4 +1,7 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
+
+type PartnerCategory = "Majeur" | "Institutionnel" | "Officiel";
 
 type PartnerItem = {
   id: number;
@@ -6,7 +9,14 @@ type PartnerItem = {
   website: string;
   logo: string;
   order: number;
+  category: PartnerCategory;
   status: "Visible" | "Masqué";
+};
+
+const categoryStyles: Record<PartnerCategory, string> = {
+  Majeur: "bg-red-100 text-red-700",
+  Institutionnel: "bg-blue-100 text-blue-700",
+  Officiel: "bg-zinc-100 text-zinc-700",
 };
 
 export default function AdminPartners() {
@@ -17,6 +27,7 @@ export default function AdminPartners() {
       website: "https://www.intersport.fr",
       logo: "/images/partners/intersport.png",
       order: 1,
+      category: "Majeur",
       status: "Visible",
     },
     {
@@ -25,6 +36,7 @@ export default function AdminPartners() {
       website: "https://www.creditmutuel.fr",
       logo: "/images/partners/credit-mutuel.png",
       order: 2,
+      category: "Institutionnel",
       status: "Visible",
     },
   ]);
@@ -36,19 +48,20 @@ export default function AdminPartners() {
   const [website, setWebsite] = useState("");
   const [logo, setLogo] = useState("");
   const [order, setOrder] = useState(1);
-  const [status, setStatus] =
-    useState<PartnerItem["status"]>("Visible");
+  const [category, setCategory] = useState<PartnerCategory>("Officiel");
+  const [status, setStatus] = useState<PartnerItem["status"]>("Visible");
 
   function resetForm() {
     setName("");
     setWebsite("");
     setLogo("");
     setOrder(1);
+    setCategory("Officiel");
     setStatus("Visible");
     setEditingId(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     if (editingId !== null) {
@@ -61,6 +74,7 @@ export default function AdminPartners() {
                 website,
                 logo,
                 order,
+                category,
                 status,
               }
             : partner
@@ -73,6 +87,7 @@ export default function AdminPartners() {
         website,
         logo,
         order,
+        category,
         status,
       };
 
@@ -89,14 +104,13 @@ export default function AdminPartners() {
     setWebsite(partner.website);
     setLogo(partner.logo);
     setOrder(partner.order);
+    setCategory(partner.category);
     setStatus(partner.status);
     setShowForm(true);
   }
 
   function handleDelete(id: number) {
-    setPartners(
-      partners.filter((partner) => partner.id !== id)
-    );
+    setPartners(partners.filter((partner) => partner.id !== id));
   }
 
   return (
@@ -131,10 +145,7 @@ export default function AdminPartners() {
               : "Ajouter un partenaire"}
           </h2>
 
-          <form
-            onSubmit={handleSubmit}
-            className="grid gap-4 md:grid-cols-2"
-          >
+          <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
             <input
               type="text"
               value={name}
@@ -153,6 +164,24 @@ export default function AdminPartners() {
               placeholder="Site internet"
             />
 
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as PartnerCategory)}
+              className="rounded-lg border border-zinc-300 px-4 py-3"
+            >
+              <option value="Majeur">Partenaire majeur</option>
+              <option value="Institutionnel">Partenaire institutionnel</option>
+              <option value="Officiel">Partenaire officiel</option>
+            </select>
+
+            <input
+              type="number"
+              value={order}
+              onChange={(e) => setOrder(Number(e.target.value))}
+              className="rounded-lg border border-zinc-300 px-4 py-3"
+              placeholder="Ordre d’affichage"
+            />
+
             <input
               type="file"
               accept="image/*"
@@ -167,22 +196,10 @@ export default function AdminPartners() {
               className="rounded-lg border border-zinc-300 px-4 py-3"
             />
 
-            <input
-              type="number"
-              value={order}
-              onChange={(e) =>
-                setOrder(Number(e.target.value))
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Ordre d’affichage"
-            />
-
             <select
               value={status}
               onChange={(e) =>
-                setStatus(
-                  e.target.value as PartnerItem["status"]
-                )
+                setStatus(e.target.value as PartnerItem["status"])
               }
               className="rounded-lg border border-zinc-300 px-4 py-3"
             >
@@ -199,7 +216,7 @@ export default function AdminPartners() {
                 <img
                   src={logo}
                   alt="Logo partenaire"
-                  className="h-24 rounded-xl object-contain"
+                  className="h-24 object-contain"
                 />
               </div>
             )}
@@ -209,9 +226,7 @@ export default function AdminPartners() {
                 type="submit"
                 className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700"
               >
-                {editingId !== null
-                  ? "Mettre à jour"
-                  : "Enregistrer"}
+                {editingId !== null ? "Mettre à jour" : "Enregistrer"}
               </button>
 
               <button
@@ -235,6 +250,7 @@ export default function AdminPartners() {
             <tr className="text-left text-sm text-zinc-600">
               <th className="px-6 py-4">Logo</th>
               <th className="px-6 py-4">Partenaire</th>
+              <th className="px-6 py-4">Catégorie</th>
               <th className="px-6 py-4">Site web</th>
               <th className="px-6 py-4">Ordre</th>
               <th className="px-6 py-4">Statut</th>
@@ -243,13 +259,16 @@ export default function AdminPartners() {
           </thead>
 
           <tbody>
-            {partners
-              .sort((a, b) => a.order - b.order)
+            {[...partners]
+              .sort((a, b) => {
+                if (a.category !== b.category) {
+                  return a.category.localeCompare(b.category);
+                }
+
+                return a.order - b.order;
+              })
               .map((partner) => (
-                <tr
-                  key={partner.id}
-                  className="border-t border-zinc-200"
-                >
+                <tr key={partner.id} className="border-t border-zinc-200">
                   <td className="px-6 py-4">
                     {partner.logo ? (
                       <img
@@ -266,6 +285,14 @@ export default function AdminPartners() {
 
                   <td className="px-6 py-4 font-medium text-zinc-800">
                     {partner.name}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[partner.category]}`}
+                    >
+                      {partner.category}
+                    </span>
                   </td>
 
                   <td className="px-6 py-4">
@@ -305,9 +332,7 @@ export default function AdminPartners() {
                       </button>
 
                       <button
-                        onClick={() =>
-                          handleDelete(partner.id)
-                        }
+                        onClick={() => handleDelete(partner.id)}
                         className="text-red-600 hover:underline"
                       >
                         Supprimer

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import {SiTiktok} from "react-icons/si";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const closeMobileMenu = () => setIsMenuOpen(false);
@@ -8,27 +10,14 @@ function Navbar() {
           <div className="border-b border-red-900 bg-zinc-950 px-8 py-2">
         <div className="mx-auto flex max-w-7xl justify-end gap-4 text-sm text-gray-20 ">
           <Link to="https://www.facebook.com/redswans2016" aria-label="Facebook" className="transition hover:text-red-500">
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M22 12a10 10 0 1 0-11.6 9.9v-7h-2.5V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.5v2h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12Z" />
-            </svg>
+          <FaFacebook className="h-5 w-5" />
           </Link>
-          <a
-    href="#"
-    aria-label="Instagram"
-    className="transition hover:text-red-500"
-  >
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  </a>
+          <Link to="https://www.instagram.com/valenciennes_handball_club/" aria-label="Instagram" className="transition hover:text-red-500">
+          <FaInstagram className="h-5 w-5" />
+          </Link>
+          <Link to="" aria-label="Tiktok" className="transition hover:text-red-500">
+          <SiTiktok className="h-5 w-5" />
+          </Link>
 
   <span className="h-5 w-px bg-zinc-700" />
           <Link to="/contact" className="hover:text-red-500">
@@ -44,14 +33,19 @@ function Navbar() {
               src="/images/logo/VHB.png"
               alt="Logo du club"
               className="h-20 w-20 object-contain"
-            />
-
+        />
+        {/* --- IGNORE ---
+        <div className="text-2xl font-bold navbar-font hover:text-red-500">
+        <span>Valenciennes </span>
+        <span>Handball </span>
+        <span>Club</span>
+      </div>*/}
 
             </Link>
                {/* Desktop menu */}
-          <div className="hidden items-center gap-6 text-sm font-bold lg:flex">
+          <div className="hidden items-center gap-5 navbar-font lg:flex">
             <div className="group relative">
-              <button className="hover:text-red-500">Le club</button>
+              <button className="hover:text-red-500">LE CLUB</button>
 
               <div className="absolute left-0 top-full hidden z-50 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
                 <Link to ="/club/histoire" className="block px-3 py-2 hover:text-red-500">
@@ -71,7 +65,7 @@ function Navbar() {
 
             <div className="group relative">
               <button className="hover:text-red-500">
-                Nationale 3 masculine
+               NATIONALE 3 MASCULINE
               </button>
 
               <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
@@ -86,7 +80,7 @@ function Navbar() {
 
             <div className="group relative">
               <button className="hover:text-red-500">
-                Nationale 2 féminine
+                NATIONALE 3 FÉMININE
               </button>
 
               <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
@@ -100,7 +94,7 @@ function Navbar() {
             </div>
 
             <div className="group relative">
-              <button className="hover:text-red-500">Équipes</button>
+              <button className="hover:text-red-500">ÉQUIPES</button>
 
                <div className="absolute left-0 top-full z-50 hidden pt-3 group-hover:block">
               <div className="w-64 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
@@ -198,21 +192,21 @@ function Navbar() {
 </div>
 
             <Link to="/actualites" className="hover:text-red-500">
-              Actualités
+              ACTUALITES
             </Link>
 
             <Link
               to="/billetterie"
               className="rounded bg-red-600 px-6 py-3 hover:bg-red-700"
             >
-              Billetterie
+              BILLETERIE
             </Link>
 
             <a
               href="#"
               className="rounded-full border border-zinc-700 px-6 py-3 hover:border-red-500 hover:text-red-500"
             >
-              Connexion
+             CONNEXION
             </a>
           </div>
 
@@ -228,7 +222,7 @@ function Navbar() {
               {/* Mobile menu */}
         {isMenuOpen && (
           <div className="mx-auto mt-5 max-w-7xl border-t border-zinc-800 pt-5 lg:hidden">
-            <div className="flex flex-col gap-2 text-base font-semibold">
+            <div className="flex flex-col gap-2 text-base navbar-font">
               <details className="rounded-lg bg-zinc-950 p-4">
                 <summary className="cursor-pointer hover:text-red-500">
                   Le club

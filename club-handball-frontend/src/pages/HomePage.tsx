@@ -15,24 +15,24 @@ function HomePage() {
         Ils soutiennent le club
       </h2>
     </div>
-
-    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
-      {partners.map((partner) => (
-        <a
-          key={partner.name}
-          href={partner.url}
-          target="_blank"
-          rel="noreferrer"
-          className="flex h-32 items-center justify-center rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-        >
-          <img
-            src={partner.logo}
-            alt={partner.name}
-            className="max-h-16 max-w-full object-contain"
-          />
-        </a>
-      ))}
-    </div>
+                <div className="grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {partners.slice(0, 5).map((partner) => (
+                    <a
+                      key={partner.name}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Voir le site de ${partner.name}`}
+                      className="group flex min-h-28 items-center justify-center"
+                    >
+                      <img
+                        src={partner.logo}
+                        alt={partner.name}
+                        className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
+                      />
+                    </a>
+                  ))}
+                </div>
 
     <div className="mt-10 flex justify-center">
       <Link

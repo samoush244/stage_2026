@@ -6,7 +6,7 @@ export default function AdminLayout() {
       <div className="flex">
         <aside className="min-h-screen w-64 bg-zinc-950 text-white">
           <div className="border-b border-zinc-800 p-6">
-            <h1 className="text-xl font-bold">Admin VHC</h1>
+            <h1 className="text-xl font-bold">Admin VHB</h1>
             <p className="text-sm text-zinc-400">Tableau de bord</p>
           </div>
 
