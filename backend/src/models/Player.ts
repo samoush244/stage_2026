@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type PlayerRole = "admin" | "coach" | "joueur" | "dirigeant";
+export type PlayerRole = "admin" | "coach" | "joueur" | "membre";
 
 export interface IPlayer extends Document {
   licenseNumber: string;
@@ -38,8 +38,8 @@ const playerSchema = new Schema<IPlayer>(
 
     roles: {
       type: [String],
-      enum: ["admin", "coach", "joueur", "dirigeant"],
-      default: ["joueur"],
+      enum: ["admin", "coach", "joueur","membre"],
+      default: ["membre"],
     },
 
     team: {

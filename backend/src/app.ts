@@ -4,6 +4,7 @@ import authRoutes from "./routes/authroutes";
 import playerRoutes from "./routes/playerRoutes";
 import newsletterRoutes from "./routes/NewsletterSubscriber";
 import contactRoutes from "./routes/ContactRoutes";
+import partnerRoutes from "./routes/partnerRoutes";
 
 const app = express();
 
@@ -17,4 +18,5 @@ app.use ("/api/auth", authRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/partners", partnerRoutes);
 export default app;

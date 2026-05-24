@@ -5,7 +5,10 @@ import User from "../models/User";
 import Player from "../models/Player";
 
 const generateToken = (userId: string) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET as string, {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET manquant dans le fichier .env");
+  }
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
@@ -56,15 +59,14 @@ export const register = async (req: Request, res: Response) => {
         message: "Un compte existe déjà avec cet email.",
       });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
+    
 
     const user = await User.create({
       firstName: player.firstName,
       lastName: player.lastName,
       email,
-      password: hashedPassword,
-      roles: player.roles,
+      password,
+      roles: ["membre"],
       playerId: player._id,
     });
 
@@ -77,7 +79,6 @@ export const register = async (req: Request, res: Response) => {
       message: "Compte créé avec succès.",
       token,
       user: {
-        id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,

@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
+import bcrypt from "bcryptjs";
 
-export type UserRole = "admin" | "coach" | "joueur" | "dirigeant";
+export type UserRole = "admin" | "coach" | "joueur" | "membre";
 
 export interface IUser extends Document {
   firstName: string;
@@ -37,8 +38,8 @@ const userSchema = new Schema<IUser>(
     },
     roles: {
       type: [String],
-      enum: ["admin", "coach", "joueur", "dirigeant"],
-      default: ["joueur"],
+      enum: ["admin", "coach", "joueur","membre"],
+      default: ["membre"],
     },
     playerId: {
       type: mongoose.Types.ObjectId,
@@ -53,5 +54,14 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
   }
 );
-
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return;
+  }
+const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);;
+});
+userSchema.methods.comparePassword = async function (candidatePassword: string) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 export default mongoose.model<IUser>("User", userSchema);
