@@ -1,52 +1,10 @@
-import fs from "fs";
-import xlsx from "xlsx";
+import XLSX from "xlsx";
 import Player from "../models/Player";
 import Team from "../models/Team";
 
-type ExcelRow = Record<string, any>;
-
-type ImportResult = {
-  created: number;
-  updated: number;
-  skipped: number;
-  errors: string[];
-};
-
-const normalizeKey = (key: string) => {
-  return key
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[\s_-]/g, "");
-};
-
-const getValue = (row: ExcelRow, possibleKeys: string[]) => {
-  const normalizedRow: Record<string, any> = {};
-
-  Object.keys(row).forEach((key) => {
-    normalizedRow[normalizeKey(key)] = row[key];
-  });
-
-  for (const key of possibleKeys) {
-    const normalizedKey = normalizeKey(key);
-
-    if (
-      normalizedRow[normalizedKey] !== undefined &&
-      normalizedRow[normalizedKey] !== null &&
-      normalizedRow[normalizedKey] !== ""
-    ) {
-      return normalizedRow[normalizedKey];
-    }
-  }
-
-  return "";
-};
-
-const cleanString = (value: any) => {
-  if (value === undefined || value === null) return "";
-  return value.toString().trim();
-};
+/* =========================================================
+   PARSER UNE DATE EXCEL
+========================================================= */
 
 const parseExcelDate = (value: any): Date | undefined => {
   if (!value) return undefined;
@@ -55,175 +13,314 @@ const parseExcelDate = (value: any): Date | undefined => {
     return value;
   }
 
-  // Cas fréquent : Excel stocke les dates comme des nombres
+  // Date Excel sous forme de nombre
   if (typeof value === "number") {
-    const parsed = xlsx.SSF.parse_date_code(value);
-
-    if (!parsed) return undefined;
-
-    return new Date(parsed.y, parsed.m - 1, parsed.d);
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    return new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
   }
 
-  if (typeof value === "string") {
-    const cleaned = value.trim();
+  const stringValue = String(value).trim();
 
-    // Format français : 24/05/2002
-    const frenchDateMatch = cleaned.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-
-    if (frenchDateMatch) {
-      const day = Number(frenchDateMatch[1]);
-      const month = Number(frenchDateMatch[2]) - 1;
-      const year = Number(frenchDateMatch[3]);
-
-      return new Date(year, month, day);
-    }
-
-    // Format standard : 2002-05-24
-    const standardDate = new Date(cleaned);
-
-    if (!isNaN(standardDate.getTime())) {
-      return standardDate;
-    }
+  if (!stringValue) {
+    return undefined;
   }
 
-  return undefined;
+  // Format français : 12/04/2003
+  const frenchDateMatch = stringValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+  if (frenchDateMatch) {
+    const day = Number(frenchDateMatch[1]);
+    const month = Number(frenchDateMatch[2]) - 1;
+    const year = Number(frenchDateMatch[3]);
+
+    return new Date(year, month, day);
+  }
+
+  // Format classique : 2003-04-12
+  const parsedDate = new Date(stringValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return undefined;
+  }
+
+  return parsedDate;
 };
 
-export const importPlayersFromExcel = async (
-  filePath: string
-): Promise<ImportResult> => {
-  const result: ImportResult = {
-    created: 0,
-    updated: 0,
-    skipped: 0,
-    errors: [],
-  };
+/* =========================================================
+   NORMALISER UN TEXTE
+   Exemple :
+   "Nationale 3 féminine" devient "nationale 3 feminine"
+========================================================= */
 
-  const workbook = xlsx.readFile(filePath);
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
+const normalizeText = (value: any): string => {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
 
-  const rows = xlsx.utils.sheet_to_json<ExcelRow>(worksheet, {
-    defval: "",
-  });
+/* =========================================================
+   LIRE UNE VALEUR DANS UNE LIGNE EXCEL AVEC PLUSIEURS NOMS POSSIBLES
+========================================================= */
 
-  if (rows.length === 0) {
-    result.errors.push("Le fichier Excel est vide.");
-    return result;
+const getCellValue = (row: any, possibleKeys: string[]): string => {
+  for (const key of possibleKeys) {
+    const value = row[key];
+
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return String(value).trim();
+    }
   }
 
-  for (let index = 0; index < rows.length; index++) {
-    const row = rows[index];
-    const lineNumber = index + 2;
+  return "";
+};
 
-    const licenseNumber = cleanString(
-      getValue(row, [
-        "licenseNumber",
-        "numéro de licence",
-        "numero de licence",
-        "licence",
-        "n licence",
-        "n° licence",
-      ])
+/* =========================================================
+   TROUVER UNE ÉQUIPE À PARTIR DU NOM DANS EXCEL
+========================================================= */
+
+const findTeamByExcelName = async (excelTeamName: string) => {
+  const cleanExcelTeamName = normalizeText(excelTeamName);
+
+  if (!cleanExcelTeamName) {
+    return null;
+  }
+
+  const teams = await Team.find().lean();
+
+  // 1. Recherche exacte
+  const exactMatch = teams.find((team: any) => {
+    const teamName = normalizeText(team.name);
+    const teamSlug = normalizeText(team.slug);
+    const teamLevel = normalizeText(team.level);
+    const teamGroup = normalizeText(team.group);
+    const teamGender = normalizeText(team.gender);
+
+    return (
+      teamName === cleanExcelTeamName ||
+      teamSlug === cleanExcelTeamName ||
+      teamLevel === cleanExcelTeamName ||
+      `${teamLevel} ${teamGender}`.trim() === cleanExcelTeamName ||
+      `${teamName} ${teamGender}`.trim() === cleanExcelTeamName ||
+      `${teamLevel} ${teamGroup}`.trim() === cleanExcelTeamName
     );
+  });
 
-    const firstName = cleanString(
-      getValue(row, ["firstName", "prenom", "prénom"])
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  // 2. Recherche souple
+  const flexibleMatch = teams.find((team: any) => {
+    const teamName = normalizeText(team.name);
+    const teamSlug = normalizeText(team.slug);
+    const teamLevel = normalizeText(team.level);
+
+    return (
+      teamName.includes(cleanExcelTeamName) ||
+      cleanExcelTeamName.includes(teamName) ||
+      teamSlug.includes(cleanExcelTeamName) ||
+      cleanExcelTeamName.includes(teamSlug) ||
+      teamLevel.includes(cleanExcelTeamName) ||
+      cleanExcelTeamName.includes(teamLevel)
     );
+  });
 
-    const lastName = cleanString(
-      getValue(row, ["lastName", "nom", "name"])
-    );
+  return flexibleMatch || null;
+};
 
-    const birthDateValue = getValue(row, [
-      "birthDate",
-      "date de naissance",
-      "naissance",
+/* =========================================================
+   IMPORT DES JOUEURS DEPUIS EXCEL
+========================================================= */
+
+export const importPlayersFromExcel = async (fileBuffer: Buffer) => {
+  const workbook = XLSX.read(fileBuffer, {
+    type: "buffer",
+  });
+
+  if (workbook.SheetNames.length === 0) {
+    throw new Error("Le fichier Excel ne contient aucune feuille.");
+  }
+
+  const allRows: any[] = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName];
+
+    const rows = XLSX.utils.sheet_to_json<any>(worksheet, {
+      defval: "",
+    });
+
+    const rowsWithSheetName = rows.map((row) => ({
+      ...row,
+      sheetTeamName: sheetName,
+    }));
+
+    allRows.push(...rowsWithSheetName);
+  }
+
+  console.log("Nombre total de lignes Excel :", allRows.length);
+
+  let imported = 0;
+  let updated = 0;
+  let skipped = 0;
+
+  const errors: string[] = [];
+
+  for (const row of allRows) {
+    const licenseNumber = getCellValue(row, [
+      "licenseNumber",
+      "Licence",
+      "licence",
+      "Numéro de licence",
+      "Numero de licence",
+      "N° licence",
+      "N° Licence",
+      "FALSE",
     ]);
 
-    const teamName = cleanString(
-      getValue(row, ["team", "teamName", "équipe", "equipe", "categorie"])
-    );
+    const firstName = getCellValue(row, [
+      "firstName",
+      "Prénom",
+      "Prenom",
+      "prenom",
+      "PRÉNOM",
+      "PRENOM",
+    ]);
 
-    const gender = cleanString(
-      getValue(row, ["gender", "sexe", "genre"])
-    ).toLowerCase();
+    const lastName = getCellValue(row, [
+      "lastName",
+      "Nom",
+      "nom",
+      "NOM",
+    ]);
 
-    const category = cleanString(
-      getValue(row, ["category", "catégorie", "categorie"])
+    const teamNameFromExcel = getCellValue(row, [
+      "team",
+      "Team",
+      "Equipe",
+      "equipe",
+      "Équipe",
+      "Catégorie",
+      "Categorie",
+      "teamName",
+      "sheetTeamName",
+    ]);
+
+    const birthDate = parseExcelDate(
+      row.birthDate ||
+        row.dateNaissance ||
+        row["date de naissance"] ||
+        row["Date de naissance"] ||
+        row["DATE DE NAISSANCE"] ||
+        row["Date naissance"] ||
+        row["date naissance"] ||
+        ""
     );
 
     if (!licenseNumber || !firstName || !lastName) {
-      result.skipped++;
-      result.errors.push(
-        `Ligne ${lineNumber} ignorée : numéro de licence, prénom ou nom manquant.`
-      );
-      continue;
-    }
+      skipped++;
 
-    if (!teamName) {
-      result.skipped++;
-      result.errors.push(
-        `Ligne ${lineNumber} ignorée : équipe manquante.`
-      );
-      continue;
-    }
-
-    const team = await Team.findOne({
-      name: { $regex: new RegExp(`^${teamName}$`, "i") },
-    });
-
-    if (!team) {
-      result.skipped++;
-      result.errors.push(
-        `Ligne ${lineNumber} ignorée : équipe "${teamName}" introuvable.`
-      );
-      continue;
-    }
-
-    const birthDate = parseExcelDate(birthDateValue);
-
-    const existingPlayer = await Player.findOne({ licenseNumber });
-
-    if (existingPlayer) {
-      existingPlayer.firstName = firstName;
-      existingPlayer.lastName = lastName;
-      existingPlayer.team = team._id;
-      
-      
-
-      if (birthDate) {
-        existingPlayer.birthDate = birthDate;
-      }
-
-      // Important :
-      // On ne touche pas à photo, position, number, isVisible, displayOrder.
-      // Ces champs sont complétés manuellement par l'admin.
-
-      await existingPlayer.save();
-      result.updated++;
-    } else {
-      await Player.create({
+      console.log("LIGNE IGNORÉE (données manquantes) :", {
         licenseNumber,
         firstName,
         lastName,
-        birthDate,
-        team: team._id,
-       
-        // Le joueur vient de l'import, mais il ne doit pas forcément
-        // apparaître directement sur le site.
-        isFeaturedTeamPlayer: true,
-        isActive: false,
       });
 
-      result.created++;
+      continue;
+    }
+
+    let teamId: any = null;
+
+    if (teamNameFromExcel) {
+      const team = await findTeamByExcelName(teamNameFromExcel);
+
+      if (!team) {
+        const message = `Licence ${licenseNumber} (${firstName} ${lastName}) : équipe introuvable "${teamNameFromExcel}"`;
+
+        errors.push(message);
+        console.error("ERREUR LIGNE :", message);
+
+        continue;
+      }
+
+      teamId = team._id;
+    }
+
+    try {
+      const existingPlayer = await Player.findOne({
+        licenseNumber,
+      });
+
+      const playerData: any = {
+        licenseNumber,
+        firstName,
+        lastName,
+        team: teamId,
+        roles: ["joueur"],
+        isActive: true,
+        isDisplayed: true,
+      };
+
+      if (birthDate) {
+        playerData.birthDate = birthDate;
+      }
+
+      if (existingPlayer) {
+        await Player.updateOne(
+          {
+            licenseNumber,
+          },
+          {
+            $set: playerData,
+
+            // Nettoyage de l'ancien champ qui nous a bien pourri la journée.
+            $unset: {
+              teamName: "",
+            },
+          },
+          {
+            runValidators: true,
+          }
+        );
+
+        updated++;
+
+        console.log("JOUEUR MIS À JOUR :", licenseNumber, "| équipe :", teamNameFromExcel);
+      } else {
+        await Player.create({
+          ...playerData,
+          isFeaturedTeamPlayer: false,
+        });
+
+        imported++;
+
+        console.log("JOUEUR CRÉÉ :", licenseNumber, "| équipe :", teamNameFromExcel);
+      }
+    } catch (err: any) {
+      const message = `Licence ${licenseNumber} (${firstName} ${lastName}) : ${err.message}`;
+
+      errors.push(message);
+      console.error("ERREUR LIGNE :", message);
     }
   }
 
-  // On supprime le fichier après import pour éviter d'empiler des fichiers inutiles
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
+  console.log("RÉSULTAT IMPORT :", {
+    imported,
+    updated,
+    skipped,
+    total: allRows.length,
+    errors,
+  });
 
-  return result;
+  return {
+    imported,
+    updated,
+    skipped,
+    total: allRows.length,
+    errors,
+  };
 };

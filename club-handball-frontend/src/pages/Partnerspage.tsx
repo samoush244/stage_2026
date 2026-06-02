@@ -37,6 +37,10 @@ export default function PartnersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  if (error) {
+    console.error(error);
+  }
+
   useEffect(() => {
     const fetchPartners = async () => {
       try {

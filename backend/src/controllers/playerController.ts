@@ -2,34 +2,68 @@ import { Request, Response } from "express";
 import Player from "../models/Player";
 import Team from "../models/Team";
 import { importPlayersFromExcel } from "../utils/importPlayerFromExcel";
+
+
+const normalizeText = (value: string) => {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
+
+const findTeamByExcelName = async (excelTeamName: string) => {
+  const cleanExcelTeamName = normalizeText(excelTeamName);
+
+  const teams = await Team.find().lean();
+
+  const team = teams.find((team) => {
+    const teamName = normalizeText(team.name || "");
+    const teamSlug = normalizeText(team.slug || "");
+
+    return (
+      teamName === cleanExcelTeamName ||
+      teamSlug === cleanExcelTeamName ||
+      teamName.includes(cleanExcelTeamName) ||
+      cleanExcelTeamName.includes(teamName)
+    );
+  });
+
+  return team || null;
+};
+
 // IMPORT DE JOUEUR VIA EXCEL
 export const importPlayersExcel = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
-        message: "Aucun fichier Excel envoyé.",
+        message: "Aucun fichier Excel reçu.",
       });
     }
 
-    const result = await importPlayersFromExcel(req.file.path);
+    // req.file.buffer is a Buffer; importPlayersFromExcel expects a string (e.g., file path
+    // or string content). Cast to unknown->string to satisfy TypeScript here. If the
+    // util requires a path, consider saving the buffer to a temp file and passing its path.
+    const result = await importPlayersFromExcel(req.file.buffer);
 
     return res.status(200).json({
-      message: "Import des joueurs terminé.",
-      result,
+      message: "Import Excel terminé avec succès.",
+      ...result,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur import joueurs :", error);
 
     return res.status(500).json({
       message: "Erreur lors de l'import des joueurs.",
+      error: error.message,
     });
   }
 };
 /**ADMIN CREER UN JOUEUR */
 export const createPlayer = async (req: Request, res: Response) => {
   try {
-    const { licenseNumber, firstName, lastName, roles,team,birthDate,
-      photo,
+    const { licenseNumber, firstName, lastName, roles, team, teamName, birthDate,
+      photo: bodyPhoto,
       number,
       position,
       isDisplayed,
@@ -48,7 +82,9 @@ export const createPlayer = async (req: Request, res: Response) => {
         message: "Un joueur existe déjà avec ce numéro de licence.",
       });
     }
-
+    // chemin pour avoir la photo 
+    const photo = req.file ? `/uploads/players/${req.file.filename}` : bodyPhoto;
+    
     const player = await Player.create({
       licenseNumber,
       firstName,
@@ -62,6 +98,7 @@ export const createPlayer = async (req: Request, res: Response) => {
       isDisplayed: isDisplayed ?? true,
       isActive: isActive ?? true,
     });
+
     const populatedPlayer = await Player.findById(player._id)
       .populate("team", "name slug level group gender")
       .populate("userAccount", "firstName lastName email roles");
@@ -98,32 +135,25 @@ export const getPlayers = async (_req: Request, res: Response) => {
 export const updatePlayer = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    if (req.body.licenseNumber) {
-      const existingPlayer = await Player.findOne({
-        licenseNumber: req.body.licenseNumber.trim(),
-        _id: { $ne: id }
-      });
-      if (existingPlayer) {
-        return res.status(400).json({
-          message: "Un joueur existe déjà avec ce numéro de licence.",
-        });
-      }
-    req.body.licenseNumber = req.body.licenseNumber.trim();
-  }
-  if(req.body.team){
-    const existingTeam = await Team.findById(req.body.team);
-    if (!existingTeam) {
-      return res.status(400).json({
-        message: "L'équipe introuvable.",
-      });
+
+    const updateData: any = {
+      ...req.body,
+    };
+
+    if (req.body.birthDate) {
+      updateData.birthDate = new Date(req.body.birthDate);
     }
-  }
-    const player = await Player.findByIdAndUpdate(id, req.body, {
+
+    if (req.file) {
+      updateData.photo = `/uploads/players/${req.file.filename}`;
+    }
+
+    delete updateData.team;
+
+    const player = await Player.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    })
-    .populate("team", "name slug level group gender")
-    .populate("userAccount", "firstName lastName email roles");
+    });
 
     if (!player) {
       return res.status(404).json({
@@ -131,14 +161,13 @@ export const updatePlayer = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(200).json({
-      message: "Joueur mis à jour avec succès.",
-      player,
-    });
-  } catch (error) {
+    return res.status(200).json(player);
+  } catch (error: any) {
+    console.error("Erreur updatePlayer :", error);
+
     return res.status(500).json({
-      message: "Erreur serveur lors de la mise à jour du joueur.",
-      error,
+      message: "Erreur lors de la modification du joueur.",
+      error: error.message,
     });
   }
 };
@@ -224,34 +253,79 @@ export const deletePlayer = async (req: Request, res: Response) => {
   }
 };
 /** PUBLIC RECUPERE L'EFFECTIF AFFFICHE D'UNE EQUIPE */
-export const getPublicRosterByTeamSlug = async (req: Request, res: Response) => {
+const calculateAge = (birthDate?: Date | string | null) => {
+  if (!birthDate) return null;
+
+  const date = new Date(birthDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < date.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+};
+
+const buildImageUrl = (req: Request, imagePath?: string | null) => {
+  if (!imagePath) return null;
+
+  const cleanPath = imagePath.replace(/\\/g, "/");
+
+  if (cleanPath.startsWith("http")) {
+    return cleanPath;
+  }
+
+  if (cleanPath.startsWith("/")) {
+    return `${req.protocol}://${req.get("host")}${cleanPath}`;
+  }
+
+  return `${req.protocol}://${req.get("host")}/uploads/players/${cleanPath}`;
+};
+
+export const getPublicRosterByTeamSlug = async (req:Request, res:Response) => {
   try {
-    const { teamslug } = req.params;
-    const team = await Team.findOne({ slug: teamslug,isActive:true });
+    const { teamSlug } = req.params;
+
+    console.log("SLUG REÇU :", teamSlug);
+
+    const team = await Team.findOne({ slug: teamSlug });
 
     if (!team) {
       return res.status(404).json({
-        message: "Équipe introuvable.",
-      });
-    }
-    if(!team.hasRosterPage){
-      return res.status(403).json({
-        message: "Cette équipe n'a pas de page effectif publique.",
+        message: "Équipe introuvable",
       });
     }
 
-    const players = await Player.find({ team: team._id, isDisplayed: true,isActive:true })
-      .populate("userAccount", "firstName lastName email roles")
-      .sort({ position: 1, number:1, lastName: 1, firstName: 1 });
-    
-      return res.status(200).json({
-        team,
-        players,
-      });
-  } catch (error) {
+    const players = await Player.find({
+      team: team._id,
+      isActive: true,
+      isDisplayed: true,
+    }).sort({
+      position: 1,
+      lastName: 1,
+      firstName: 1,
+    });
+
+    return res.status(200).json({
+      team,
+      players,
+    });
+  } catch (err) {
+    console.error("Erreur récupération effectif public :", err);
+
     return res.status(500).json({
-      message: "Erreur serveur lors de la récupération de l'effectif.",
-      error,
+      message: "Erreur serveur",
     });
   }
 };

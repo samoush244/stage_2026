@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // dossier uploads visile depuis le navigateur
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/upload", express.static(path.join(__dirname, "../upload")));
 app.get("/api/health", (_req, res) => {
   res.json({ message: "Backend OK" });
 });

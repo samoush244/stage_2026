@@ -48,8 +48,9 @@ const playerSchema = new Schema<IPlayer>(
     team: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
+      required: false,
     },
-
+    
     birthDate: {
       type: Date,
     },
