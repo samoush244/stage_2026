@@ -1,37 +1,6 @@
-import { useState } from "react";
+
 
 function Footer() {
-  const [email, setEmail] = useState("");
-  const [newsletterMessage, setNewsletterMessage] = useState("");
-
-  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch("http://localhost:5000/api/newsletter/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
-
-      setNewsletterMessage("Inscription réussie !");
-      setEmail("");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setNewsletterMessage(error.message);
-      } else {
-        setNewsletterMessage("Erreur lors de l'inscription.");
-      }
-    }
-  };
 
   return (
     <footer className="bg-black px-8 py-12 text-white">
@@ -71,7 +40,7 @@ function Footer() {
             </li>
           </ul>
         </div>
-
+    </div>
         <div>
           <h3 className="font-bold uppercase text-white">Contact</h3>
           <ul className="mt-4 space-y-2 text-sm text-gray-400">
@@ -90,37 +59,6 @@ function Footer() {
           </div>
         </div>
 
-        <div>
-          <h3 className="font-bold uppercase text-white">Newsletter</h3>
-
-          <p className="mt-4 text-sm text-gray-400">
-            Recevez les actualités du club, les matchs, événements et annonces
-            importantes.
-          </p>
-
-          <form onSubmit={handleNewsletterSubmit} className="mt-4 flex gap-2">
-            <input
-              type="email"
-              placeholder="Votre email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-             className="w-full rounded-md border border-zinc-700 bg-white px-3 py-2 text-sm text-black placeholder:text-gray-500 outline-none"
-            />
-
-            <button
-              type="submit"
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-            >
-              OK
-            </button>
-          </form>
-
-          {newsletterMessage && (
-            <p className="mt-2 text-sm text-gray-300">{newsletterMessage}</p>
-          )}
-        </div>
-      </div>
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-zinc-800 pt-6 text-sm text-gray-500 md:flex-row md:items-center md:justify-between">
         <p>© 2026 Club Handball. Tous droits réservés.</p>

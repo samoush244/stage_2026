@@ -1,38 +1,22 @@
-import partners from "../data/partners";
+import { useEffect, useState } from "react";
 
-const allPartners = [
-  ...partners,
-  {
-    name: "Partenaire 7",
-    logo: "/images/logo/logo7.png",
-    url: "#",
-    category: "majeur",
-  },
-  {
-    name: "Partenaire 8",
-    logo: "/images/logo/logo8.png",
-    url: "#",
-    category: "institutionnel",
-  },
-  {
-    name: "Partenaire 9",
-    logo: "/images/logo/logo9.png",
-    url: "#",
-    category: "officiel",
-  },
-  {
-    name: "Partenaire 10",
-    logo: "/images/logo/logo10.png",
-    url: "#",
-    category: "officiel",
-  },
-];
+
+type Partner = {
+  _id: string;
+  name: string;
+  logo: string;
+  url: string;
+  category?: string;
+  isActive?: boolean;
+  order?: number;
+};
+
+const SERVER_URL ="http://localhost:5000";
 
 const partnerSections = [
   {
     key: "majeur",
     title: "Partenaires majeurs",
-
   },
   {
     key: "institutionnel",
@@ -42,9 +26,107 @@ const partnerSections = [
     key: "officiel",
     title: "Partenaires officiels",
   },
+  {
+    key: "autres",
+    title: "Autres partenaires",
+  },
 ];
 
 export default function PartnersPage() {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/partners");
+
+        if (!res.ok) {
+        throw new Error("Erreur lors du chargement des partenaires");
+      }
+
+      const data = await res.json();
+
+      console.log("Partenaires récupérés :", data);
+
+      setPartners(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des partenaires :", error);
+      setError("Impossible de charger les partenaires.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    fetchPartners();
+  }, []);
+
+  const getLogoUrl = (logo?: string) => {
+    if (!logo) return "";
+
+    if (logo.startsWith("http")) {
+      return logo;
+    }
+
+    const cleanLogo = logo.startsWith("/") ? logo : `/${logo}`;
+
+    return `${SERVER_URL}${cleanLogo}`;
+  };
+
+  const normalizeCategory = (category?: string) => {
+    const value = category?.trim().toLowerCase();
+
+    if (
+      value === "majeur" ||
+      value === "partenaire majeur" ||
+      value === "partenaires majeurs"
+    ) {
+      return "majeur";
+    }
+
+    if (
+      value === "institutionnel" ||
+      value === "partenaire institutionnel" ||
+      value === "partenaires institutionnels"
+    ) {
+      return "institutionnel";
+    }
+
+    if (
+      value === "officiel" ||
+      value === "partenaire officiel" ||
+      value === "partenaires officiels"
+    ) {
+      return "officiel";
+    }
+
+    return "autres";
+  };
+
+  const visiblePartners = partners
+    .filter((partner) => partner.isActive !== false)
+    .sort((a, b) => {
+      const categoryA = normalizeCategory(a.category);
+      const categoryB = normalizeCategory(b.category);
+
+      if (categoryA !== categoryB) {
+        return categoryA.localeCompare(categoryB, "fr", {
+          sensitivity: "base",
+        });
+      }
+
+      return (a.order ?? 999) - (b.order ?? 999);
+    });
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-zinc-600">Chargement des partenaires...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="bg-white">
       {/* HERO */}
@@ -66,27 +148,30 @@ export default function PartnersPage() {
       </section>
 
       {/* LISTE DES PARTENAIRES */}
-      <section className="py-20">
+       <section className="py-20">
         <div className="mx-auto max-w-7xl space-y-20 px-6">
-          {partnerSections.map((section) => {
-            const sectionPartners = allPartners.filter(
+          {visiblePartners.length === 0 ?(
+            <p className="text-center text-zinc-500">
+              Aucun partenaire affiché pour le moment.
+            </p>
+          ):( partnerSections.map((section) => {
+            const sectionPartners = partners.filter(
               (partner) => partner.category === section.key
             );
-
             if (sectionPartners.length === 0) return null;
 
             return (
               <div key={section.key}>
                 <div>
-                  <h2 className="text-3xl font-black uppercase text-red-600 md:text">
+                  <h2 className="text-3xl font-black uppercase text-red-600 md:text-4xl">
                     {section.title}
                   </h2>
-                  </div>  
+                </div>
 
-                <div className="grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className="mt-10 grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {sectionPartners.map((partner) => (
                     <a
-                      key={partner.name}
+                      key={partner._id}
                       href={partner.url}
                       target="_blank"
                       rel="noreferrer"
@@ -94,7 +179,7 @@ export default function PartnersPage() {
                       className="group flex min-h-28 items-center justify-center"
                     >
                       <img
-                        src={partner.logo}
+                        src={getLogoUrl(partner.logo)}
                         alt={partner.name}
                         className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
                       />
@@ -103,9 +188,11 @@ export default function PartnersPage() {
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </section>
+
 
       {/* DEVENIR PARTENAIRE */}
       <section className="bg-zinc-950 py-20 text-white">

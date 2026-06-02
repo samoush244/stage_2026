@@ -1,116 +1,150 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import API from "../../services/api";
 
-type PartnerCategory = "Majeur" | "Institutionnel" | "Officiel";
+type PartnerCategory = "majeur" | "institutionnel" | "officiel";
 
 type PartnerItem = {
-  id: number;
+  _id: string;
   name: string;
-  website: string;
+  url: string;
   logo: string;
   order: number;
   category: PartnerCategory;
-  status: "Visible" | "Masqué";
+  isActive: boolean;
+};
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+
+const categoryLabels: Record<PartnerCategory, string> = {
+  majeur: "Majeur",
+  institutionnel: "Institutionnel",
+  officiel: "Officiel",
 };
 
 const categoryStyles: Record<PartnerCategory, string> = {
-  Majeur: "bg-red-100 text-red-700",
-  Institutionnel: "bg-blue-100 text-blue-700",
-  Officiel: "bg-zinc-100 text-zinc-700",
+  majeur: "bg-red-100 text-red-700",
+  institutionnel: "bg-blue-100 text-blue-700",
+  officiel: "bg-zinc-100 text-zinc-700",
 };
 
 export default function AdminPartners() {
-  const [partners, setPartners] = useState<PartnerItem[]>([
-    {
-      id: 1,
-      name: "Intersport Valenciennes",
-      website: "https://www.intersport.fr",
-      logo: "/images/partners/intersport.png",
-      order: 1,
-      category: "Majeur",
-      status: "Visible",
-    },
-    {
-      id: 2,
-      name: "Crédit Mutuel",
-      website: "https://www.creditmutuel.fr",
-      logo: "/images/partners/credit-mutuel.png",
-      order: 2,
-      category: "Institutionnel",
-      status: "Visible",
-    },
-  ]);
+  const [partners, setPartners] = useState<PartnerItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [logo, setLogo] = useState("");
+  const [url, setUrl] = useState("");
+  const [logoPreview, setLogoPreview] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [order, setOrder] = useState(1);
-  const [category, setCategory] = useState<PartnerCategory>("Officiel");
-  const [status, setStatus] = useState<PartnerItem["status"]>("Visible");
+  const [category, setCategory] = useState<PartnerCategory>("officiel");
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+
+  async function fetchPartners() {
+    try {
+      const res = await API.get("/partners/admin/all");
+      setPartners(res.data);
+    } catch (error) {
+      console.error("Erreur récupération partenaires admin :", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function resetForm() {
     setName("");
-    setWebsite("");
-    setLogo("");
+    setUrl("");
+    setLogoPreview("");
+    setLogoFile(null);
     setOrder(1);
-    setCategory("Officiel");
-    setStatus("Visible");
+    setCategory("officiel");
+    setIsActive(true);
     setEditingId(null);
   }
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  function getLogoUrl(logo: string) {
+    if (!logo) return "";
 
-    if (editingId !== null) {
-      setPartners(
-        partners.map((partner) =>
-          partner.id === editingId
-            ? {
-                ...partner,
-                name,
-                website,
-                logo,
-                order,
-                category,
-                status,
-              }
-            : partner
-        )
-      );
-    } else {
-      const newPartner: PartnerItem = {
-        id: Date.now(),
-        name,
-        website,
-        logo,
-        order,
-        category,
-        status,
-      };
-
-      setPartners([...partners, newPartner]);
+    if (logo.startsWith("http") || logo.startsWith("blob:")) {
+      return logo;
     }
 
-    resetForm();
-    setShowForm(false);
+    return `${SERVER_URL}${logo}`;
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+
+    try {
+      const formData = new FormData();
+
+      formData.append("name", name);
+      formData.append("url", url);
+      formData.append("category", category);
+      formData.append("order", String(order));
+      formData.append("isActive", String(isActive));
+
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+
+      if (editingId) {
+        await API.put(`/partners/${editingId}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        await API.post("/partners", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
+
+      await fetchPartners();
+
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Erreur sauvegarde partenaire :", error);
+    }
   }
 
   function handleEdit(partner: PartnerItem) {
-    setEditingId(partner.id);
+    setEditingId(partner._id);
     setName(partner.name);
-    setWebsite(partner.website);
-    setLogo(partner.logo);
+    setUrl(partner.url);
+    setLogoPreview(getLogoUrl(partner.logo));
+    setLogoFile(null);
     setOrder(partner.order);
     setCategory(partner.category);
-    setStatus(partner.status);
+    setIsActive(partner.isActive);
     setShowForm(true);
   }
 
-  function handleDelete(id: number) {
-    setPartners(partners.filter((partner) => partner.id !== id));
+  async function handleDelete(id: string) {
+    try {
+      await API.delete(`/partners/${id}`);
+      setPartners(partners.filter((partner) => partner._id !== id));
+    } catch (error) {
+      console.error("Erreur suppression partenaire :", error);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl bg-white p-6 shadow">
+        <p className="text-zinc-600">Chargement des partenaires...</p>
+      </div>
+    );
   }
 
   return (
@@ -140,9 +174,7 @@ export default function AdminPartners() {
       {showForm && (
         <div className="mb-8 rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold text-zinc-900">
-            {editingId !== null
-              ? "Modifier un partenaire"
-              : "Ajouter un partenaire"}
+            {editingId ? "Modifier un partenaire" : "Ajouter un partenaire"}
           </h2>
 
           <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
@@ -157,8 +189,8 @@ export default function AdminPartners() {
 
             <input
               type="url"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
               required
               className="rounded-lg border border-zinc-300 px-4 py-3"
               placeholder="Site internet"
@@ -169,9 +201,9 @@ export default function AdminPartners() {
               onChange={(e) => setCategory(e.target.value as PartnerCategory)}
               className="rounded-lg border border-zinc-300 px-4 py-3"
             >
-              <option value="Majeur">Partenaire majeur</option>
-              <option value="Institutionnel">Partenaire institutionnel</option>
-              <option value="Officiel">Partenaire officiel</option>
+              <option value="majeur">Partenaire majeur</option>
+              <option value="institutionnel">Partenaire institutionnel</option>
+              <option value="officiel">Partenaire officiel</option>
             </select>
 
             <input
@@ -189,32 +221,30 @@ export default function AdminPartners() {
                 const file = e.target.files?.[0];
 
                 if (file) {
-                  const logoUrl = URL.createObjectURL(file);
-                  setLogo(logoUrl);
+                  setLogoFile(file);
+                  setLogoPreview(URL.createObjectURL(file));
                 }
               }}
               className="rounded-lg border border-zinc-300 px-4 py-3"
             />
 
             <select
-              value={status}
-              onChange={(e) =>
-                setStatus(e.target.value as PartnerItem["status"])
-              }
+              value={isActive ? "true" : "false"}
+              onChange={(e) => setIsActive(e.target.value === "true")}
               className="rounded-lg border border-zinc-300 px-4 py-3"
             >
-              <option value="Visible">Visible</option>
-              <option value="Masqué">Masqué</option>
+              <option value="true">Visible</option>
+              <option value="false">Masqué</option>
             </select>
 
-            {logo && (
+            {logoPreview && (
               <div className="md:col-span-2">
                 <p className="mb-2 text-sm font-medium text-zinc-700">
                   Aperçu du logo
                 </p>
 
                 <img
-                  src={logo}
+                  src={logoPreview}
                   alt="Logo partenaire"
                   className="h-24 object-contain"
                 />
@@ -226,7 +256,7 @@ export default function AdminPartners() {
                 type="submit"
                 className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700"
               >
-                {editingId !== null ? "Mettre à jour" : "Enregistrer"}
+                {editingId ? "Mettre à jour" : "Enregistrer"}
               </button>
 
               <button
@@ -261,18 +291,22 @@ export default function AdminPartners() {
           <tbody>
             {[...partners]
               .sort((a, b) => {
-                if (a.category !== b.category) {
-                  return a.category.localeCompare(b.category);
-                }
+              const categoryA = a.category || "Autres";
+              const categoryB = b.category || "Autres";
 
-                return a.order - b.order;
-              })
+                if (categoryA !== categoryB) {
+                  return categoryA.localeCompare(categoryB, "fr", {
+                  sensitivity: "base",
+                    });
+                  }
+                  return (a.order ?? 999) - (b.order ?? 999);
+                })
               .map((partner) => (
-                <tr key={partner.id} className="border-t border-zinc-200">
+                <tr key={partner._id} className="border-t border-zinc-200">
                   <td className="px-6 py-4">
                     {partner.logo ? (
                       <img
-                        src={partner.logo}
+                        src={getLogoUrl(partner.logo)}
                         alt={partner.name}
                         className="h-16 w-28 object-contain"
                       />
@@ -291,13 +325,13 @@ export default function AdminPartners() {
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[partner.category]}`}
                     >
-                      {partner.category}
+                      {categoryLabels[partner.category]}
                     </span>
                   </td>
 
                   <td className="px-6 py-4">
                     <a
-                      href={partner.website}
+                      href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline"
@@ -313,12 +347,12 @@ export default function AdminPartners() {
                   <td className="px-6 py-4">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        partner.status === "Visible"
+                        partner.isActive
                           ? "bg-green-100 text-green-700"
                           : "bg-zinc-100 text-zinc-600"
                       }`}
                     >
-                      {partner.status}
+                      {partner.isActive ? "Visible" : "Masqué"}
                     </span>
                   </td>
 
@@ -332,7 +366,7 @@ export default function AdminPartners() {
                       </button>
 
                       <button
-                        onClick={() => handleDelete(partner.id)}
+                        onClick={() => handleDelete(partner._id)}
                         className="text-red-600 hover:underline"
                       >
                         Supprimer
@@ -343,6 +377,12 @@ export default function AdminPartners() {
               ))}
           </tbody>
         </table>
+
+        {partners.length === 0 && (
+          <p className="px-6 py-8 text-center text-zinc-500">
+            Aucun partenaire enregistré pour le moment.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,124 +1,255 @@
-import { useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 type NewsItem = {
-  id: number;
+  _id: string;
   title: string;
-  content: string;
-  image: string;
-  type: "interne" | "externe";
+  slug?: string;
+  image?: string;
+  content?: string;
+  summary?: string;
+  type: "internal" | "external";
   source?: string;
   externalUrl?: string;
-  status: "Publié" | "Brouillon";
-  date: string;
+  publishedAt?: string;
+  isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
-export default function AdminNews() {
-  const [news, setNews] = useState<NewsItem[]>([
-    {
-      id: 1,
-      title: "Victoire de la N3 masculine",
-      content: "Le club a remporté une victoire importante dans la N3 masculine.",
-      image: "/images/news1.jpg",
-      type: "interne",
-      status: "Publié",
-      date: "18 mai 2026",
-    },
-    {
-      id: 2,
-      title: "Tournoi jeunes du club",
-      content: "Le club organise un tournoi pour les jeunes joueurs.",
-      image: "/images/news2.jpg",
-      type: "interne",
-      status: "Brouillon",
-      date: "16 mai 2026",
-    },
-  ]);
+const API_URL = "http://localhost:5000";
 
+export default function AdminNews() {
+  const [news, setNews] = useState<NewsItem[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState("");
-  const [type, setType] = useState<"interne" | "externe">("interne");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState("");
+  const [type, setType] = useState<"internal" | "external">("internal");
   const [source, setSource] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
-  const [status, setStatus] = useState<"Publié" | "Brouillon">("Brouillon");
+  const [isPublished, setIsPublished] = useState(false);
+
+  const token = localStorage.getItem("token");
+
+  const getAuthHeaders = () => ({
+    Authorization: `Bearer ${token ?? ""}`,
+  });
+
+  async function getErrorMessage(res: Response) {
+    try {
+      const data = await res.json();
+      return data.message || "Une erreur est survenue.";
+    } catch {
+      return "Une erreur est survenue.";
+    }
+  }
+
+  async function fetchNews() {
+    try {
+      setError("");
+
+      const res = await fetch(`${API_URL}/api/news/admin/all`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) {
+        throw new Error(await getErrorMessage(res));
+      }
+
+      const data = await res.json();
+
+      setNews(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Erreur récupération actualités admin :", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de charger les actualités."
+      );
+    } finally {
+      setPageLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchNews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetForm() {
     setTitle("");
+    setSummary("");
     setContent("");
-    setImage("");
-    setType("interne");
+    setImageFile(null);
+    setPreviewImage("");
+    setType("internal");
     setSource("");
     setExternalUrl("");
-    setStatus("Brouillon");
+    setIsPublished(false);
     setEditingId(null);
+    setError("");
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function getImageUrl(image?: string) {
+    if (!image) return "";
 
-    if (editingId !== null) {
-      setNews(
-        news.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                title,
-                content,
-                image,
-                type,
-                source,
-                externalUrl,
-                status,
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem: NewsItem = {
-        id: Date.now(),
-        title,
-        content,
-        image,
-        type,
-        source,
-        externalUrl,
-        status,
-        date: new Date().toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }),
-      };
-
-      setNews([newItem, ...news]);
+    if (image.startsWith("http") || image.startsWith("blob:")) {
+      return image;
     }
 
-    resetForm();
-    setShowForm(false);
+    const cleanImage = image.startsWith("/") ? image : `/${image}`;
+
+    return `${API_URL}${cleanImage}`;
+  }
+
+  function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setImageFile(file);
+    setPreviewImage(URL.createObjectURL(file));
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!title.trim()) {
+      setError("Le titre est obligatoire.");
+      return;
+    }
+
+    if (!summary.trim()) {
+      setError("Le résumé est obligatoire.");
+      return;
+    }
+
+    if (type === "internal" && !content.trim()) {
+      setError("Le contenu est obligatoire pour une actualité interne.");
+      return;
+    }
+
+    if (type === "external" && (!source.trim() || !externalUrl.trim())) {
+      setError(
+        "La source et le lien externe sont obligatoires pour un article externe."
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const formData = new FormData();
+
+      formData.append("title", title.trim());
+      formData.append("summary", summary.trim());
+      formData.append("content", content.trim());
+      formData.append("type", type);
+      formData.append("source", source.trim());
+      formData.append("externalUrl", externalUrl.trim());
+      formData.append("isPublished", String(isPublished));
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      const url =
+        editingId !== null
+          ? `${API_URL}/api/news/${editingId}`
+          : `${API_URL}/api/news`;
+
+      const method = editingId !== null ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(await getErrorMessage(res));
+      }
+
+      await fetchNews();
+
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Erreur enregistrement actualité :", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Impossible d’enregistrer l’actualité."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleEdit(item: NewsItem) {
-    setEditingId(item.id);
-    setTitle(item.title);
-    setContent(item.content);
-    setImage(item.image);
-    setType(item.type);
+    setEditingId(item._id);
+    setTitle(item.title || "");
+    setSummary(item.summary || "");
+    setContent(item.content || "");
+    setPreviewImage(getImageUrl(item.image));
+    setImageFile(null);
+    setType(item.type || "internal");
     setSource(item.source || "");
     setExternalUrl(item.externalUrl || "");
-    setStatus(item.status);
+    setIsPublished(Boolean(item.isPublished));
     setShowForm(true);
+    setError("");
   }
 
-  function handleDelete(id: number) {
-    setNews(news.filter((item) => item.id !== id));
+  async function handleDelete(id: string) {
+    const confirmDelete = window.confirm(
+      "Voulez-vous vraiment supprimer cette actualité ?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setError("");
+
+      const res = await fetch(`${API_URL}/api/news/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) {
+        throw new Error(await getErrorMessage(res));
+      }
+
+      setNews((prev) => prev.filter((item) => item._id !== id));
+    } catch (error) {
+      console.error("Erreur suppression actualité :", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer l’actualité."
+      );
+    }
+  }
+
+  if (pageLoading) {
+    return (
+      <div className="rounded-2xl bg-white p-8 text-center text-zinc-600 shadow">
+        Chargement des actualités...
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900">
             Gestion des actualités
@@ -139,91 +270,153 @@ export default function AdminNews() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      )}
+
       {showForm && (
         <div className="mb-8 rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold text-zinc-900">
-            {editingId !== null ? "Modifier une actualité" : "Créer une actualité"}
+            {editingId !== null
+              ? "Modifier une actualité"
+              : "Créer une actualité"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Titre de l’actualité"
-            />
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                Titre
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                placeholder="Titre de l’actualité"
+              />
+            </div>
 
-            <input
-  type="file"
-  accept="image/*"
-  onChange={(e) => {
-    const file = e.target.files?.[0];
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                Résumé
+              </label>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                rows={3}
+                required
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                placeholder="Court résumé affiché sur la page actualités"
+              />
+            </div>
 
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
-    }
-  }}
-  className="rounded-lg border border-zinc-300 px-4 py-3"
-/>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3"
+              />
+            </div>
 
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={6}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Contenu ou résumé de l’actualité"
-            />
-
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "interne" | "externe")}
-              className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-            >
-              <option value="interne">Actualité interne</option>
-              <option value="externe">Article externe / presse</option>
-            </select>
-
-            {type === "externe" && (
-              <>
-                <input
-                  type="text"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-                  placeholder="Source : La Voix du Nord"
-                />
-
-                <input
-                  type="url"
-                  value={externalUrl}
-                  onChange={(e) => setExternalUrl(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-                  placeholder="Lien de l’article"
-                />
-              </>
+            {previewImage && (
+              <img
+                src={previewImage}
+                alt="Aperçu de l’actualité"
+                className="h-48 w-full rounded-lg object-cover"
+              />
             )}
 
-            <select
-              value={status}
-              onChange={(e) =>
-                setStatus(e.target.value as "Publié" | "Brouillon")
-              }
-              className="w-full rounded-lg border border-zinc-300 px-4 py-3"
-            >
-              <option value="Brouillon">Brouillon</option>
-              <option value="Publié">Publié</option>
-            </select>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                Type d’actualité
+              </label>
+              <select
+                value={type}
+                onChange={(e) =>
+                  setType(e.target.value as "internal" | "external")
+                }
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+              >
+                <option value="internal">Actualité interne</option>
+                <option value="external">Article externe / revue de presse</option>
+              </select>
+            </div>
+
+            {type === "internal" && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                  Contenu
+                </label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={7}
+                  required={type === "internal"}
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                  placeholder="Contenu complet de l’actualité"
+                />
+              </div>
+            )}
+
+            {type === "external" && (
+              <div className="space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                    Source
+                  </label>
+                  <input
+                    type="text"
+                    value={source}
+                    onChange={(e) => setSource(e.target.value)}
+                    required={type === "external"}
+                    className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                    placeholder="Ex : La Voix du Nord"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-zinc-700">
+                    Lien de l’article externe
+                  </label>
+                  <input
+                    type="url"
+                    value={externalUrl}
+                    onChange={(e) => setExternalUrl(e.target.value)}
+                    required={type === "external"}
+                    className="w-full rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+            )}
+
+            <label className="flex items-center gap-3 rounded-xl bg-zinc-50 p-4 text-sm font-semibold text-zinc-700">
+              <input
+                type="checkbox"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.target.checked)}
+              />
+              Publier sur le site
+            </label>
 
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700"
+                disabled={loading}
+                className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700 disabled:opacity-60"
               >
-                {editingId !== null ? "Mettre à jour" : "Enregistrer"}
+                {loading
+                  ? "Enregistrement..."
+                  : editingId !== null
+                  ? "Mettre à jour"
+                  : "Enregistrer"}
               </button>
 
               <button
@@ -255,57 +448,84 @@ export default function AdminNews() {
           </thead>
 
           <tbody>
-            {news.map((item) => (
-              <tr key={item.id} className="border-t border-zinc-200">
-                <td className="px-6 py-4">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="h-16 w-20 rounded-lg object-cover"
-                  />
-                </td>
-
-                <td className="px-6 py-4 font-medium text-zinc-800">
-                  {item.title}
-                </td>
-
-                <td className="px-6 py-4 text-zinc-600">
-                  {item.type === "interne" ? "Interne" : "Externe"}
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      item.status === "Publié"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-zinc-600">{item.date}</td>
-
-                <td className="px-6 py-4">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Modifier
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
+            {news.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
+                  Aucune actualité enregistrée pour le moment.
                 </td>
               </tr>
-            ))}
+            ) : (
+              news.map((item) => (
+                <tr key={item._id} className="border-t border-zinc-200">
+                  <td className="px-6 py-4">
+                    {item.image ? (
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={item.title}
+                        className="h-16 w-20 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-zinc-100 text-xs text-zinc-500">
+                        Aucune
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-zinc-800">{item.title}</p>
+                    {item.summary && (
+                      <p className="mt-1 line-clamp-2 text-sm text-zinc-500">
+                        {item.summary}
+                      </p>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {item.type === "internal" ? "Interne" : "Externe"}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        item.isPublished
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {item.isPublished ? "Publié" : "Brouillon"}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {item.createdAt
+                      ? new Date(item.createdAt).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Modifier
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

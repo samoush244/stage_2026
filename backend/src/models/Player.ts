@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type PlayerRole = "admin" | "coach" | "joueur" | "membre";
+export type PlayerRole = "coach" | "joueur" | "membre";
 
 export interface IPlayer extends Document {
   licenseNumber: string;
@@ -8,10 +8,13 @@ export interface IPlayer extends Document {
   lastName: string;
   roles: PlayerRole[];
   team?: mongoose.Types.ObjectId;
+  birthDate?: Date;
   photo?: string;
   number?: number;
   position?: string;
   isDisplayed: boolean;
+  isActive: boolean;
+  isFeaturedTeamPlayer :boolean;
   userAccount?: mongoose.Types.ObjectId;
 }
 
@@ -38,13 +41,17 @@ const playerSchema = new Schema<IPlayer>(
 
     roles: {
       type: [String],
-      enum: ["admin", "coach", "joueur","membre"],
-      default: ["membre"],
+      enum: [ "coach", "joueur","membre"],
+      default: ["joueur"],
     },
 
     team: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
+    },
+
+    birthDate: {
+      type: Date,
     },
 
     photo: {
@@ -64,6 +71,14 @@ const playerSchema = new Schema<IPlayer>(
     isDisplayed: {
       type: Boolean,
       default: false,
+    },
+    isFeaturedTeamPlayer:{
+     type:Boolean,
+     default:false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
 
     userAccount: {

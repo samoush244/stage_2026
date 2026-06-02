@@ -10,6 +10,7 @@ export interface AuthRequest extends Request {
   user?: {
     id: string;
     roles: string[];
+    isActive?: boolean;
   };
 }
 
@@ -38,13 +39,16 @@ export const protect = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
 
     const user = await User.findById(decoded.id).select("-password");
-
     if (!user) {
       return res.status(401).json({
-        message: "Utilisateur introuvable",
+        message: "Utilisateur non trouvé",
       });
     }
-
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Compte utilisateur désactivé",
+      });
+    }
     req.user = {
       id: user._id.toString(),
       roles: user.roles,

@@ -1,33 +1,30 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type TeamGender = "masculin" | "feminin" | "mixte";
-
-export type TeamType =
-  | "premiere"
-  | "jeunes"
-  | "loisirs"
-  | "autre";
-
 export interface ITeam extends Document {
   name: string;
   slug: string;
 
-  gender: TeamGender;
-  type: TeamType;
+  group: "premiere" | "masculine" | "feminine" | "loisirs";
+  gender?: "masculin" | "feminin" | "mixte";
 
-  category?: string;
+  level?: string;
+  season?: string;
 
   image?: string;
+  description?: string;
 
   ffhandballUrl?: string;
-
   scorencoUrl?: string;
 
-  isFirstTeam: boolean;
+  hasRosterPage: boolean;
+  hasResultsPage: boolean;
 
+  order: number;
   isActive: boolean;
-}
 
+  createdAt: Date;
+  updatedAt: Date;
+}
 const teamSchema = new Schema<ITeam>(
   {
     name: {
@@ -50,22 +47,33 @@ const teamSchema = new Schema<ITeam>(
       required: true,
     },
 
-    type: {
+    group: {
       type: String,
-      enum: ["premiere", "jeunes", "loisirs", "autre"],
+      enum: ["premiere", "masculine", "feminine", "loisirs"],
       required: true,
     },
 
-    category: {
+    level: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+
+    season: {
       type: String,
       trim: true,
     },
 
     image: {
       type: String,
-      default: "",
+      required: false,
     },
 
+    description: {
+      type: String,
+      required: false,
+    },
+    
     ffhandballUrl: {
       type: String,
       default: "",
@@ -76,11 +84,20 @@ const teamSchema = new Schema<ITeam>(
       default: "",
     },
 
-    isFirstTeam: {
+    hasRosterPage: {
       type: Boolean,
       default: false,
     },
 
+    hasResultsPage: {
+      type: Boolean,
+      default: false,
+    },
+
+    order: {
+      type: Number,
+      default: 0,
+    },
     isActive: {
       type: Boolean,
       default: true,

@@ -66,7 +66,7 @@ export const register = async (req: Request, res: Response) => {
       lastName: player.lastName,
       email,
       password,
-      roles: ["membre"],
+      roles:player.roles,
       playerId: player._id,
     });
 

@@ -5,6 +5,7 @@ export interface IPartner extends Document {
   logo: string;
   url: string;
   order: number;
+  category:string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -27,6 +28,12 @@ const partnerSchema = new Schema<IPartner>(
       type: String,
       required: true,
       trim: true,
+    },
+    
+    category:{
+      type:String,
+      required:true,
+
     },
 
     order: {
