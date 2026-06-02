@@ -152,7 +152,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="actualites" element={<AdminNews />} />
-          <Route path="equipes" element={<AdminTeams teamSlug="" />} />
+          <Route path="equipes" element={<AdminTeams />} />
           <Route path="joueurs" element={<AdminPlayers />} />
           <Route path="matchs" element={<AdminMatches />} />
           <Route path="partenaires" element={<AdminPartners />} />
