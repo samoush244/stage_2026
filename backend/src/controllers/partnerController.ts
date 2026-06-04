@@ -1,5 +1,49 @@
 import { Request, Response } from "express";
 import Partner from "../models/partner";
+import cloudinary from "../config/cloudinary";
+
+const getUploadedFile = (req: Request) => {
+  return (req as Request & { file?: Express.Multer.File }).file;
+};
+
+const uploadLogoToCloudinary = async (
+  file?: Express.Multer.File
+): Promise<string | undefined> => {
+  if (!file) {
+    return undefined;
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "stage-handball/partners",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(result?.secure_url);
+      }
+    );
+
+    uploadStream.end(file.buffer);
+  });
+};
+
+const toBoolean = (value: unknown, defaultValue = true) => {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return value === "true" || value === "Visible";
+};
 
 export const getPartners = async (req: Request, res: Response) => {
   try {
@@ -41,10 +85,20 @@ export const createPartner = async (req: Request, res: Response) => {
         message: "Le nom, la catégorie et l'URL sont obligatoires",
       });
     }
-     
-    if (!req.file) {
+
+    const file = getUploadedFile(req);
+
+    if (!file) {
       return res.status(400).json({
         message: "Le logo est obligatoire",
+      });
+    }
+
+    const logoUrl = await uploadLogoToCloudinary(file);
+
+    if (!logoUrl) {
+      return res.status(400).json({
+        message: "Erreur lors de l'upload du logo",
       });
     }
 
@@ -52,9 +106,9 @@ export const createPartner = async (req: Request, res: Response) => {
       name,
       url,
       category,
-      logo: `/uploads/partners/${req.file.filename}`,
+      logo: logoUrl,
       order: order ? Number(order) : 0,
-      isActive: isActive === "false" ? false : true,
+      isActive: toBoolean(isActive, true),
     });
 
     res.status(201).json(partner);
@@ -86,11 +140,14 @@ export const updatePartner = async (req: Request, res: Response) => {
     if (order !== undefined) updateData.order = Number(order);
 
     if (isActive !== undefined) {
-      updateData.isActive = isActive === "false" ? false : true;
+      updateData.isActive = toBoolean(isActive, true);
     }
 
-    if (req.file) {
-      updateData.logo = `/uploads/partners/${req.file.filename}`;
+    const file = getUploadedFile(req);
+    const logoUrl = await uploadLogoToCloudinary(file);
+
+    if (logoUrl) {
+      updateData.logo = logoUrl;
     }
 
     const partner = await Partner.findByIdAndUpdate(id, updateData, {

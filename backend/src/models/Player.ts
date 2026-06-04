@@ -1,9 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export type PlayerRole = "coach" | "joueur" | "membre";
+export type MemberType = "player" | "staff";
 
 export interface IPlayer extends Document {
   licenseNumber: string;
+  memberType: MemberType;
   firstName: string;
   lastName: string;
   roles: PlayerRole[];
@@ -12,9 +14,10 @@ export interface IPlayer extends Document {
   photo?: string;
   number?: number;
   position?: string;
+  displayOrder: number;
   isDisplayed: boolean;
   isActive: boolean;
-  isFeaturedTeamPlayer :boolean;
+  isFeaturedTeamPlayer: boolean;
   userAccount?: mongoose.Types.ObjectId;
 }
 
@@ -25,6 +28,12 @@ const playerSchema = new Schema<IPlayer>(
       required: true,
       unique: true,
       trim: true,
+    },
+
+    memberType: {
+      type: String,
+      enum: ["player", "staff"],
+      default: "player",
     },
 
     firstName: {
@@ -41,7 +50,7 @@ const playerSchema = new Schema<IPlayer>(
 
     roles: {
       type: [String],
-      enum: [ "coach", "joueur","membre"],
+      enum: ["coach", "joueur", "membre"],
       default: ["joueur"],
     },
 
@@ -50,7 +59,7 @@ const playerSchema = new Schema<IPlayer>(
       ref: "Team",
       required: false,
     },
-    
+
     birthDate: {
       type: Date,
     },
@@ -69,14 +78,21 @@ const playerSchema = new Schema<IPlayer>(
       trim: true,
     },
 
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+
     isDisplayed: {
       type: Boolean,
       default: false,
     },
-    isFeaturedTeamPlayer:{
-     type:Boolean,
-     default:false,
+
+    isFeaturedTeamPlayer: {
+      type: Boolean,
+      default: false,
     },
+
     isActive: {
       type: Boolean,
       default: true,

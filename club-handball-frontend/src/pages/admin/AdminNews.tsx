@@ -42,15 +42,23 @@ export default function AdminNews() {
     Authorization: `Bearer ${token ?? ""}`,
   });
 
-  async function getErrorMessage(res: Response) {
-    try {
-      const data = await res.json();
-      return data.message || "Une erreur est survenue.";
-    } catch {
-      return "Une erreur est survenue.";
-    }
-  }
+async function getErrorMessage(res: Response) {
+  try {
+    const contentType = res.headers.get("content-type");
 
+    if (contentType && contentType.includes("application/json")) {
+      const data = await res.json();
+      return data.message || data.error || "Une erreur est survenue.";
+    }
+
+    const text = await res.text();
+    console.error("Réponse backend non JSON :", text);
+
+    return "Erreur serveur : regarde le terminal backend.";
+  } catch {
+    return "Une erreur est survenue.";
+  }
+}
   async function fetchNews() {
     try {
       setError("");

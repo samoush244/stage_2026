@@ -9,6 +9,8 @@ import partnerRoutes from "./routes/partnerRoutes";
 import newsRoutes from "./routes/newsRoutes";
 import teamRoutes from "./routes/teamRoutes";
 import organizationMemberRoutes from "./routes/organizationMemberRoutes";
+import eventRoutes from "./routes/eventRoutes";
+import historyRoutes from "./routes/historyRoutes";
 const app = express();
 
 app.use(cors());
@@ -28,4 +30,6 @@ app.use("/api/partners", partnerRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/organization-members", organizationMemberRoutes);
+app.use("/api/events",eventRoutes);
+app.use("/api/histories", historyRoutes);
 export default app;

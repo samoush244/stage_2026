@@ -1,186 +1,143 @@
-import {
-    boardMembers,
-    bureauMembers,
-    type OrganizationMember,
-} from "../data/OrganigrammeMembers";
+import { useEffect, useState } from "react";
+import { getPublicOrganizationMembers } from "../services/organizationMemberService";
+import type { OrganizationMember } from "../services/organizationMemberService";
 
-type MemberSectionProps = {
-  title: string;
-  description: string;
-  members: OrganizationMember[];
-};
+const BACKEND_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:5000"
+).replace(/\/api\/?$/, "");
 
-function MemberCard({ member }: { member: OrganizationMember }) {
-  return (
-    <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative h-72 bg-zinc-900 text-white">
-        {member.photoUrl ? (
-          <img
-            src={member.photoUrl}
-            alt={`${member.firstName} ${member.lastName}`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-zinc-900 to-black">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-600 text-3xl font-extrabold">
-              {member.firstName.charAt(0)}
-              {member.lastName.charAt(0)}
-            </div>
-          </div>
-        )}
-      </div>
+function getImageUrl(photo?: string) {
+  if (!photo) {
+    return "";
+  }
 
-      <div className="p-5">
-        <p className="text-sm font-bold uppercase text-red-600">
-          {member.role}
-        </p>
+  if (photo.startsWith("http://") || photo.startsWith("https://")) {
+    return photo;
+  }
 
-        <h3 className="mt-2 text-2xl font-extrabold">
-          {member.firstName} {member.lastName}
-        </h3>
+  const cleanPhoto = photo.startsWith("/") ? photo : `/${photo}`;
 
-        {member.email ? (
-          <a
-            href={`mailto:${member.email}`}
-            className="mt-4 block text-sm font-medium text-gray-600 hover:text-red-600"
-          >
-            {member.email}
-          </a>
-        ) : (
-          <p className="mt-4 text-sm text-gray-500">
-            Adresse email non affichée
-          </p>
-        )}
-      </div>
-    </article>
-  );
+  return `${BACKEND_URL}${cleanPhoto}`;
 }
 
-function MemberSection({ title, description, members }: MemberSectionProps) {
-  return (
-    <section className="px-8 py-20">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-10">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-600">
-            Organigramme
-          </p>
+function OrganigrammePage() {
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
-          <h2 className="mt-3 text-4xl font-extrabold">
-            {title}
-          </h2>
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const data = await getPublicOrganizationMembers();
+        setMembers(data);
+      } catch (error) {
+        console.error("Erreur récupération organigramme :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-          <p className="mt-4 max-w-2xl text-gray-600">
-            {description}
-          </p>
-        </div>
+    fetchMembers();
+  }, []);
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {members.map((member) => (
-            <MemberCard key={member.id} member={member} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+  const bureauMembers = members.filter((member) => member.group === "bureau");
+  const caMembers = members.filter((member) => member.group === "ca");
+  if (loading) {
+    return (
+      <main className="bg-white px-6 py-24 text-black">
+        <p>Chargement de l'organigramme...</p>
+      </main>
+    );
+  }
 
-function OrganizationChartPage() {
   return (
     <main className="bg-white text-black">
-      <section className="bg-black px-8 py-16 text-white">
+      <section className="bg-black px-6 py-24 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+          <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
             Le club
           </p>
 
-          <h1 className="mt-4 text-5xl font-extrabold">
+          <h1 className="mt-4 text-5xl font-extrabold uppercase">
             Organigramme
           </h1>
 
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
-            Retrouvez les personnes qui participent à la gestion, à
-            l’organisation et au développement du club.
+          <p className="mt-6 max-w-3xl text-lg text-zinc-300">
+            Découvrez les membres qui participent à la gestion et au
+            développement du club.
           </p>
         </div>
       </section>
 
-      <MemberSection
-        title="Le bureau"
-        description="Le bureau assure la gestion quotidienne du club, le suivi administratif, financier et associatif."
-        members={bureauMembers}
-      />
-
-      <section className="bg-zinc-950 text-white">
-        <div className="px-8 py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-10">
-              <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-                Organigramme
-              </p>
-
-              <h2 className="mt-3 text-4xl font-extrabold">
-                Conseil d’administration
-              </h2>
-
-              <p className="mt-4 max-w-2xl text-gray-400">
-                Le conseil d’administration accompagne les décisions importantes
-                du club et participe à son développement.
-              </p>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {boardMembers.map((member) => (
-                <article
-                  key={member.id}
-                  className="overflow-hidden rounded-2xl border border-zinc-800 bg-black shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="relative h-72 bg-zinc-900 text-white">
-                    {member.photoUrl ? (
-                      <img
-                        src={member.photoUrl}
-                        alt={`${member.firstName} ${member.lastName}`}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-red-700 via-black to-black">
-                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-600 text-3xl font-extrabold">
-                          {member.firstName.charAt(0)}
-                          {member.lastName.charAt(0)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-5">
-                    <p className="text-sm font-bold uppercase text-red-500">
-                      {member.role}
-                    </p>
-
-                    <h3 className="mt-2 text-2xl font-extrabold">
-                      {member.firstName} {member.lastName}
-                    </h3>
-
-                    {member.email ? (
-                      <a
-                        href={`mailto:${member.email}`}
-                        className="mt-4 block text-sm font-medium text-gray-400 hover:text-red-500"
-                      >
-                        {member.email}
-                      </a>
-                    ) : (
-                      <p className="mt-4 text-sm text-gray-500">
-                        Adresse email non affichée
-                      </p>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-7xl space-y-16">
+          <MemberSection title="Bureau" members={bureauMembers} />
+          <MemberSection title="Conseil d'administration" members={caMembers} />
         </div>
       </section>
     </main>
   );
 }
 
-export default OrganizationChartPage;
+type MemberSectionProps = {
+  title: string;
+  members: OrganizationMember[];
+};
+
+function MemberSection({ title, members }: MemberSectionProps) {
+  if (members.length === 0) {
+    return null;
+  }
+
+  return (
+    <section>
+      <h2 className="mb-8 text-3xl font-extrabold uppercase text-black">
+        {title}
+      </h2>
+
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {members.map((member) => (
+          <article
+            key={member._id}
+            className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
+          >
+            <div className="h-64 bg-zinc-100">
+              {member.photo ? (
+                <img
+                  src={getImageUrl(member.photo)}
+                  alt={`${member.firstName} ${member.lastName}`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-zinc-200 text-5xl font-black text-zinc-500">
+                  {member.firstName.charAt(0)}
+                  {member.lastName.charAt(0)}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6">
+              <h3 className="text-xl font-extrabold uppercase">
+                {member.firstName} {member.lastName}
+              </h3>
+
+              <p className="mt-2 font-semibold text-red-600">
+                {member.role}
+              </p>
+
+              {member.email && (
+                <a
+                  href={`mailto:${member.email}`}
+                  className="mt-4 inline-block text-sm text-zinc-600 hover:text-red-600"
+                >
+                  {member.email}
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default OrganigrammePage;

@@ -2,6 +2,7 @@
 
 import { Request, Response } from "express";
 import Team from "../models/Team";
+import cloudinary from "../config/cloudinary";
 
 const createSlug = (value: string) => {
   return value
@@ -10,6 +11,45 @@ const createSlug = (value: string) => {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
+};
+
+const uploadImageToCloudinary = async (
+  file?: Express.Multer.File
+): Promise<string | undefined> => {
+  if (!file) {
+    return undefined;
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "stage-handball/teams",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(result?.secure_url);
+      }
+    );
+
+    uploadStream.end(file.buffer);
+  });
+};
+
+const toBoolean = (value: unknown, defaultValue = true) => {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return value === "true";
 };
 
 // PUBLIC - récupérer les équipes actives
@@ -92,7 +132,8 @@ export const createTeam = async (req: Request, res: Response) => {
       });
     }
 
-    const finalSlug = slug && slug.trim() !== "" ? createSlug(slug) : createSlug(name);
+    const finalSlug =
+      slug && slug.trim() !== "" ? createSlug(slug) : createSlug(name);
 
     const existingTeam = await Team.findOne({ slug: finalSlug });
 
@@ -102,7 +143,7 @@ export const createTeam = async (req: Request, res: Response) => {
       });
     }
 
-    const image = req.file ? `/uploads/teams/${req.file.filename}` : undefined;
+    const imageUrl = await uploadImageToCloudinary(req.file);
 
     const team = await Team.create({
       name,
@@ -111,15 +152,17 @@ export const createTeam = async (req: Request, res: Response) => {
       gender: gender || "mixte",
       category,
       level,
-      image,
+      image: imageUrl,
       ffhandballUrl,
       scorencoUrl,
       order: order ? Number(order) : 0,
-      isActive: isActive === "false" ? false : true,
+      isActive: toBoolean(isActive, true),
     });
 
     return res.status(201).json(team);
   } catch (error) {
+    console.error("Erreur création équipe :", error);
+
     return res.status(500).json({
       message: "Erreur lors de la création de l'équipe.",
     });
@@ -152,8 +195,27 @@ export const updateTeam = async (req: Request, res: Response) => {
       isActive,
     } = req.body;
 
-    if (name !== undefined) team.name = name;
-    if (slug !== undefined && slug.trim() !== "") team.slug = createSlug(slug);
+    if (name !== undefined) {
+      team.name = name;
+    }
+
+    if (slug !== undefined && slug.trim() !== "") {
+      const newSlug = createSlug(slug);
+
+      const existingTeam = await Team.findOne({
+        slug: newSlug,
+        _id: { $ne: team._id },
+      });
+
+      if (existingTeam) {
+        return res.status(400).json({
+          message: "Une équipe existe déjà avec ce slug.",
+        });
+      }
+
+      team.slug = newSlug;
+    }
+
     if (teamType !== undefined) team.teamType = teamType;
     if (gender !== undefined) team.gender = gender;
     if (category !== undefined) team.category = category;
@@ -161,16 +223,20 @@ export const updateTeam = async (req: Request, res: Response) => {
     if (ffhandballUrl !== undefined) team.ffhandballUrl = ffhandballUrl;
     if (scorencoUrl !== undefined) team.scorencoUrl = scorencoUrl;
     if (order !== undefined) team.order = Number(order);
-    if (isActive !== undefined) team.isActive = isActive === "true" || isActive === true;
+    if (isActive !== undefined) team.isActive = toBoolean(isActive, team.isActive);
 
-    if (req.file) {
-      team.image = `/uploads/teams/${req.file.filename}`;
+    const imageUrl = await uploadImageToCloudinary(req.file);
+
+    if (imageUrl) {
+      team.image = imageUrl;
     }
 
     await team.save();
 
     return res.status(200).json(team);
   } catch (error) {
+    console.error("Erreur modification équipe :", error);
+
     return res.status(500).json({
       message: "Erreur lors de la modification de l'équipe.",
     });

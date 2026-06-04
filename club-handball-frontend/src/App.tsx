@@ -44,6 +44,7 @@ import AdminOrganization from "./pages/admin/AdminOrganization";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminContactMessages from "./pages/admin/AdminContactMessage";
+import AdminHistory from "./pages/admin/AdminHistory";
 
 function App() {
   return (
@@ -161,6 +162,7 @@ function App() {
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="evenements" element={<AdminEvents />} />
           <Route path="contact-messages" element={<AdminContactMessages />} />
+          <Route path="histoire" element={<AdminHistory />} />
         </Route>
 
         {/* 404 */}

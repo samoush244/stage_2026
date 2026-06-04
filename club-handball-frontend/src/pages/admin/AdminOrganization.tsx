@@ -1,127 +1,147 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  createOrganizationMember,
+  deleteOrganizationMember,
+  getAllOrganizationMembersAdmin,
+  toggleOrganizationMemberStatus,
+  updateOrganizationMember,
+  type OrganizationMember,
+} from "../../services/organizationMemberService";
 
-type OrganizationMember = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  role: string;
-  group: "Bureau" | "Conseil d'administration" ;
-  email?: string;
-  photo: string;
-  order: number;
-  status: "Visible" | "Masqué";
-};
+const BACKEND_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:5000"
+).replace(/\/api\/?$/, "");
 
-export default function AdminOrganization() {
-  const [members, setMembers] = useState<OrganizationMember[]>([
-    {
-      id: 1,
-      firstName: "Jean",
-      lastName: "Dupont",
-      role: "Président",
-      group: "Bureau",
-      email: "president@vhc.fr",
-      photo: "/images/organization/president.jpg",
-      order: 1,
-      status: "Visible",
-    },
-    {
-      id: 2,
-      firstName: "Marie",
-      lastName: "Martin",
-      role: "Trésorière",
-      group: "Bureau",
-      email: "",
-      photo: "/images/organization/tresoriere.jpg",
-      order: 2,
-      status: "Visible",
-    },
-  ]);
+function getImageUrl(photo?: string) {
+  if (!photo) {
+    return "";
+  }
 
+  if (photo.startsWith("http://") || photo.startsWith("https://")) {
+    return photo;
+  }
+
+  const cleanPhoto = photo.startsWith("/") ? photo : `/${photo}`;
+
+  return `${BACKEND_URL}${cleanPhoto}`;
+}
+
+function AdminOrganization() {
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [role, setRole] = useState("");
-  const [group, setGroup] = useState<OrganizationMember["group"]>("Bureau");
+  const [group, setGroup] = useState<"bureau" | "ca">("bureau");
   const [email, setEmail] = useState("");
-  const [photo, setPhoto] = useState("");
   const [order, setOrder] = useState(1);
-  const [status, setStatus] =
-    useState<OrganizationMember["status"]>("Visible");
+  const [status, setStatus] = useState<"Visible" | "Masqué">("Visible");
+
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllOrganizationMembersAdmin();
+      setMembers(data);
+    } catch (error) {
+      console.error("Erreur récupération organigramme admin :", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   function resetForm() {
     setFirstName("");
     setLastName("");
     setRole("");
-    setGroup("Bureau");
+    setGroup("bureau");
     setEmail("");
-    setPhoto("");
     setOrder(1);
     setStatus("Visible");
+    setPhotoFile(null);
+    setPhotoPreview("");
     setEditingId(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (editingId !== null) {
-      setMembers(
-        members.map((member) =>
-          member.id === editingId
-            ? {
-                ...member,
-                firstName,
-                lastName,
-                role,
-                group,
-                email,
-                photo,
-                order,
-                status,
-              }
-            : member
-        )
-      );
-    } else {
-      const newMember: OrganizationMember = {
-        id: Date.now(),
+    try {
+      const memberData = {
         firstName,
         lastName,
         role,
         group,
         email,
-        photo,
         order,
-        status,
+        isActive: status === "Visible",
+        photoFile,
       };
 
-      setMembers([...members, newMember]);
-    }
+      if (editingId) {
+        await updateOrganizationMember(editingId, memberData);
+      } else {
+        await createOrganizationMember(memberData);
+      }
 
-    resetForm();
-    setShowForm(false);
+      await fetchMembers();
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Erreur enregistrement membre :", error);
+    }
   }
 
   function handleEdit(member: OrganizationMember) {
-    setEditingId(member.id);
+    setEditingId(member._id);
     setFirstName(member.firstName);
     setLastName(member.lastName);
     setRole(member.role);
     setGroup(member.group);
     setEmail(member.email || "");
-    setPhoto(member.photo);
-    setOrder(member.order);
-    setStatus(member.status);
+    setOrder(member.order || 1);
+    setStatus(member.isActive ? "Visible" : "Masqué");
+    setPhotoFile(null);
+    setPhotoPreview(getImageUrl(member.photo));
     setShowForm(true);
   }
 
-  function handleDelete(id: number) {
-    setMembers(members.filter((member) => member.id !== id));
+  async function handleDelete(id: string) {
+    const confirmDelete = window.confirm(
+      "Voulez-vous vraiment supprimer ce membre ?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteOrganizationMember(id);
+      await fetchMembers();
+    } catch (error) {
+      console.error("Erreur suppression membre :", error);
+    }
   }
 
-  const sortedMembers = [...members].sort((a, b) => a.order - b.order);
+  async function handleToggleStatus(id: string) {
+    try {
+      await toggleOrganizationMemberStatus(id);
+      await fetchMembers();
+    } catch (error) {
+      console.error("Erreur changement statut membre :", error);
+    }
+  }
+
+  const sortedMembers = [...members].sort((a, b) => {
+    return Number(a.order || 0) - Number(b.order || 0);
+  });
 
   return (
     <div>
@@ -130,8 +150,9 @@ export default function AdminOrganization() {
           <h1 className="text-3xl font-bold text-zinc-900">
             Organigramme
           </h1>
+
           <p className="mt-2 text-zinc-600">
-            Gérer les membres du bureau, les dirigeants .
+            Gérer les membres du bureau et les dirigeants.
           </p>
         </div>
 
@@ -149,7 +170,7 @@ export default function AdminOrganization() {
       {showForm && (
         <div className="mb-8 rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold text-zinc-900">
-            {editingId !== null ? "Modifier un membre" : "Ajouter un membre"}
+            {editingId ? "Modifier un membre" : "Ajouter un membre"}
           </h2>
 
           <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
@@ -182,13 +203,11 @@ export default function AdminOrganization() {
 
             <select
               value={group}
-              onChange={(e) =>
-                setGroup(e.target.value as OrganizationMember["group"])
-              }
+              onChange={(e) => setGroup(e.target.value as "bureau" | "ca")}
               className="rounded-lg border border-zinc-300 px-4 py-3"
             >
-              <option value="Bureau">Bureau</option>
-              <option value="Conseil d'administration">Conseil d'administration</option>
+              <option value="bureau">Bureau</option>
+              <option value="ca">Conseil d'administration</option>
             </select>
 
             <input
@@ -214,7 +233,8 @@ export default function AdminOrganization() {
                 const file = e.target.files?.[0];
 
                 if (file) {
-                  setPhoto(URL.createObjectURL(file));
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
                 }
               }}
               className="rounded-lg border border-zinc-300 px-4 py-3"
@@ -223,7 +243,7 @@ export default function AdminOrganization() {
             <select
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value as OrganizationMember["status"])
+                setStatus(e.target.value as "Visible" | "Masqué")
               }
               className="rounded-lg border border-zinc-300 px-4 py-3"
             >
@@ -231,14 +251,14 @@ export default function AdminOrganization() {
               <option value="Masqué">Masqué</option>
             </select>
 
-            {photo && (
+            {photoPreview && (
               <div className="md:col-span-2">
                 <p className="mb-2 text-sm font-medium text-zinc-700">
                   Aperçu photo
                 </p>
 
                 <img
-                  src={photo}
+                  src={photoPreview}
                   alt="Aperçu membre"
                   className="h-32 w-32 rounded-xl object-cover"
                 />
@@ -250,7 +270,7 @@ export default function AdminOrganization() {
                 type="submit"
                 className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700"
               >
-                {editingId !== null ? "Mettre à jour" : "Enregistrer"}
+                {editingId ? "Mettre à jour" : "Enregistrer"}
               </button>
 
               <button
@@ -268,9 +288,9 @@ export default function AdminOrganization() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow">
-        <table className="w-full">
-          <thead className="bg-zinc-100">
+      <div className="w-full max-w-full overflow-x-auto rounded-2xl bg-white shadow">
+        <table className="w-full min-w-[900px] table-fixed border-collapse">
+          <thead>
             <tr className="text-left text-sm text-zinc-600">
               <th className="px-6 py-4">Photo</th>
               <th className="px-6 py-4">Nom</th>
@@ -284,68 +304,87 @@ export default function AdminOrganization() {
           </thead>
 
           <tbody>
-            {sortedMembers.map((member) => (
-              <tr key={member.id} className="border-t border-zinc-200">
-                <td className="px-6 py-4">
-                  {member.photo ? (
-                    <img
-                      src={member.photo}
-                      alt={`${member.firstName} ${member.lastName}`}
-                      className="h-14 w-14 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-200 text-xs text-zinc-500">
-                      —
-                    </div>
-                  )}
-                </td>
-
-                <td className="px-6 py-4 font-medium text-zinc-800">
-                  {member.lastName} {member.firstName}
-                </td>
-
-                <td className="px-6 py-4 text-zinc-600">{member.role}</td>
-                <td className="px-6 py-4 text-zinc-600">{member.group}</td>
-
-                <td className="px-6 py-4 text-zinc-600">
-                  {member.email || "Non renseigné"}
-                </td>
-
-                <td className="px-6 py-4 text-zinc-600">{member.order}</td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      member.status === "Visible"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-zinc-100 text-zinc-600"
-                    }`}
-                  >
-                    {member.status}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleEdit(member)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Modifier
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(member.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
+            {loading && (
+              <tr>
+                <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
+                  Chargement des membres...
                 </td>
               </tr>
-            ))}
+            )}
 
-            {members.length === 0 && (
+            {!loading &&
+              sortedMembers.map((member) => (
+                <tr key={member._id} className="border-t border-zinc-200">
+                  <td className="px-6 py-4">
+                    {member.photo ? (
+                      <img
+                        src={getImageUrl(member.photo)}
+                        alt={`${member.firstName} ${member.lastName}`}
+                        className="h-14 w-14 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-200 text-xs text-zinc-500">
+                        —
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 font-medium text-zinc-800">
+                    {member.lastName} {member.firstName}
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {member.role}
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {member.group === "bureau"
+                      ? "Bureau"
+                      : "Conseil d'administration"}
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {member.email || "Non renseigné"}
+                  </td>
+
+                  <td className="px-6 py-4 text-zinc-600">
+                    {member.order}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleToggleStatus(member._id)}
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        member.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {member.isActive ? "Visible" : "Masqué"}
+                    </button>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleEdit(member)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Modifier
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(member._id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+            {!loading && members.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
                   Aucun membre ajouté.
@@ -358,3 +397,5 @@ export default function AdminOrganization() {
     </div>
   );
 }
+
+export default AdminOrganization;

@@ -15,6 +15,8 @@ export type PublicPlayer = {
   number?: number | null;
   jerseyNumber?: number | null;
   age?: number | null;
+  memberType?: "player" | "staff";
+  displayOrder?: number;
   isDisplayed?: boolean;
   isFeaturedTeamPlayer?: boolean;
   isActive?: boolean;
@@ -25,8 +27,10 @@ export type PublicRosterResponse = {
     _id: string;
     name: string;
     slug: string;
+    image?: string;
   } | null;
   players: PublicPlayer[];
+  staff?: PublicPlayer[];
 };
 
 export const getPublicRosterByTeamSlug = async (teamSlug: string) => {

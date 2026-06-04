@@ -23,9 +23,7 @@ export default function AdminLayout() {
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/joueurs">
               Joueurs
             </Link>
-            <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/matchs">
-              Matchs
-            </Link>
+            
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/partenaires">
               Partenaires
             </Link>
@@ -43,6 +41,9 @@ export default function AdminLayout() {
             </Link>
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/contact-messages">
               Messages contact
+              </Link>
+              <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/histoire">
+              Histoire du Club
               </Link>
           </nav>
         </aside>

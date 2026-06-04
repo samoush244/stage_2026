@@ -62,11 +62,8 @@ export const trainingCategories: TrainingCategory[] = [
     id: 4,
     title: "Moins de 11 ans",
     ageRange: "9 à 10 ans",
-    logoUrl: "/images/categories/u11.png",
-    columns: [
-      "",
-      
-    ],
+    logoUrl: "/images/categories/ecole de hand.png",
+    columns: ["Moins de 11 ans"],
     rows: [
       {
         day: "Mardi",
@@ -87,10 +84,8 @@ export const trainingCategories: TrainingCategory[] = [
     id: 5,
     title: "Moins de 13 ans",
     ageRange: "10 à 12 ans",
-    logoUrl: "/images/categories/u13.png",
-    columns: [
-      "",
-    ],
+    logoUrl: "/images/categories/ecole de hand.png",
+    columns: ["Moins de 13 ans"],
     rows: [
       {
         day: "Lundi",
@@ -218,7 +213,6 @@ export const trainingCategories: TrainingCategory[] = [
     id: 8,
     title: "Seniors",
     ageRange: "à partir de 17 ans",
-    logoUrl: "/images/categories/u18.png",
     columns: [
     "Seniors Masculins 1",
     "Seniors Masculins 2",

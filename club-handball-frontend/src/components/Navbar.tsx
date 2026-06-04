@@ -71,7 +71,7 @@ function Navbar() {
           </a>
 
           <a
-            href="#"
+            href="https://www.tiktok.com/@valencienneshandballclub"
             aria-label="Tiktok"
             className="transition hover:text-red-500"
           >
@@ -90,9 +90,9 @@ function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/images/logo/VHB.png"
+              src="/images/logo/VHB2.png"
               alt="Logo du club"
-              className="h-20 w-20 object-contain"
+              className="h-22.5 w-22.5 object-contain"
             />
           </Link>
 

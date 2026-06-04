@@ -2,27 +2,28 @@ import express from "express";
 import {
   getPublicOrganizationMembers,
   getAllOrganizationMembers,
-  getOrganizationMemberById,
   createOrganizationMember,
   updateOrganizationMember,
   deleteOrganizationMember,
-} from "../controllers/organizationMembercontroller";
+  toggleOrganizationMemberStatus,
+} from "../controllers/organizationMemberController";
 
 import { protect } from "../middlewares/authMiddleware";
 import { requireRole } from "../middlewares/roleMiddleware";
+import uploadOrganization from "../middlewares/uploadOrganization";
 
 const router = express.Router();
 
-router.get("/public", getPublicOrganizationMembers);
+router.get("/", getPublicOrganizationMembers);
 
-router.get("/", protect, requireRole(["admin"]), getAllOrganizationMembers);
+router.get("/admin/all", protect, requireRole(["admin"]), getAllOrganizationMembers);
 
-router.get("/:id", protect, requireRole(["admin"]), getOrganizationMemberById);
+router.post("/", protect, requireRole(["admin"]), uploadOrganization.single("photo"), createOrganizationMember);
 
-router.post("/", protect, requireRole(["admin"]), createOrganizationMember);
-
-router.put("/:id", protect, requireRole(["admin"]), updateOrganizationMember);
+router.put("/:id", protect, requireRole(["admin"]), uploadOrganization.single("photo"), updateOrganizationMember);
 
 router.delete("/:id", protect, requireRole(["admin"]), deleteOrganizationMember);
+
+router.patch("/:id/toggle-status", protect, requireRole(["admin"]), toggleOrganizationMemberStatus);
 
 export default router;
