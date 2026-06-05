@@ -7,16 +7,18 @@ import { useLocation } from "react-router";
 // - Remplacez l'URL de l'API par votre endpoint réel
 // - La fonction subscribeToNewsletter envoie l'email à votre API
 // ============================================================
-const API_URL = "http://localhost:5000/api/newsletter/subscribe"; // 👈 Remplacez par votre endpoint
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 async function subscribeToNewsletter(email: string): Promise<void> {
-  // 👇 Adaptez cette fonction à votre backend (axios, fetch, etc.)
-  const response = await fetch(API_URL, {
+  const response = await fetch(`${API_URL}/api/newsletter/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
-  if (!response.ok) throw new Error("Erreur lors de l'inscription");
+
+  if (!response.ok) {
+    throw new Error("Erreur lors de l'inscription");
+  }
 }
 
 // ============================================================

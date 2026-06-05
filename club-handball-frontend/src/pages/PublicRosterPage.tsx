@@ -59,17 +59,23 @@ const staffPositionOrder = [
 
 const defaultPlayerImage = "/images/default-player.png";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 function getBackendImageUrl(image?: string | null) {
   if (!image || image.trim() === "") return null;
 
-  if (image.startsWith("http")) {
+  if (image.startsWith("http://") || image.startsWith("https://")) {
     return image;
   }
 
-  return `${SERVER_URL}${image.startsWith("/") ? image : `/${image}`}`;
+  if (image.startsWith("/")) {
+    return `${API_URL}${image}`;
+  }
+
+  return `${API_URL}/${image}`;
 }
 
 function getAgeFromBirthDate(birthDate?: string) {

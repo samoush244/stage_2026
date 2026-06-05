@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { getPublicOrganizationMembers } from "../services/organizationMemberService";
 import type { OrganizationMember } from "../services/organizationMemberService";
 
-const BACKEND_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/api\/?$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 function getImageUrl(photo?: string) {
   if (!photo) {
@@ -15,10 +16,13 @@ function getImageUrl(photo?: string) {
     return photo;
   }
 
-  const cleanPhoto = photo.startsWith("/") ? photo : `/${photo}`;
+  if (photo.startsWith("/")) {
+    return `${API_URL}${photo}`;
+  }
 
-  return `${BACKEND_URL}${cleanPhoto}`;
+  return `${API_URL}/${photo}`;
 }
+
 
 function OrganigrammePage() {
   const [members, setMembers] = useState<OrganizationMember[]>([]);

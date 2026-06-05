@@ -16,7 +16,10 @@ type NewsItem = {
   updatedAt?: string;
 };
 
-const API_URL = "http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 export default function AdminNews() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -42,23 +45,15 @@ export default function AdminNews() {
     Authorization: `Bearer ${token ?? ""}`,
   });
 
-async function getErrorMessage(res: Response) {
-  try {
-    const contentType = res.headers.get("content-type");
-
-    if (contentType && contentType.includes("application/json")) {
+  async function getErrorMessage(res: Response) {
+    try {
       const data = await res.json();
-      return data.message || data.error || "Une erreur est survenue.";
+      return data.message || "Une erreur est survenue.";
+    } catch {
+      return "Une erreur est survenue.";
     }
-
-    const text = await res.text();
-    console.error("Réponse backend non JSON :", text);
-
-    return "Erreur serveur : regarde le terminal backend.";
-  } catch {
-    return "Une erreur est survenue.";
   }
-}
+
   async function fetchNews() {
     try {
       setError("");
@@ -106,16 +101,22 @@ async function getErrorMessage(res: Response) {
   }
 
   function getImageUrl(image?: string) {
-    if (!image) return "";
+  if (!image) return "";
 
-    if (image.startsWith("http") || image.startsWith("blob:")) {
-      return image;
-    }
-
-    const cleanImage = image.startsWith("/") ? image : `/${image}`;
-
-    return `${API_URL}${cleanImage}`;
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("blob:")
+  ) {
+    return image;
   }
+
+  if (image.startsWith("/")) {
+    return `${API_URL}${image}`;
+  }
+
+  return `${API_URL}/${image}`;
+}
 
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

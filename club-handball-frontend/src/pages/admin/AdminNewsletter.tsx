@@ -6,6 +6,10 @@ type Subscriber = {
   isActive: boolean;
   createdAt: string;
 };
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 export default function AdminNewsletter() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -14,7 +18,7 @@ export default function AdminNewsletter() {
 useEffect(() => {
   const fetchSubscribers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/newsletter");
+      const response = await fetch(`${API_URL}/api/newsletter`);
       const data = await response.json();
       setSubscribers(data);
     } catch (error) {

@@ -70,20 +70,29 @@ function getPlayerId(player: PlayerItem) {
   return player._id || String(player.id || "");
 }
 
-const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5000/api")
-  .replace(/\/api\/?$/, "")
-  .replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 function buildImageUrl(imagePath: string) {
   if (!imagePath) return "";
 
-  if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) {
+  if (
+    imagePath.startsWith("http://") ||
+    imagePath.startsWith("https://") ||
+    imagePath.startsWith("blob:")
+  ) {
     return imagePath;
   }
 
   const cleanPath = imagePath.replace(/\\/g, "/");
 
-  return `${API_ORIGIN}${cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`}`;
+  if (cleanPath.startsWith("/")) {
+    return `${API_URL}${cleanPath}`;
+  }
+
+  return `${API_URL}/${cleanPath}`;
 }
 
 function formatPlayerFromApi(player: any): PlayerItem {

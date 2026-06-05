@@ -16,7 +16,10 @@ type NewsItem = {
   isPublished: boolean;
 };
 
-const API_URL = "http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 function NewsDetailPage() {
   const params = useParams();
@@ -58,16 +61,18 @@ function NewsDetailPage() {
   }, [currentSlug]);
 
   const getImageUrl = (image?: string) => {
-    if (!image) return "";
+  if (!image) return "";
 
-    if (image.startsWith("http")) {
-      return image;
-    }
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
 
-    const cleanImage = image.startsWith("/") ? image : `/${image}`;
+  if (image.startsWith("/")) {
+    return `${API_URL}${image}`;
+  }
 
-    return `${API_URL}${cleanImage}`;
-  };
+  return `${API_URL}/${image}`;
+};
 
   const getDisplayDate = () => {
     const date = news?.publishedAt || news?.createdAt;

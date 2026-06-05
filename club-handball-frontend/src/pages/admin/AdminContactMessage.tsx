@@ -12,13 +12,18 @@ type ContactMessage = {
   createdAt: string;
 };
 
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
+
 export default function AdminContactMessages() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [search, setSearch] = useState("");
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/contact");
+      const response = await fetch(`${API_URL}/api/contact`);
       const data = await response.json();
       setMessages(data);
     } catch (error) {
@@ -43,7 +48,7 @@ export default function AdminContactMessages() {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/contact/${id}/status`,
+        `${API_URL}/api/contact/${id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -65,7 +70,7 @@ export default function AdminContactMessages() {
 
   const deleteMessage = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contact/${id}`, {
+      const response = await fetch(`${API_URL}/api/contact/${id}`, {
         method: "DELETE",
       });
 

@@ -14,7 +14,10 @@ type PartnerItem = {
   isActive: boolean;
 };
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 const categoryLabels: Record<PartnerCategory, string> = {
   majeur: "Majeur",
@@ -69,15 +72,23 @@ export default function AdminPartners() {
     setEditingId(null);
   }
 
-  function getLogoUrl(logo: string) {
-    if (!logo) return "";
+function getLogoUrl(logo: string) {
+  if (!logo) return "";
 
-    if (logo.startsWith("http") || logo.startsWith("blob:")) {
-      return logo;
-    }
-
-    return `${SERVER_URL}${logo}`;
+  if (
+    logo.startsWith("http://") ||
+    logo.startsWith("https://") ||
+    logo.startsWith("blob:")
+  ) {
+    return logo;
   }
+
+  if (logo.startsWith("/")) {
+    return `${API_URL}${logo}`;
+  }
+
+  return `${API_URL}/${logo}`;
+}
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

@@ -28,7 +28,10 @@ type HistoryForm = {
   isActive: boolean;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 const initialForm: HistoryForm = {
   year: "",
@@ -42,15 +45,15 @@ const initialForm: HistoryForm = {
 const getImageUrl = (image?: string) => {
   if (!image) return "";
 
-  if (image.startsWith("http")) {
+  if (image.startsWith("http://") || image.startsWith("https://")) {
     return image;
   }
 
-  if (image.startsWith("/uploads")) {
+  if (image.startsWith("/")) {
     return `${API_URL}${image}`;
   }
 
-  return image;
+  return `${API_URL}/${image}`;
 };
 
 function AdminHistory() {

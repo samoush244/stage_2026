@@ -10,8 +10,10 @@ import {
 type EventType = "Match" | "Tournoi" | "Stage" | "Soirée club" | "Autre";
 type EventStatus = "Visible" | "Masqué";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const BACKEND_URL = API_URL.replace(/\/api\/?$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 export default function AdminEvents() {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -40,7 +42,11 @@ const getImageUrl = (imagePath?: string) => {
     return imagePath;
   }
 
-  return `${BACKEND_URL}${imagePath.startsWith("/") ? imagePath : `/${imagePath}`}`;
+  if (imagePath.startsWith("/")) {
+    return `${API_URL}${imagePath}`;
+  }
+
+  return `${API_URL}/${imagePath}`;
 };
 
   const fetchEvents = async () => {

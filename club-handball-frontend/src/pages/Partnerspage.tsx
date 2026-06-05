@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-
 type Partner = {
   _id: string;
   name: string;
@@ -11,7 +10,10 @@ type Partner = {
   order?: number;
 };
 
-const SERVER_URL ="http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 
 const partnerSections = [
   {
@@ -37,31 +39,27 @@ export default function PartnersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  if (error) {
-    console.error(error);
-  }
-
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/partners");
+        const res = await fetch(`${API_URL}/api/partners`);
 
         if (!res.ok) {
-        throw new Error("Erreur lors du chargement des partenaires");
+          throw new Error("Erreur lors du chargement des partenaires");
+        }
+
+        const data = await res.json();
+
+        console.log("Partenaires récupérés :", data);
+
+        setPartners(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des partenaires :", error);
+        setError("Impossible de charger les partenaires.");
+      } finally {
+        setLoading(false);
       }
-
-      const data = await res.json();
-
-      console.log("Partenaires récupérés :", data);
-
-      setPartners(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des partenaires :", error);
-      setError("Impossible de charger les partenaires.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
     fetchPartners();
   }, []);
@@ -69,13 +67,15 @@ export default function PartnersPage() {
   const getLogoUrl = (logo?: string) => {
     if (!logo) return "";
 
-    if (logo.startsWith("http")) {
+    if (logo.startsWith("http://") || logo.startsWith("https://")) {
       return logo;
     }
 
-    const cleanLogo = logo.startsWith("/") ? logo : `/${logo}`;
+    if (logo.startsWith("/")) {
+      return `${API_URL}${logo}`;
+    }
 
-    return `${SERVER_URL}${cleanLogo}`;
+    return `${API_URL}/${logo}`;
   };
 
   const normalizeCategory = (category?: string) => {
@@ -133,7 +133,6 @@ export default function PartnersPage() {
 
   return (
     <main className="bg-white">
-      {/* HERO */}
       <section className="bg-black py-24 text-white">
         <div className="mx-auto max-w-7xl px-6">
           <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
@@ -151,54 +150,60 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      {/* LISTE DES PARTENAIRES */}
-       <section className="py-20">
+      <section className="py-20">
         <div className="mx-auto max-w-7xl space-y-20 px-6">
-          {visiblePartners.length === 0 ?(
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+              {error}
+            </div>
+          )}
+
+          {!error && visiblePartners.length === 0 && (
             <p className="text-center text-zinc-500">
               Aucun partenaire affiché pour le moment.
             </p>
-          ):( partnerSections.map((section) => {
-            const sectionPartners = partners.filter(
-              (partner) => partner.category === section.key
-            );
-            if (sectionPartners.length === 0) return null;
-
-            return (
-              <div key={section.key}>
-                <div>
-                  <h2 className="text-3xl font-black uppercase text-red-600 md:text-4xl">
-                    {section.title}
-                  </h2>
-                </div>
-
-                <div className="mt-10 grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {sectionPartners.map((partner) => (
-                    <a
-                      key={partner._id}
-                      href={partner.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Voir le site de ${partner.name}`}
-                      className="group flex min-h-28 items-center justify-center"
-                    >
-                      <img
-                        src={getLogoUrl(partner.logo)}
-                        alt={partner.name}
-                        className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
-                      />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            );
-          })
           )}
+
+          {!error &&
+            partnerSections.map((section) => {
+              const sectionPartners = visiblePartners.filter(
+                (partner) => normalizeCategory(partner.category) === section.key
+              );
+
+              if (sectionPartners.length === 0) return null;
+
+              return (
+                <div key={section.key}>
+                  <div>
+                    <h2 className="text-3xl font-black uppercase text-red-600 md:text-4xl">
+                      {section.title}
+                    </h2>
+                  </div>
+
+                  <div className="mt-10 grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {sectionPartners.map((partner) => (
+                      <a
+                        key={partner._id}
+                        href={partner.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Voir le site de ${partner.name}`}
+                        className="group flex min-h-28 items-center justify-center"
+                      >
+                        <img
+                          src={getLogoUrl(partner.logo)}
+                          alt={partner.name}
+                          className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </section>
 
-
-      {/* DEVENIR PARTENAIRE */}
       <section className="bg-zinc-950 py-20 text-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 md:flex-row md:items-center">
           <div>

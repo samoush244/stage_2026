@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { getPublicEvents, type EventItem } from "../services/eventService";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const BACKEND_URL = API_URL.replace("/api", "");
-
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/$/,
+  ""
+);
 function TicketingPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,14 +13,18 @@ function TicketingPage() {
   const mainEvent = events[0];
   const otherEvents = events.slice(1);
 
-  const getImageUrl = (imagePath?: string) => {
+const getImageUrl = (imagePath?: string) => {
   if (!imagePath) return "";
 
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
     return imagePath;
   }
 
-  return `${BACKEND_URL}${imagePath.startsWith("/") ? imagePath : `/${imagePath}`}`;
+  if (imagePath.startsWith("/")) {
+    return `${API_URL}${imagePath}`;
+  }
+
+  return `${API_URL}/${imagePath}`;
 };
 
   const formatDate = (value: string) => {
