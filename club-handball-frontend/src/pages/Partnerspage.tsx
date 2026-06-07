@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import {Link} from "react-router";
 
 type Partner = {
   _id: string;
@@ -213,12 +214,12 @@ export default function PartnersPage() {
             </p>
           </div>
 
-          <a
-            href="/contact"
+          <Link
+            to="/contact"
             className="inline-flex bg-red-600 px-8 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700"
           >
             Nous contacter
-          </a>
+          </Link>
         </div>
       </section>
     </main>
