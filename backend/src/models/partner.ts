@@ -5,8 +5,9 @@ export interface IPartner extends Document {
   logo: string;
   url: string;
   order: number;
-  category:string;
+  category: "majeur" | "institutionnel" | "officiel" | "autres";
   isActive: boolean;
+  showOnHome: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,11 +30,12 @@ const partnerSchema = new Schema<IPartner>(
       required: true,
       trim: true,
     },
-    
-    category:{
-      type:String,
-      required:true,
 
+    category: {
+      type: String,
+      required: true,
+      enum: ["majeur", "institutionnel", "officiel", "autres"],
+      default: "officiel",
     },
 
     order: {
@@ -44,6 +46,11 @@ const partnerSchema = new Schema<IPartner>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    showOnHome: {
+      type: Boolean,
+      default: false,
     },
   },
   {

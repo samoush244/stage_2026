@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import API from "../services/api";
 
 type Partner = {
   _id: string;
@@ -7,13 +8,13 @@ type Partner = {
   url: string;
   category?: string;
   isActive?: boolean;
+  showOnHome?: boolean;
   order?: number;
 };
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
-  /\/$/,
-  ""
-);
+const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api")
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
 
 const partnerSections = [
   {
@@ -42,17 +43,8 @@ export default function PartnersPage() {
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/partners`);
-
-        if (!res.ok) {
-          throw new Error("Erreur lors du chargement des partenaires");
-        }
-
-        const data = await res.json();
-
-        console.log("Partenaires récupérés :", data);
-
-        setPartners(Array.isArray(data) ? data : []);
+        const res = await API.get("/partners");
+        setPartners(Array.isArray(res.data) ? res.data : []);
       } catch (error) {
         console.error("Erreur lors de la récupération des partenaires :", error);
         setError("Impossible de charger les partenaires.");
@@ -72,10 +64,10 @@ export default function PartnersPage() {
     }
 
     if (logo.startsWith("/")) {
-      return `${API_URL}${logo}`;
+      return `${BACKEND_URL}${logo}`;
     }
 
-    return `${API_URL}/${logo}`;
+    return `${BACKEND_URL}/${logo}`;
   };
 
   const normalizeCategory = (category?: string) => {

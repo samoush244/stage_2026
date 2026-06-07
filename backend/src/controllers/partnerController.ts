@@ -42,7 +42,15 @@ const toBoolean = (value: unknown, defaultValue = true) => {
     return value;
   }
 
-  return value === "true" || value === "Visible";
+  const normalizedValue = String(value).trim().toLowerCase();
+
+  return (
+    normalizedValue === "true" ||
+    normalizedValue === "1" ||
+    normalizedValue === "visible" ||
+    normalizedValue === "on" ||
+    normalizedValue === "oui"
+  );
 };
 
 export const getPartners = async (req: Request, res: Response) => {
@@ -78,7 +86,7 @@ export const getAllPartnersAdmin = async (req: Request, res: Response) => {
 
 export const createPartner = async (req: Request, res: Response) => {
   try {
-    const { name, url, category, order, isActive } = req.body;
+    const { name, url, category, order, isActive, showOnHome } = req.body;
 
     if (!name || !url || !category) {
       return res.status(400).json({
@@ -107,8 +115,9 @@ export const createPartner = async (req: Request, res: Response) => {
       url,
       category,
       logo: logoUrl,
-      order: order ? Number(order) : 0,
+      order: order !== undefined && order !== "" ? Number(order) : 0,
       isActive: toBoolean(isActive, true),
+      showOnHome: toBoolean(showOnHome, false),
     });
 
     res.status(201).json(partner);
@@ -123,7 +132,7 @@ export const createPartner = async (req: Request, res: Response) => {
 export const updatePartner = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, url, category, order, isActive } = req.body;
+    const { name, url, category, order, isActive, showOnHome } = req.body;
 
     const updateData: {
       name?: string;
@@ -132,15 +141,23 @@ export const updatePartner = async (req: Request, res: Response) => {
       logo?: string;
       order?: number;
       isActive?: boolean;
+      showOnHome?: boolean;
     } = {};
 
     if (name) updateData.name = name;
     if (url) updateData.url = url;
     if (category) updateData.category = category;
-    if (order !== undefined) updateData.order = Number(order);
+
+    if (order !== undefined && order !== "") {
+      updateData.order = Number(order);
+    }
 
     if (isActive !== undefined) {
       updateData.isActive = toBoolean(isActive, true);
+    }
+
+    if (showOnHome !== undefined) {
+      updateData.showOnHome = toBoolean(showOnHome, false);
     }
 
     const file = getUploadedFile(req);

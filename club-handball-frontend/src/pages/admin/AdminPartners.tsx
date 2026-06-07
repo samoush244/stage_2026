@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import API from "../../services/api";
 
-type PartnerCategory = "majeur" | "institutionnel" | "officiel";
+type PartnerCategory = "majeur" | "institutionnel" | "officiel" | "autres";
 
 type PartnerItem = {
   _id: string;
@@ -12,24 +12,44 @@ type PartnerItem = {
   order: number;
   category: PartnerCategory;
   isActive: boolean;
+  showOnHome: boolean;
 };
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
-  /\/$/,
-  ""
-);
+const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api")
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
 
 const categoryLabels: Record<PartnerCategory, string> = {
   majeur: "Majeur",
   institutionnel: "Institutionnel",
   officiel: "Officiel",
+  autres: "Autres",
 };
 
 const categoryStyles: Record<PartnerCategory, string> = {
   majeur: "bg-red-100 text-red-700",
   institutionnel: "bg-blue-100 text-blue-700",
   officiel: "bg-zinc-100 text-zinc-700",
+  autres: "bg-orange-100 text-orange-700",
 };
+
+function getLogoUrl(logo: string) {
+  if (!logo) return "";
+
+  if (
+    logo.startsWith("http://") ||
+    logo.startsWith("https://") ||
+    logo.startsWith("blob:")
+  ) {
+    return logo;
+  }
+
+  if (logo.startsWith("/")) {
+    return `${BACKEND_URL}${logo}`;
+  }
+
+  return `${BACKEND_URL}/${logo}`;
+}
 
 export default function AdminPartners() {
   const [partners, setPartners] = useState<PartnerItem[]>([]);
@@ -45,6 +65,7 @@ export default function AdminPartners() {
   const [order, setOrder] = useState(1);
   const [category, setCategory] = useState<PartnerCategory>("officiel");
   const [isActive, setIsActive] = useState(true);
+  const [showOnHome, setShowOnHome] = useState(false);
 
   useEffect(() => {
     fetchPartners();
@@ -53,7 +74,7 @@ export default function AdminPartners() {
   async function fetchPartners() {
     try {
       const res = await API.get("/partners/admin/all");
-      setPartners(res.data);
+      setPartners(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Erreur récupération partenaires admin :", error);
     } finally {
@@ -69,26 +90,9 @@ export default function AdminPartners() {
     setOrder(1);
     setCategory("officiel");
     setIsActive(true);
+    setShowOnHome(false);
     setEditingId(null);
   }
-
-function getLogoUrl(logo: string) {
-  if (!logo) return "";
-
-  if (
-    logo.startsWith("http://") ||
-    logo.startsWith("https://") ||
-    logo.startsWith("blob:")
-  ) {
-    return logo;
-  }
-
-  if (logo.startsWith("/")) {
-    return `${API_URL}${logo}`;
-  }
-
-  return `${API_URL}/${logo}`;
-}
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -101,6 +105,7 @@ function getLogoUrl(logo: string) {
       formData.append("category", category);
       formData.append("order", String(order));
       formData.append("isActive", String(isActive));
+      formData.append("showOnHome", String(showOnHome));
 
       if (logoFile) {
         formData.append("logo", logoFile);
@@ -121,7 +126,6 @@ function getLogoUrl(logo: string) {
       }
 
       await fetchPartners();
-
       resetForm();
       setShowForm(false);
     } catch (error) {
@@ -135,16 +139,19 @@ function getLogoUrl(logo: string) {
     setUrl(partner.url);
     setLogoPreview(getLogoUrl(partner.logo));
     setLogoFile(null);
-    setOrder(partner.order);
-    setCategory(partner.category);
-    setIsActive(partner.isActive);
+    setOrder(partner.order ?? 1);
+    setCategory(partner.category ?? "officiel");
+    setIsActive(partner.isActive !== false);
+    setShowOnHome(partner.showOnHome === true);
     setShowForm(true);
   }
 
   async function handleDelete(id: string) {
     try {
       await API.delete(`/partners/${id}`);
-      setPartners(partners.filter((partner) => partner._id !== id));
+      setPartners((currentPartners) =>
+        currentPartners.filter((partner) => partner._id !== id)
+      );
     } catch (error) {
       console.error("Erreur suppression partenaire :", error);
     }
@@ -160,14 +167,14 @@ function getLogoUrl(logo: string) {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900">
             Gestion des partenaires
           </h1>
 
           <p className="mt-2 text-zinc-600">
-            Gérer les logos partenaires affichés sur le site.
+            Gérer les logos partenaires affichés sur le site et sur l’accueil.
           </p>
         </div>
 
@@ -215,6 +222,7 @@ function getLogoUrl(logo: string) {
               <option value="majeur">Partenaire majeur</option>
               <option value="institutionnel">Partenaire institutionnel</option>
               <option value="officiel">Partenaire officiel</option>
+              <option value="autres">Autre partenaire</option>
             </select>
 
             <input
@@ -224,6 +232,24 @@ function getLogoUrl(logo: string) {
               className="rounded-lg border border-zinc-300 px-4 py-3"
               placeholder="Ordre d’affichage"
             />
+
+            <select
+              value={isActive ? "true" : "false"}
+              onChange={(e) => setIsActive(e.target.value === "true")}
+              className="rounded-lg border border-zinc-300 px-4 py-3"
+            >
+              <option value="true">Visible sur le site</option>
+              <option value="false">Masqué du site</option>
+            </select>
+
+            <select
+              value={showOnHome ? "true" : "false"}
+              onChange={(e) => setShowOnHome(e.target.value === "true")}
+              className="rounded-lg border border-zinc-300 px-4 py-3"
+            >
+              <option value="false">Ne pas afficher sur l’accueil</option>
+              <option value="true">Afficher sur l’accueil</option>
+            </select>
 
             <input
               type="file"
@@ -236,17 +262,8 @@ function getLogoUrl(logo: string) {
                   setLogoPreview(URL.createObjectURL(file));
                 }
               }}
-              className="rounded-lg border border-zinc-300 px-4 py-3"
+              className="rounded-lg border border-zinc-300 px-4 py-3 md:col-span-2"
             />
-
-            <select
-              value={isActive ? "true" : "false"}
-              onChange={(e) => setIsActive(e.target.value === "true")}
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-            >
-              <option value="true">Visible</option>
-              <option value="false">Masqué</option>
-            </select>
 
             {logoPreview && (
               <div className="md:col-span-2">
@@ -285,107 +302,106 @@ function getLogoUrl(logo: string) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow">
-        <table className="w-full">
-          <thead className="bg-zinc-100">
+      <div className="overflow-x-auto rounded-2xl bg-white shadow">
+        <table className="w-full min-w-[1100px] border-collapse">
+          <thead>
             <tr className="text-left text-sm text-zinc-600">
               <th className="px-6 py-4">Logo</th>
-              <th className="px-6 py-4">Partenaire</th>
+              <th className="px-6 py-4">Nom</th>
               <th className="px-6 py-4">Catégorie</th>
-              <th className="px-6 py-4">Site web</th>
               <th className="px-6 py-4">Ordre</th>
+              <th className="px-6 py-4">Site</th>
               <th className="px-6 py-4">Statut</th>
+              <th className="px-6 py-4">Accueil</th>
               <th className="px-6 py-4">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {[...partners]
-              .sort((a, b) => {
-              const categoryA = a.category || "Autres";
-              const categoryB = b.category || "Autres";
+            {partners.map((partner) => (
+              <tr key={partner._id} className="border-t border-zinc-100">
+                <td className="px-6 py-4">
+                  {partner.logo ? (
+                    <img
+                      src={getLogoUrl(partner.logo)}
+                      alt={partner.name}
+                      className="h-12 w-24 object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm text-zinc-400">Aucun logo</span>
+                  )}
+                </td>
 
-                if (categoryA !== categoryB) {
-                  return categoryA.localeCompare(categoryB, "fr", {
-                  sensitivity: "base",
-                    });
-                  }
-                  return (a.order ?? 999) - (b.order ?? 999);
-                })
-              .map((partner) => (
-                <tr key={partner._id} className="border-t border-zinc-200">
-                  <td className="px-6 py-4">
-                    {partner.logo ? (
-                      <img
-                        src={getLogoUrl(partner.logo)}
-                        alt={partner.name}
-                        className="h-16 w-28 object-contain"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-28 items-center justify-center rounded-lg bg-zinc-200 text-xs text-zinc-500">
-                        Aucun logo
-                      </div>
-                    )}
-                  </td>
+                <td className="px-6 py-4 font-medium text-zinc-900">
+                  {partner.name}
+                </td>
 
-                  <td className="px-6 py-4 font-medium text-zinc-800">
-                    {partner.name}
-                  </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      categoryStyles[partner.category] ?? categoryStyles.autres
+                    }`}
+                  >
+                    {categoryLabels[partner.category] ?? "Autres"}
+                  </span>
+                </td>
 
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${categoryStyles[partner.category]}`}
-                    >
-                      {categoryLabels[partner.category]}
-                    </span>
-                  </td>
+                <td className="px-6 py-4 text-zinc-600">{partner.order}</td>
 
-                  <td className="px-6 py-4">
-                    <a
-                      href={partner.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                <td className="px-6 py-4">
+                  <a
+                    href={partner.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Voir le site
+                  </a>
+                </td>
+
+                <td className="px-6 py-4">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      partner.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-zinc-100 text-zinc-600"
+                    }`}
+                  >
+                    {partner.isActive ? "Visible" : "Masqué"}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      partner.showOnHome
+                        ? "bg-red-100 text-red-700"
+                        : "bg-zinc-100 text-zinc-600"
+                    }`}
+                  >
+                    {partner.showOnHome ? "Oui" : "Non"}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleEdit(partner)}
                       className="text-blue-600 hover:underline"
                     >
-                      Voir le site
-                    </a>
-                  </td>
+                      Modifier
+                    </button>
 
-                  <td className="px-6 py-4 text-zinc-600">
-                    {partner.order}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        partner.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-zinc-100 text-zinc-600"
-                      }`}
+                    <button
+                      onClick={() => handleDelete(partner._id)}
+                      className="text-red-600 hover:underline"
                     >
-                      {partner.isActive ? "Visible" : "Masqué"}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleEdit(partner)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Modifier
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(partner._id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      Supprimer
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
