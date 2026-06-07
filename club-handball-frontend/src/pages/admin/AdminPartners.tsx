@@ -302,8 +302,8 @@ export default function AdminPartners() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-white shadow">
-        <table className="w-full min-w-[1100px] border-collapse">
+      <div className="w-full max-w-full overflow-x-auto rounded-2xl bg-white shadow">
+        <table className="w-full min-w-[900px] table-fixed border-collapse">
           <thead>
             <tr className="text-left text-sm text-zinc-600">
               <th className="px-6 py-4">Logo</th>
