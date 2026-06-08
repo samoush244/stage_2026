@@ -8,9 +8,12 @@ type PublicTeam = {
   slug?: string;
   image?: string | null;
   imageUrl?: string | null;
+  category?: string;
+  level?: string;
+  teamType?: string;
 };
 
-type PublicPlayer = {
+type PublicMember = {
   _id: string;
   memberType?: "player" | "staff";
   firstName?: string;
@@ -19,18 +22,20 @@ type PublicPlayer = {
   age?: number | null;
   photo?: string | null;
   photoUrl?: string | null;
+  imageUrl?: string | null;
   number?: number | null;
   jerseyNumber?: number | null;
   position?: string | null;
+  displayOrder?: number;
 };
 
-type PublicRosterResponse = {
+type RosterState = {
   team: PublicTeam | null;
-  players: PublicPlayer[];
-  staff: PublicPlayer[];
+  players: PublicMember[];
+  staff: PublicMember[];
 };
 
-const positionOrder = [
+const playerPositionOrder = [
   "Gardien",
   "Gardienne",
   "Ailier gauche",
@@ -44,10 +49,22 @@ const positionOrder = [
   "Non renseigné",
 ];
 
+const staffPositionOrder = [
+  "Entraîneur principal",
+  "Entraîneur adjoint",
+  "Préparateur physique",
+  "Accompagnateur",
+  "Responsable d'équipe",
+  "Kinésithérapeute",
+  "Médecin",
+  "Autre",
+  "Non renseigné",
+];
+
 const defaultPlayerImage = "/images/default-player.png";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/$/, "");
 
 function getBackendImageUrl(image?: string | null) {
   if (!image || image.trim() === "") return null;
@@ -56,7 +73,11 @@ function getBackendImageUrl(image?: string | null) {
     return image;
   }
 
-  return `${SERVER_URL}${image.startsWith("/") ? image : `/${image}`}`;
+  if (image.startsWith("/")) {
+    return `${SERVER_URL}${image}`;
+  }
+
+  return `${SERVER_URL}/${image}`;
 }
 
 function getAgeFromBirthDate(birthDate?: string) {
@@ -80,7 +101,7 @@ function getAgeFromBirthDate(birthDate?: string) {
   return age;
 }
 
-function getPlayerNumber(player: PublicPlayer) {
+function getPlayerNumber(player: PublicMember) {
   if (player.number !== null && player.number !== undefined) {
     return player.number;
   }
@@ -92,36 +113,71 @@ function getPlayerNumber(player: PublicPlayer) {
   return null;
 }
 
-function getPlayerImage(player: PublicPlayer) {
-  if (player.photoUrl && player.photoUrl.trim() !== "") {
-    return getBackendImageUrl(player.photoUrl) || defaultPlayerImage;
+function getMemberImage(member: PublicMember) {
+  if (member.photoUrl && member.photoUrl.trim() !== "") {
+    return getBackendImageUrl(member.photoUrl) || defaultPlayerImage;
   }
 
-  if (player.photo && player.photo.trim() !== "") {
-    return getBackendImageUrl(player.photo) || defaultPlayerImage;
+  if (member.photo && member.photo.trim() !== "") {
+    return getBackendImageUrl(member.photo) || defaultPlayerImage;
+  }
+
+  if (member.imageUrl && member.imageUrl.trim() !== "") {
+    return getBackendImageUrl(member.imageUrl) || defaultPlayerImage;
   }
 
   return defaultPlayerImage;
 }
 
-function groupPlayersByPosition(players: PublicPlayer[]) {
-  return players.reduce<Record<string, PublicPlayer[]>>((groups, player) => {
-    const position = player.position?.trim() || "Non renseigné";
+function groupMembersByPosition(members: PublicMember[]) {
+  return members.reduce<Record<string, PublicMember[]>>((groups, member) => {
+    const position = member.position?.trim() || "Non renseigné";
 
     if (!groups[position]) {
       groups[position] = [];
     }
 
-    groups[position].push(player);
+    groups[position].push(member);
 
     return groups;
   }, {});
 }
 
+function sortPositions(positions: string[], order: string[]) {
+  return positions.sort((a, b) => {
+    const indexA = order.indexOf(a);
+    const indexB = order.indexOf(b);
+
+    if (indexA === -1 && indexB === -1) {
+      return a.localeCompare(b);
+    }
+
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+
+    return indexA - indexB;
+  });
+}
+
+function sortMembers(members: PublicMember[]) {
+  return [...members].sort((a, b) => {
+    const orderA = a.displayOrder ?? 0;
+    const orderB = b.displayOrder ?? 0;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    return `${a.lastName || ""} ${a.firstName || ""}`.localeCompare(
+      `${b.lastName || ""} ${b.firstName || ""}`
+    );
+  });
+}
+
 export default function PublicRosterPage() {
   const { teamSlug } = useParams();
 
-  const [roster, setRoster] = useState<PublicRosterResponse>({
+  const [roster, setRoster] = useState<RosterState>({
     team: null,
     players: [],
     staff: [],
@@ -151,9 +207,7 @@ export default function PublicRosterPage() {
           players: Array.isArray(response.data.players)
             ? response.data.players
             : [],
-          staff: Array.isArray(response.data.staff)
-            ? response.data.staff
-            : [],
+          staff: Array.isArray(response.data.staff) ? response.data.staff : [],
         });
       } catch (err) {
         console.error("Erreur récupération effectif :", err);
@@ -173,28 +227,39 @@ export default function PublicRosterPage() {
     fetchRoster();
   }, [teamSlug]);
 
-  const players = Array.isArray(roster.players) ? roster.players : [];
-  const staff = Array.isArray(roster.staff) ? roster.staff : [];
+  const rawPlayers = Array.isArray(roster.players) ? roster.players : [];
+  const rawStaff = Array.isArray(roster.staff) ? roster.staff : [];
+
+  const players = useMemo(() => {
+    return sortMembers(
+      rawPlayers.filter((member) => member.memberType !== "staff")
+    );
+  }, [rawPlayers]);
+
+  const staff = useMemo(() => {
+    const separatedStaff =
+      rawStaff.length > 0
+        ? rawStaff
+        : rawPlayers.filter((member) => member.memberType === "staff");
+
+    return sortMembers(separatedStaff);
+  }, [rawStaff, rawPlayers]);
 
   const groupedPlayers = useMemo(() => {
-    return groupPlayersByPosition(players);
+    return groupMembersByPosition(players);
   }, [players]);
 
-  const sortedPositions = useMemo(() => {
-    return Object.keys(groupedPlayers).sort((a, b) => {
-      const indexA = positionOrder.indexOf(a);
-      const indexB = positionOrder.indexOf(b);
-
-      if (indexA === -1 && indexB === -1) {
-        return a.localeCompare(b);
-      }
-
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-
-      return indexA - indexB;
-    });
+  const sortedPlayerPositions = useMemo(() => {
+    return sortPositions(Object.keys(groupedPlayers), playerPositionOrder);
   }, [groupedPlayers]);
+
+  const groupedStaff = useMemo(() => {
+    return groupMembersByPosition(staff);
+  }, [staff]);
+
+  const sortedStaffPositions = useMemo(() => {
+    return sortPositions(Object.keys(groupedStaff), staffPositionOrder);
+  }, [groupedStaff]);
 
   const teamImageUrl = getBackendImageUrl(
     roster.team?.imageUrl || roster.team?.image
@@ -202,84 +267,76 @@ export default function PublicRosterPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-neutral-950 px-6 py-24 text-white">
+      <main className="min-h-screen bg-black px-6 py-24 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
-            Effectif
-          </p>
-          <h1 className="mt-4 text-4xl font-black uppercase">
+          <div className="h-2 w-24 bg-red-600" />
+
+          <p className="mt-8 text-lg font-bold uppercase tracking-wide">
             Chargement de l'effectif...
-          </h1>
+          </p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-white text-black">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-black px-6 py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(220,38,38,0.25),transparent_35%)]" />
+      <section className="bg-black px-6 py-16 text-white">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-2 bg-red-600" />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1fr_520px]">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.4em] text-red-500">
-              Effectif officiel
+            <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
+              Effectif
             </p>
-
-            <h1 className="mt-5 text-5xl font-black uppercase leading-none md:text-7xl">
-              {roster.team?.name || "Effectif"}
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">
-              Retrouvez les joueurs, leurs postes, leurs numéros et le staff de
-              l’équipe.
-            </p>
-
-            <div className="mt-10 grid max-w-xl grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p className="text-4xl font-black text-red-500">
-                  {players.length}
-                </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-400">
-                  Joueurs
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p className="text-4xl font-black text-red-500">
-                  {staff.length}
-                </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-400">
-                  Staff
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p className="text-4xl font-black text-red-500">
-                  {sortedPositions.length}
-                </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-400">
-                  Postes
-                </p>
-              </div>
-            </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-3 rounded-[2rem] bg-red-600/30 blur-2xl" />
+          <div className="mt-8 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <h1 className="text-5xl font-black uppercase leading-none md:text-7xl">
+                {roster.team?.name || "Effectif"}
+              </h1>
 
-            <div className="relative overflow-hidden rounded-[2rem] border border-red-600/40 bg-neutral-900 p-3 shadow-2xl">
+              <p className="mt-6 max-w-2xl text-lg text-zinc-300">
+                Retrouvez les joueurs de l'équipe, le staff, les postes, les
+                numéros et les informations principales.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                {roster.team?.level && (
+                  <span className="rounded-full border border-white/20 px-5 py-2 text-sm font-bold uppercase text-white">
+                    {roster.team.level}
+                  </span>
+                )}
+
+                {roster.team?.category && (
+                  <span className="rounded-full border border-white/20 px-5 py-2 text-sm font-bold uppercase text-white">
+                    {roster.team.category}
+                  </span>
+                )}
+
+                <span className="rounded-full bg-red-600 px-5 py-2 text-sm font-black uppercase text-white">
+                  {players.length} joueur{players.length > 1 ? "s" : ""}
+                </span>
+
+                <span className="rounded-full bg-white px-5 py-2 text-sm font-black uppercase text-black">
+                  {staff.length} staff
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-zinc-950 p-3 shadow-2xl">
               {teamImageUrl ? (
                 <img
                   src={teamImageUrl}
                   alt={roster.team?.name || "Photo de l'équipe"}
-                  className="h-[360px] w-full rounded-[1.5rem] object-cover"
+                  className="max-h-[620px] w-full rounded-[1.5rem] object-contain"
                 />
               ) : (
-                <div className="flex h-[360px] items-center justify-center rounded-[1.5rem] bg-neutral-800">
-                  <p className="text-xl font-black uppercase text-zinc-500">
-                    Photo équipe
+                <div className="flex min-h-[360px] items-center justify-center rounded-[1.5rem] bg-zinc-900">
+                  <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                    Photo d'équipe à venir
                   </p>
                 </div>
               )}
@@ -288,52 +345,56 @@ export default function PublicRosterPage() {
         </div>
       </section>
 
-      {/* MESSAGE ERREUR */}
-      {error && (
-        <section className="px-6 pt-12">
-          <div className="mx-auto max-w-7xl rounded-xl border border-red-500/40 bg-red-950/40 p-6 text-red-200">
-            {error}
-          </div>
-        </section>
-      )}
-
       {/* JOUEURS */}
-      <section className="px-6 py-20">
+      <section className="bg-white px-6 py-20">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-14 flex items-end justify-between gap-6">
+          {error && (
+            <div className="mb-10 rounded-xl border border-red-200 bg-red-50 p-6 font-semibold text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-                Les joueurs
+              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-600">
+                Groupe sportif
               </p>
 
               <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">
-                Groupe sportif
+                Les joueurs
               </h2>
             </div>
           </div>
 
           {players.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center">
-              <h2 className="text-2xl font-black uppercase">
+            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-10 text-center">
+              <h3 className="text-2xl font-black uppercase">
                 Aucun joueur affiché
-              </h2>
+              </h3>
 
-              <p className="mt-3 text-zinc-400">
+              <p className="mt-3 text-zinc-600">
                 L'effectif de cette équipe n'est pas encore disponible.
               </p>
             </div>
           ) : (
             <div className="space-y-20">
-              {sortedPositions.map((position) => (
+              {sortedPlayerPositions.map((position) => (
                 <section key={position}>
-                  <div className="mb-8 flex items-center gap-5">
-                    <h3 className="text-2xl font-black uppercase text-white md:text-3xl">
-                      {position}
-                    </h3>
-                    <div className="h-px flex-1 bg-red-600/50" />
+                  <div className="mb-8 flex items-center gap-4">
+                    <div className="h-12 w-2 bg-red-600" />
+
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
+                        Poste
+                      </p>
+
+                      <h3 className="text-3xl font-black uppercase">
+                        {position}
+                      </h3>
+                    </div>
                   </div>
 
-                  <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {groupedPlayers[position].map((player) => {
                       const number = getPlayerNumber(player);
 
@@ -345,46 +406,41 @@ export default function PublicRosterPage() {
                       return (
                         <article
                           key={player._id}
-                          className="group overflow-hidden rounded-3xl border border-white/10 bg-neutral-900 shadow-xl transition duration-300 hover:-translate-y-2 hover:border-red-600/70"
+                          className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
-                          <div className="relative h-80 overflow-hidden bg-neutral-800">
+                          <div className="relative h-80 overflow-hidden bg-zinc-100">
+                            <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
+
                             <img
-                              src={getPlayerImage(player)}
+                              src={getMemberImage(player)}
                               alt={`${player.firstName || ""} ${
                                 player.lastName || ""
                               }`}
-                              className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                             />
 
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-
                             {number !== null && (
-                              <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl font-black text-white shadow-lg">
+                              <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
                                 {number}
                               </div>
                             )}
-
-                            <div className="absolute bottom-4 left-4 right-4">
-                              <p className="text-xs font-black uppercase tracking-[0.25em] text-red-400">
-                                {player.position || "Non renseigné"}
-                              </p>
-                            </div>
                           </div>
 
                           <div className="p-6">
-                            <h3 className="text-2xl font-black uppercase leading-tight text-white">
+                            <h4 className="text-2xl font-black uppercase leading-tight">
                               {player.lastName || ""}
-                            </h3>
+                            </h4>
 
-                            <p className="mt-1 text-xl font-bold text-red-500">
+                            <p className="text-lg font-bold text-red-600">
                               {player.firstName || ""}
                             </p>
 
-                            <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-400">
-                              <span>Âge</span>
-                              <span className="text-white">
-                                {age !== null ? `${age} ans` : "N/R"}
-                              </span>
+                            <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
+                              <p>
+                                Poste : {player.position || "Non renseigné"}
+                              </p>
+
+                              {age !== null && <p>Âge : {age} ans</p>}
                             </div>
                           </div>
                         </article>
@@ -398,64 +454,83 @@ export default function PublicRosterPage() {
         </div>
       </section>
 
-      {/* STAFF HORIZONTAL */}
-      <section className="bg-black px-6 py-20">
+      {/* STAFF */}
+      <section className="bg-zinc-950 px-6 py-20 text-white">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-12">
-            <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-              Encadrement
-            </p>
+          <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
+                Encadrement
+              </p>
 
-            <h2 className="mt-3 text-4xl font-black uppercase text-white md:text-5xl">
-              Staff technique
-            </h2>
+              <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">
+                Le staff
+              </h2>
+            </div>
           </div>
 
           {staff.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center">
-              <h3 className="text-2xl font-black uppercase text-white">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-10 text-center">
+              <h3 className="text-2xl font-black uppercase">
                 Aucun membre du staff affiché
               </h3>
 
               <p className="mt-3 text-zinc-400">
-                Le staff de cette équipe n'est pas encore disponible.
+                Le staff apparaîtra ici dès qu'il sera ajouté depuis
+                l'administration.
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-2">
-              {staff.map((member) => (
-                <article
-                  key={member._id}
-                  className="group flex overflow-hidden rounded-3xl border border-white/10 bg-neutral-900 transition duration-300 hover:border-red-600/70"
-                >
-                  <div className="h-44 w-36 shrink-0 overflow-hidden bg-neutral-800 sm:h-52 sm:w-44">
-                    <img
-                      src={getPlayerImage(member)}
-                      alt={`${member.firstName || ""} ${member.lastName || ""}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                    />
-                  </div>
+            <div className="space-y-14">
+              {sortedStaffPositions.map((position) => (
+                <section key={position}>
+                  <div className="mb-8 flex items-center gap-4">
+                    <div className="h-10 w-2 bg-red-600" />
 
-                  <div className="flex flex-1 flex-col justify-center p-6">
-                    <p className="mb-3 w-fit rounded-full bg-red-600 px-4 py-1 text-xs font-black uppercase tracking-widest text-white">
-                      {member.position || "Staff"}
-                    </p>
-
-                    <h3 className="text-2xl font-black uppercase leading-tight text-white">
-                      {member.lastName || ""}
+                    <h3 className="text-2xl font-black uppercase">
+                      {position}
                     </h3>
-
-                    <p className="mt-1 text-xl font-bold text-red-500">
-                      {member.firstName || ""}
-                    </p>
-
-                    <div className="mt-5 h-px w-full bg-white/10" />
-
-                    <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-                      Membre de l’encadrement de l’équipe.
-                    </p>
                   </div>
-                </article>
+
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {groupedStaff[position].map((member) => (
+                      <article
+                        key={member._id}
+                        className="group rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 transition duration-300 hover:-translate-y-1 hover:border-red-600/60 hover:bg-white/[0.07]"
+                      >
+                        <div className="flex gap-5">
+                          <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
+                            <img
+                              src={getMemberImage(member)}
+                              alt={`${member.firstName || ""} ${
+                                member.lastName || ""
+                              }`}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            />
+                          </div>
+
+                          <div className="flex min-w-0 flex-1 flex-col justify-center">
+                            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-500">
+                              Staff
+                            </p>
+
+                            <h4 className="mt-2 text-xl font-black uppercase leading-tight text-white">
+                              {member.lastName || ""}
+                            </h4>
+
+                            <p className="text-lg font-bold text-zinc-300">
+                              {member.firstName || ""}
+                            </p>
+
+                            <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+                              {member.position || "Fonction non renseignée"}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
