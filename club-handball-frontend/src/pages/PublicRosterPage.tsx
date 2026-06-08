@@ -323,18 +323,6 @@ export default function PublicRosterPage() {
             </div>
           )}
 
-          <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-600">
-                Groupe sportif
-              </p>
-
-              <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">
-                Les joueurs
-              </h2>
-            </div>
-          </div>
-
           {players.length === 0 ? (
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-10 text-center">
               <h3 className="text-2xl font-black uppercase">
