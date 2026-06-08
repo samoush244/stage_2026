@@ -283,67 +283,36 @@ export default function PublicRosterPage() {
     <main className="min-h-screen bg-white text-black">
       {/* HERO */}
       <section className="bg-black px-6 py-16 text-white">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-2 bg-red-600" />
+  <div className="mx-auto max-w-7xl">
+    <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
+      Effectif
+    </p>
 
-            <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-              Effectif
-            </p>
-          </div>
+    <h1 className="mt-6 text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
+      {roster.team?.name || "Effectif"}
+    </h1>
 
-          <div className="mt-8 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-            <div>
-              <h1 className="text-5xl font-black uppercase leading-none md:text-7xl">
-                {roster.team?.name || "Effectif"}
-              </h1>
+    <p className="mt-6 max-w-4xl text-lg leading-relaxed text-zinc-300">
+      Retrouvez les joueurs de l'équipe, leurs postes, numéros et informations principales.
+    </p>
 
-              <p className="mt-6 max-w-2xl text-lg text-zinc-300">
-                Retrouvez les joueurs de l'équipe, le staff, les postes, les
-                numéros et les informations principales.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                {roster.team?.level && (
-                  <span className="rounded-full border border-white/20 px-5 py-2 text-sm font-bold uppercase text-white">
-                    {roster.team.level}
-                  </span>
-                )}
-
-                {roster.team?.category && (
-                  <span className="rounded-full border border-white/20 px-5 py-2 text-sm font-bold uppercase text-white">
-                    {roster.team.category}
-                  </span>
-                )}
-
-                <span className="rounded-full bg-red-600 px-5 py-2 text-sm font-black uppercase text-white">
-                  {players.length} joueur{players.length > 1 ? "s" : ""}
-                </span>
-
-                <span className="rounded-full bg-white px-5 py-2 text-sm font-black uppercase text-black">
-                  {staff.length} staff
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-zinc-950 p-3 shadow-2xl">
-              {teamImageUrl ? (
-                <img
-                  src={teamImageUrl}
-                  alt={roster.team?.name || "Photo de l'équipe"}
-                  className="max-h-[620px] w-full rounded-[1.5rem] object-contain"
-                />
-              ) : (
-                <div className="flex min-h-[360px] items-center justify-center rounded-[1.5rem] bg-zinc-900">
-                  <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-                    Photo d'équipe à venir
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="mt-4 w-full overflow-hidden bg-black">
+      {teamImageUrl ? (
+        <img
+          src={teamImageUrl}
+          alt={roster.team?.name || "Photo de l'équipe"}
+          className="w-full object-contain"
+        />
+      ) : (
+        <div className="flex min-h-[420px] items-center justify-center bg-zinc-900">
+          <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+            Photo d'équipe à venir
+          </p>
         </div>
-      </section>
+      )}
+    </div>
+  </div>
+</section>
 
       {/* JOUEURS */}
       <section className="bg-white px-6 py-20">
