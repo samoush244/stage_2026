@@ -1,7 +1,13 @@
 import nodemailer from "nodemailer";
 
-
 const getTransporter = () => {
+  console.log("SMTP_HOST:", process.env.SMTP_HOST);
+  console.log("SMTP_PORT:", process.env.SMTP_PORT);
+  console.log("SMTP_SECURE:", process.env.SMTP_SECURE);
+  console.log("SMTP_USER:", process.env.SMTP_USER);
+  console.log("SMTP_PASS présent:", !!process.env.SMTP_PASS);
+  console.log("MAIL_FROM:", process.env.MAIL_FROM);
+
   if (
     !process.env.SMTP_HOST ||
     !process.env.SMTP_USER ||
@@ -27,17 +33,18 @@ export const sendWelcomeEmail = async (
 ) => {
   const transporter = getTransporter();
 
-  await transporter.sendMail({
-    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+  await transporter.verify();
+  console.log("Connexion SMTP validée");
+
+  const result = await transporter.sendMail({
+    from: process.env.MAIL_FROM || `"Red Swans" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Bienvenue dans la newsletter des Red Swans",
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <h2>Bienvenue dans la famille Red Army !</h2>
 
-        <p>
-          Merci pour votre inscription à la newsletter du club.
-        </p>
+        <p>Merci pour votre inscription à la newsletter du club.</p>
 
         <p>
           Vous recevrez désormais nos actualités, annonces importantes,
@@ -68,9 +75,9 @@ Bienvenue dans la famille Red Swans !
 Merci pour votre inscription à la newsletter du club.
 Vous recevrez désormais nos actualités, annonces importantes, prochains matchs, événements et informations du club.
 
-Vous recevez cet email car vous avez accepté de recevoir les actualités du club via notre formulaire newsletter.
-
 Se désinscrire : ${unsubscribeUrl}
     `,
   });
+
+  console.log("Email envoyé :", result.messageId);
 };
