@@ -1,3 +1,4 @@
+import {Link} from "react-router";
 export default function Communaute() {
   return (
     <main className="min-h-screen bg-white text-zinc-950">
@@ -307,68 +308,35 @@ export default function Communaute() {
         </div>
       </section>
 
-      {/* FORMULAIRE / CTA */}
+     {/* CTA CONTACT */}
       <section className="bg-zinc-950 py-16 text-white">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="mb-10 text-center">
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-red-500">
-              Nous rejoindre
-            </p>
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-red-500">
+            Nous rejoindre
+          </p>
 
-            <h2 className="text-4xl font-black uppercase md:text-5xl">
-              Envie de participer à la vie du club ?
-            </h2>
+          <h2 className="text-4xl font-black uppercase md:text-5xl">
+            Envie de participer à la vie du club ?
+          </h2>
 
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-zinc-300">
-              Que ce soit pour rejoindre la Red Army, devenir bénévole ou simplement proposer
-              ton aide, tu peux laisser un message au club.
-            </p>
-          </div>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
+            Que ce soit pour rejoindre la Red Army, devenir bénévole ou proposer ton aide
+            ponctuellement, tu peux envoyer un message au club via le formulaire de contact.
+          </p>
 
-          <form className="grid gap-5 bg-white p-8 text-zinc-950 shadow-2xl">
-            <div className="grid gap-5 md:grid-cols-2">
-              <input
-                type="text"
-                placeholder="Nom"
-                className="border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
-              />
+        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link to="/contact"
+          className="bg-red-600 px-8 py-4 font-black uppercase tracking-wide text-white transition hover:bg-white hover:text-zinc-950">
+              Envoyer une demande
+          </Link>
 
-              <input
-                type="text"
-                placeholder="Prénom"
-                className="border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
-              />
-            </div>
-
-            <input
-              type="email"
-              placeholder="Adresse e-mail"
-              className="border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
-            />
-
-            <select className="border border-zinc-300 px-4 py-3 outline-none focus:border-red-600">
-              <option>Je souhaite...</option>
-              <option>Rejoindre la Red Army</option>
-              <option>Devenir bénévole</option>
-              <option>Aider ponctuellement le club</option>
-              <option>Obtenir plus d’informations</option>
-            </select>
-
-            <textarea
-              placeholder="Message"
-              rows={5}
-              className="border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
-            />
-
-            <button
-              type="submit"
-              className="mt-2 bg-red-600 px-8 py-4 font-black uppercase tracking-wide text-white transition hover:bg-zinc-950"
-            >
-              Envoyer ma demande
-            </button>
-          </form>
-        </div>
-      </section>
+          <Link to="/contact"
+        className="border-2 border-white px-8 py-4 font-black uppercase tracking-wide text-white transition hover:bg-white hover:text-zinc-950">
+          Contacter le club
+        </Link>
+      </div>
+      </div>
+  </section>
     </main>
   );
 }

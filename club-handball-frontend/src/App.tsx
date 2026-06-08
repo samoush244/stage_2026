@@ -75,23 +75,23 @@ function App() {
 
         {/* Équipes premières */}
         <Route
-          path="/n3-masculine/effectif"
-          element={<PublicRosterPage teamSlug="nationale-3-masculine" />}
+          path="/:teamSlug/effectif"
+          element={<PublicRosterPage  />}
         />
 
         <Route
-          path="/n3-feminine/effectif"
-          element={<PublicRosterPage teamSlug="nationale-3-feminine" />}
+          path="/:teamSlug/effectif"
+          element={<PublicRosterPage />}
         />
 
         <Route
-          path="/n3-masculine/calendrier-resultats"
-          element={<CalendrierResultatsPage team="masculin" />}
+          path="/:teamSlugcalendrier-resultats"
+          element={<CalendrierResultatsPage />}
         />
 
         <Route
-          path="/n3-feminine/calendrier-resultats"
-          element={<CalendrierResultatsPage team="feminin" />}
+          path="/:teamSlug/calendrier-resultats"
+          element={<CalendrierResultatsPage  />}
         />
 
         {/* Autres équipes */}

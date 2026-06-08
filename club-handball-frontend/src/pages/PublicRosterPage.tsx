@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import {useParams} from "react-router";
 import {
   getPublicRosterByTeamSlug,
   type PublicPlayer,
@@ -6,7 +7,7 @@ import {
 } from "../services/publicPlayerService";
 
 type PublicRosterPageProps = {
-  teamSlug: string;
+  teamSlug?: string;
 };
 
 type RosterTeam = NonNullable<PublicRosterResponse["team"]> & {
@@ -168,7 +169,11 @@ function sortMembers(members: PublicMember[]) {
   });
 }
 
-export default function PublicRosterPage({ teamSlug }: PublicRosterPageProps) {
+export default function PublicRosterPage({ teamSlug: propTeamSlug }: PublicRosterPageProps) {
+  const { teamSlug: urlTeamSlug } = useParams<{ teamSlug: string }>();
+
+  const teamSlug = propTeamSlug || urlTeamSlug;
+
   const [roster, setRoster] = useState<RosterState>({
     team: null,
     players: [],
@@ -178,38 +183,44 @@ export default function PublicRosterPage({ teamSlug }: PublicRosterPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchRoster = async () => {
-      try {
-        setLoading(true);
-        setError("");
+useEffect(() => {
+  const fetchRoster = async () => {
+    if (!teamSlug) {
+      setLoading(false);
+      setError("Aucune équipe sélectionnée.");
+      return;
+    }
 
-        const data = (await getPublicRosterByTeamSlug(
-          teamSlug
-        )) as unknown as RosterState;
+    try {
+      setLoading(true);
+      setError("");
 
-        setRoster({
-          team: data.team,
-          players: Array.isArray(data.players) ? data.players : [],
-          staff: Array.isArray(data.staff) ? data.staff : [],
-        });
-      } catch (err) {
-        console.error("Erreur récupération effectif :", err);
+      const data = (await getPublicRosterByTeamSlug(
+        teamSlug
+      )) as unknown as RosterState;
 
-        setRoster({
-          team: null,
-          players: [],
-          staff: [],
-        });
+      setRoster({
+        team: data.team,
+        players: Array.isArray(data.players) ? data.players : [],
+        staff: Array.isArray(data.staff) ? data.staff : [],
+      });
+    } catch (err) {
+      console.error("Erreur récupération effectif :", err);
 
-        setError("Impossible de récupérer l'effectif pour le moment.");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setRoster({
+        team: null,
+        players: [],
+        staff: [],
+      });
 
-    fetchRoster();
-  }, [teamSlug]);
+      setError("Impossible de récupérer l'effectif pour le moment.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRoster();
+}, [teamSlug]);
 
   const rawPlayers = Array.isArray(roster.players) ? roster.players : [];
   const rawStaff = Array.isArray(roster.staff) ? roster.staff : [];
