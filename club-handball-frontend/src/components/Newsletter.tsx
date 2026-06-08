@@ -3,17 +3,21 @@ import { useLocation } from "react-router";
 
 // ============================================================
 // CONFIGURATION
-// À adapter selon votre backend :
-// - Remplacez l'URL de l'API par votre endpoint réel
-// - La fonction subscribeToNewsletter envoie l'email à votre API
 // ============================================================
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const CONSENT_TEXT =
+  "J’accepte de recevoir les actualités du club par email. Je pourrai me désabonner à tout moment.";
 
 async function subscribeToNewsletter(email: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/newsletter/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({
+      email,
+      consentGiven: true,
+      consentText: CONSENT_TEXT,
+    }),
   });
 
   if (!response.ok) {
@@ -22,7 +26,7 @@ async function subscribeToNewsletter(email: string): Promise<void> {
 }
 
 // ============================================================
-// STORAGE KEY — clé localStorage pour mémoriser l'état
+// STORAGE KEY
 // ============================================================
 const STORAGE_KEY = "rs_newsletter_v2";
 
@@ -30,10 +34,14 @@ type Status = "idle" | "loading" | "success" | "error";
 
 export default function Newsletter() {
   const location = useLocation();
+
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [consent, setConsent] = useState(false);
+
   const [status, setStatus] = useState<Status>("idle");
   const [fieldError, setFieldError] = useState(false);
+  const [consentError, setConsentError] = useState(false);
 
   // Ne pas afficher sur les pages admin
   const isAdmin = location.pathname.startsWith("/admin");
@@ -42,6 +50,7 @@ export default function Newsletter() {
     if (isAdmin) return;
 
     const stored = localStorage.getItem(STORAGE_KEY);
+
     // Ne plus afficher si déjà inscrit
     if (stored === "subscribed") return;
 
@@ -56,17 +65,32 @@ export default function Newsletter() {
   if (isAdmin) return null;
 
   async function handleSubmit() {
+    let hasError = false;
+
     if (!email || !email.includes("@")) {
       setFieldError(true);
-      return;
+      hasError = true;
+    } else {
+      setFieldError(false);
     }
-    setFieldError(false);
+
+    if (!consent) {
+      setConsentError(true);
+      hasError = true;
+    } else {
+      setConsentError(false);
+    }
+
+    if (hasError) return;
+
     setStatus("loading");
 
     try {
       await subscribeToNewsletter(email);
+
       setStatus("success");
       localStorage.setItem(STORAGE_KEY, "subscribed");
+
       // Ferme automatiquement après 3s
       setTimeout(() => setOpen(false), 3000);
     } catch {
@@ -85,8 +109,16 @@ export default function Newsletter() {
         className="fixed bottom-36 right-0 z-40 flex flex-col items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white rounded-l-lg px-2.5 py-3 text-[10px] font-semibold tracking-widest uppercase transition-all duration-300"
         style={{ marginRight: open ? "300px" : "0" }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="2" y="4" width="20" height="16" rx="2" />
           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
         </svg>
@@ -106,14 +138,21 @@ export default function Newsletter() {
           transition: "transform 0.35s ease",
         }}
       >
-        {/* Bouton fermer (ne mémorise pas, juste cache) */}
+        {/* Bouton fermer */}
         <button
           onClick={() => setOpen(false)}
           aria-label="Fermer"
           className="absolute top-3 right-3 text-neutral-500 hover:text-white transition-colors p-1"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
@@ -126,6 +165,7 @@ export default function Newsletter() {
         <h2 className="text-white text-lg font-semibold leading-snug mb-1">
           Restez dans la course
         </h2>
+
         <p className="text-neutral-400 text-xs leading-relaxed mb-4">
           Résultats, matchs, annonces — avant tout le monde.
         </p>
@@ -134,7 +174,9 @@ export default function Newsletter() {
         {status === "success" && (
           <div className="text-center py-6">
             <div className="text-green-400 text-3xl mb-2">✓</div>
-            <p className="text-white font-semibold">Bienvenue dans la famille</p>
+            <p className="text-white font-semibold">
+              Bienvenue dans la famille
+            </p>
             <p className="text-red-500 font-bold">Red Swans !</p>
           </div>
         )}
@@ -148,8 +190,12 @@ export default function Newsletter() {
                 { icon: "📅", text: "Prochains matchs" },
                 { icon: "📢", text: "Annonces du club" },
               ].map(({ icon, text }) => (
-                <li key={text} className="flex items-center gap-2 text-neutral-300 text-xs">
-                  <span>{icon}</span>{text}
+                <li
+                  key={text}
+                  className="flex items-center gap-2 text-neutral-300 text-xs"
+                >
+                  <span>{icon}</span>
+                  {text}
                 </li>
               ))}
             </ul>
@@ -158,15 +204,45 @@ export default function Newsletter() {
               type="email"
               placeholder="votre@email.fr"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setFieldError(false); setStatus("idle"); }}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFieldError(false);
+                setStatus("idle");
+              }}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className={`w-full bg-neutral-800 text-white text-sm placeholder-neutral-500 rounded-md px-3 h-10 outline-none mb-2 border transition-colors ${
-                fieldError ? "border-red-500" : "border-neutral-600 focus:border-red-500"
+                fieldError
+                  ? "border-red-500"
+                  : "border-neutral-600 focus:border-red-500"
               }`}
             />
 
             {fieldError && (
-              <p className="text-red-500 text-[11px] -mt-1 mb-2">Adresse email invalide</p>
+              <p className="text-red-500 text-[11px] -mt-1 mb-2">
+                Adresse email invalide
+              </p>
+            )}
+
+            {/* CASE DE CONSENTEMENT RGPD */}
+            <label className="mt-3 mb-2 flex cursor-pointer items-start gap-2 text-[11px] leading-relaxed text-neutral-400">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => {
+                  setConsent(e.target.checked);
+                  setConsentError(false);
+                  setStatus("idle");
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-red-600"
+              />
+
+              <span>{CONSENT_TEXT}</span>
+            </label>
+
+            {consentError && (
+              <p className="text-red-500 text-[11px] mb-2">
+                Vous devez accepter pour vous inscrire à la newsletter.
+              </p>
             )}
 
             {status === "error" && (

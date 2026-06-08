@@ -26,25 +26,27 @@ function Navbar() {
     fetchTeams();
   }, []);
 
-  const firstMaleTeam = teams.find(
-    (team) => team.teamType === "premiere" && team.gender === "masculin"
-  );
+const activeTeams = teams.filter((team) => team.isActive !== false);
 
-  const firstFemaleTeam = teams.find(
-    (team) => team.teamType === "premiere" && team.gender === "feminin"
-  );
+const firstMaleTeam = activeTeams.find(
+  (team) => team.teamType === "premiere"  && team.gender === "masculin"
+);
 
-  const maleTeams = teams
-    .filter((team) => team.teamType === "autre" && team.gender === "masculin")
-    .sort((a, b) => a.order - b.order);
+const firstFemaleTeam = activeTeams.find(
+  (team) => team.teamType === "premiere"  && team.gender === "feminin"
+);
 
-  const femaleTeams = teams
-    .filter((team) => team.teamType === "autre" && team.gender === "feminin")
-    .sort((a, b) => a.order - b.order);
+  const maleTeams = activeTeams
+  .filter((team) => team.teamType === "autre" && team.gender === "masculin")
+  .sort((a, b) => a.order - b.order);
 
-  const mixedTeams = teams
-    .filter((team) => team.teamType === "autre" && team.gender === "mixte")
-    .sort((a, b) => a.order - b.order);
+const femaleTeams = activeTeams
+  .filter((team) => team.teamType === "autre" && team.gender === "feminin")
+  .sort((a, b) => a.order - b.order);
+
+const mixedTeams = activeTeams
+  .filter((team) => team.teamType === "autre" && team.gender === "mixte")
+  .sort((a, b) => a.order - b.order);
 
   return (
     <header className="sticky top-0 z-[9999] bg-zinc-950 text-white">
@@ -132,50 +134,61 @@ function Navbar() {
               </div>
             </div>
 
-            <div className="group relative">
-              <button className="hover:text-red-500">
-                {(firstMaleTeam?.name || "Nationale 3 Masculine").toUpperCase()}
-              </button>
+          {firstMaleTeam && (
+  <div className="group relative">
+    <button className="hover:text-red-500">
+      {firstMaleTeam.name.toUpperCase()}
+    </button>
 
-              <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
-                <Link
-                  to="/n3-masculine/effectif"
-                  className="block px-3 py-2 hover:text-red-500"
-                >
-                  Effectifs
-                </Link>
+    <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
+      {firstMaleTeam.hasRosterPage && (
+        <Link
+          to={`/equipes/${firstMaleTeam.slug}/effectif`}
+          className="block px-3 py-2 hover:text-red-500"
+        >
+          Effectifs
+        </Link>
+      )}
 
-                <Link
-                  to="/n3-masculine/calendrier-resultats"
-                  className="block px-3 py-2 hover:text-red-500"
-                >
-                  Calendrier & résultats
-                </Link>
-              </div>
-            </div>
+      {firstMaleTeam.hasResultsPage && (
+        <Link
+          to={`/equipes/${firstMaleTeam.slug}/calendrier-resultats`}
+          className="block px-3 py-2 hover:text-red-500"
+        >
+          Calendrier & résultats
+        </Link>
+      )}
+    </div>
+  </div>
+)}
+            {firstFemaleTeam && (
+  <div className="group relative">
+    <button className="hover:text-red-500">
+      {firstFemaleTeam.name.toUpperCase()}
+    </button>
 
-            <div className="group relative">
-              <button className="hover:text-red-500">
-                {(firstFemaleTeam?.name || "Nationale 3 Féminine").toUpperCase()}
-              </button>
+    <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
+      {firstFemaleTeam.hasRosterPage && (
+        <Link
+          to={`/equipes/${firstFemaleTeam.slug}/effectif`}
+          className="block px-3 py-2 hover:text-red-500"
+        >
+          Effectifs
+        </Link>
+      )}
 
-              <div className="absolute left-0 top-full hidden w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl group-hover:block">
-                <Link
-                  to="/n3-feminine/effectif"
-                  className="block px-3 py-2 hover:text-red-500"
-                >
-                  Effectifs
-                </Link>
-
-                <Link
-                  to="/n3-feminine/calendrier-resultats"
-                  className="block px-3 py-2 hover:text-red-500"
-                >
-                  Calendrier & résultats
-                </Link>
-              </div>
-            </div>
-
+      {firstFemaleTeam.hasResultsPage && (
+        <Link
+          to={`/equipes/${firstFemaleTeam.slug}/calendrier-resultats`}
+          className="block px-3 py-2 hover:text-red-500"
+        >
+          Calendrier & résultats
+        </Link>
+      )}
+    </div>
+  </div>
+)}
+               
             <div className="group relative">
               <Link to="/equipes" className="hover:text-red-500">
                 ÉQUIPES
@@ -340,53 +353,65 @@ function Navbar() {
                 </div>
               </details>
 
-              <details className="rounded-lg bg-zinc-950 p-4">
-                <summary className="cursor-pointer hover:text-red-500">
-                  {firstMaleTeam?.name || "Nationale 3 Masculine"}
-                </summary>
+              {firstMaleTeam && (
+  <details className="rounded-lg bg-zinc-950 p-4">
+    <summary className="cursor-pointer hover:text-red-500">
+      {firstMaleTeam.name}
+    </summary>
 
-                <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
-                  <Link
-                    to="/n3-masculine/effectif"
-                    onClick={closeMobileMenu}
-                    className="hover:text-red-500"
-                  >
-                    Effectifs
-                  </Link>
+    <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
+      {firstMaleTeam.hasRosterPage && (
+        <Link
+          to={`/equipes/${firstMaleTeam.slug}/effectif`}
+          onClick={closeMobileMenu}
+          className="hover:text-red-500"
+        >
+          Effectifs
+        </Link>
+      )}
 
-                  <Link
-                    to="/n3-masculine/calendrier-resultats"
-                    onClick={closeMobileMenu}
-                    className="hover:text-red-500"
-                  >
-                    Calendrier & résultats
-                  </Link>
-                </div>
-              </details>
+      {firstMaleTeam.hasResultsPage && (
+        <Link
+          to={`/equipes/${firstMaleTeam.slug}/calendrier-resultats`}
+          onClick={closeMobileMenu}
+          className="hover:text-red-500"
+        >
+          Calendrier & résultats
+        </Link>
+      )}
+    </div>
+  </details>
+)}
 
-              <details className="rounded-lg bg-zinc-950 p-4">
-                <summary className="cursor-pointer hover:text-red-500">
-                  {firstFemaleTeam?.name || "Nationale 3 Féminine"}
-                </summary>
+                {firstFemaleTeam && (
+  <details className="rounded-lg bg-zinc-950 p-4">
+    <summary className="cursor-pointer hover:text-red-500">
+      {firstFemaleTeam.name}
+    </summary>
 
-                <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
-                  <Link
-                    to="/n3-feminine/effectif"
-                    onClick={closeMobileMenu}
-                    className="hover:text-red-500"
-                  >
-                    Effectifs
-                  </Link>
+    <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
+      {firstFemaleTeam.hasRosterPage && (
+        <Link
+          to={`/equipes/${firstFemaleTeam.slug}/effectif`}
+          onClick={closeMobileMenu}
+          className="hover:text-red-500"
+        >
+          Effectifs
+        </Link>
+      )}
 
-                  <Link
-                    to="/n3-feminine/calendrier-resultats"
-                    onClick={closeMobileMenu}
-                    className="hover:text-red-500"
-                  >
-                    Calendrier & résultats
-                  </Link>
-                </div>
-              </details>
+      {firstFemaleTeam.hasResultsPage && (
+        <Link
+          to={`/equipes/${firstFemaleTeam.slug}/calendrier-resultats`}
+          onClick={closeMobileMenu}
+          className="hover:text-red-500"
+        >
+          Calendrier & résultats
+        </Link>
+      )}
+    </div>
+  </details>
+)}
 
               <details className="rounded-lg bg-zinc-950 p-4">
                 <summary className="cursor-pointer hover:text-red-500">

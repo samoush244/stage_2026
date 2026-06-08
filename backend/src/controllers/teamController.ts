@@ -51,7 +51,25 @@ const toBoolean = (value: unknown, defaultValue = true) => {
 
   return value === "true";
 };
+// RECUP LES EQUIPES PREMIERES
+export const getPublicFirstTeams = async (req: Request, res: Response) => {
+  try {
+    const teams = await Team.find({
+      teamType: "premiere",
+      isActive: true,
+    })
+      .sort({ order: 1, name: 1 })
+      .lean();
 
+    return res.status(200).json(teams);
+  } catch (error) {
+    console.error("Erreur récupération équipes premières :", error);
+
+    return res.status(500).json({
+      message: "Erreur serveur lors de la récupération des équipes premières.",
+    });
+  }
+};
 // PUBLIC - récupérer les équipes actives
 export const getPublicTeams = async (_req: Request, res: Response) => {
   try {

@@ -6,7 +6,7 @@ import {
   createTeam,
   updateTeam,
   deleteTeam,
- 
+  getPublicFirstTeams,
 } from "../controllers/teamController";
 
 import { protect } from "../middlewares/authMiddleware";
@@ -22,7 +22,7 @@ router.put("/:id", protect, requireRole(["admin"]), uploadTeamImage.single("imag
 router.delete("/:id", protect, requireRole(["admin"]), deleteTeam);
 
 // Routes publiques
-router.get("/", getPublicTeams);
+router.get("/public/first-teams", getPublicFirstTeams);
 router.get("/slug/:slug", getTeamBySlug);
-
+router.get("/", getPublicTeams);
 export default router;

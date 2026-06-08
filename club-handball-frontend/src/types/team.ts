@@ -12,6 +12,8 @@ export interface Team {
   image?: string;
   ffhandballUrl?: string;
   scorencoUrl?: string;
+  hasRosterPage?:boolean;
+  hasResultsPage?:boolean;
   order: number;
   isActive: boolean;
 }
