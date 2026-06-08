@@ -75,24 +75,16 @@ function App() {
 
         {/* Équipes premières */}
         <Route
-          path="/:teamSlug/effectif"
+          path="/equipes/:teamSlug/effectif"
           element={<PublicRosterPage  />}
         />
 
         <Route
-          path="/:teamSlug/effectif"
-          element={<PublicRosterPage />}
-        />
-
-        <Route
-          path="/:teamSlugcalendrier-resultats"
+          path="/equipes/:teamSlug/calendrier-resultats"
           element={<CalendrierResultatsPage />}
         />
 
-        <Route
-          path="/:teamSlug/calendrier-resultats"
-          element={<CalendrierResultatsPage  />}
-        />
+      
 
         {/* Autres équipes */}
         <Route path="/equipes/:teamSlug" element={<TeamDetailPage />} />
