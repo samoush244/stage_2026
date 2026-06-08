@@ -135,7 +135,7 @@ export default function Newsletter() {
           <div className="text-center py-6">
             <div className="text-green-400 text-3xl mb-2">✓</div>
             <p className="text-white font-semibold">Bienvenue dans la famille</p>
-            <p className="text-red-500 font-bold">Red Snakes !</p>
+            <p className="text-red-500 font-bold">Red Swans !</p>
           </div>
         )}
 
