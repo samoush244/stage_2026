@@ -1,83 +1,168 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import API from "../services/api";
 
-type Team = {
-  _id: string;
-  name: string;
-  slug: string;
-  level?: string;
-  category?: string;
-  gender?: string;
-  image?: string;
-  imageUrl?: string;
+type PublicTeam = {
+  _id?: string;
+  name?: string;
+  slug?: string;
+  image?: string | null;
+  imageUrl?: string | null;
 };
 
-type RosterMember = {
+type PublicPlayer = {
   _id: string;
-  memberType: "player" | "staff";
-  firstName: string;
-  lastName: string;
+  memberType?: "player" | "staff";
+  firstName?: string;
+  lastName?: string;
   birthDate?: string;
   age?: number | null;
-  photo?: string;
-  photoUrl?: string;
-  number?: number;
-  position?: string;
-  displayOrder?: number;
+  photo?: string | null;
+  photoUrl?: string | null;
+  number?: number | null;
+  jerseyNumber?: number | null;
+  position?: string | null;
 };
 
-function getInitials(firstName?: string, lastName?: string) {
-  const first = firstName?.charAt(0)?.toUpperCase() || "";
-  const last = lastName?.charAt(0)?.toUpperCase() || "";
+type PublicRosterResponse = {
+  team: PublicTeam | null;
+  players: PublicPlayer[];
+  staff: PublicPlayer[];
+};
 
-  return `${first}${last}` || "RS";
+const positionOrder = [
+  "Gardien",
+  "Gardienne",
+  "Ailier gauche",
+  "Ailière gauche",
+  "Ailier droit",
+  "Ailière droite",
+  "Arrière gauche",
+  "Arrière droite",
+  "Demi-centre",
+  "Pivot",
+  "Non renseigné",
+];
+
+const defaultPlayerImage = "/images/default-player.png";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
+function getBackendImageUrl(image?: string | null) {
+  if (!image || image.trim() === "") return null;
+
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
+
+  return `${SERVER_URL}${image.startsWith("/") ? image : `/${image}`}`;
 }
 
-function getPlayerPosition(player: RosterMember) {
-  return player.position || "Poste à compléter";
+function getAgeFromBirthDate(birthDate?: string) {
+  if (!birthDate) return null;
+
+  const birth = new Date(birthDate);
+
+  if (Number.isNaN(birth.getTime())) return null;
+
+  const today = new Date();
+
+  let age = today.getFullYear() - birth.getFullYear();
+
+  const monthDiff = today.getMonth() - birth.getMonth();
+  const dayDiff = today.getDate() - birth.getDate();
+
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    age -= 1;
+  }
+
+  return age;
 }
 
-function getPositionOrder(position: string) {
-  const value = position.toLowerCase();
+function getPlayerNumber(player: PublicPlayer) {
+  if (player.number !== null && player.number !== undefined) {
+    return player.number;
+  }
 
-  if (value.includes("gardien")) return 1;
-  if (value.includes("ailier gauche")) return 2;
-  if (value.includes("arrière gauche") || value.includes("arriere gauche")) return 3;
-  if (value.includes("demi")) return 4;
-  if (value.includes("pivot")) return 5;
-  if (value.includes("arrière droit") || value.includes("arriere droit")) return 6;
-  if (value.includes("ailier droit")) return 7;
-  if (value.includes("compléter")) return 99;
+  if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) {
+    return player.jerseyNumber;
+  }
 
-  return 50;
+  return null;
+}
+
+function getPlayerImage(player: PublicPlayer) {
+  if (player.photoUrl && player.photoUrl.trim() !== "") {
+    return getBackendImageUrl(player.photoUrl) || defaultPlayerImage;
+  }
+
+  if (player.photo && player.photo.trim() !== "") {
+    return getBackendImageUrl(player.photo) || defaultPlayerImage;
+  }
+
+  return defaultPlayerImage;
+}
+
+function groupPlayersByPosition(players: PublicPlayer[]) {
+  return players.reduce<Record<string, PublicPlayer[]>>((groups, player) => {
+    const position = player.position?.trim() || "Non renseigné";
+
+    if (!groups[position]) {
+      groups[position] = [];
+    }
+
+    groups[position].push(player);
+
+    return groups;
+  }, {});
 }
 
 export default function PublicRosterPage() {
   const { teamSlug } = useParams();
 
-  const [team, setTeam] = useState<Team | null>(null);
-  const [players, setPlayers] = useState<RosterMember[]>([]);
-  const [staff, setStaff] = useState<RosterMember[]>([]);
+  const [roster, setRoster] = useState<PublicRosterResponse>({
+    team: null,
+    players: [],
+    staff: [],
+  });
+
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchRoster = async () => {
-      if (!teamSlug) return;
+      if (!teamSlug) {
+        setError("Équipe introuvable.");
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
+        setError("");
 
         const response = await API.get(
           `/players/public/team/${teamSlug}/roster`
         );
 
-        setTeam(response.data.team);
-        setPlayers(response.data.players || []);
-        setStaff(response.data.staff || []);
-      } catch (error) {
-        console.error("Erreur récupération effectif :", error);
-        setTeam(null);
+        setRoster({
+          team: response.data.team || null,
+          players: Array.isArray(response.data.players)
+            ? response.data.players
+            : [],
+          staff: Array.isArray(response.data.staff) ? response.data.staff : [],
+        });
+      } catch (err) {
+        console.error("Erreur récupération effectif :", err);
+
+        setRoster({
+          team: null,
+          players: [],
+          staff: [],
+        });
+
+        setError("Impossible de récupérer l'effectif pour le moment.");
       } finally {
         setLoading(false);
       }
@@ -86,279 +171,219 @@ export default function PublicRosterPage() {
     fetchRoster();
   }, [teamSlug]);
 
-  const playersByPosition = useMemo(() => {
-    const groups: Record<string, RosterMember[]> = {};
+  const players = Array.isArray(roster.players) ? roster.players : [];
+  const staff = Array.isArray(roster.staff) ? roster.staff : [];
 
-    players.forEach((player) => {
-      const position = getPlayerPosition(player);
+  const groupedPlayers = useMemo(() => {
+    return groupPlayersByPosition(players);
+  }, [players]);
 
-      if (!groups[position]) {
-        groups[position] = [];
+  const sortedPositions = useMemo(() => {
+    return Object.keys(groupedPlayers).sort((a, b) => {
+      const indexA = positionOrder.indexOf(a);
+      const indexB = positionOrder.indexOf(b);
+
+      if (indexA === -1 && indexB === -1) {
+        return a.localeCompare(b);
       }
 
-      groups[position].push(player);
-    });
+      if (indexA === -1) {
+        return 1;
+      }
 
-    return Object.entries(groups).sort(([positionA], [positionB]) => {
-      return getPositionOrder(positionA) - getPositionOrder(positionB);
+      if (indexB === -1) {
+        return -1;
+      }
+
+      return indexA - indexB;
     });
-  }, [players]);
+  }, [groupedPlayers]);
+
+  const teamImageUrl = getBackendImageUrl(
+    roster.team?.imageUrl || roster.team?.image
+  );
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-neutral-950 px-6 py-24 text-white">
+      <main className="min-h-screen bg-white px-6 py-24 text-black">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
-            Effectif
-          </p>
-          <h1 className="mt-4 text-4xl font-black uppercase">
-            Chargement de l’effectif...
-          </h1>
-        </div>
-      </main>
-    );
-  }
-
-  if (!team) {
-    return (
-      <main className="min-h-screen bg-neutral-950 px-6 py-24 text-white">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
-            Effectif
-          </p>
-          <h1 className="mt-4 text-4xl font-black uppercase">
-            Équipe introuvable
-          </h1>
-          <p className="mt-4 text-neutral-400">
-            Impossible de récupérer l’effectif de cette équipe.
-          </p>
+          <p className="text-lg font-semibold">Chargement de l'effectif...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
+    <main className="min-h-screen bg-white text-black">
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-red-600/30 bg-black">
-        {team.imageUrl && (
-          <img
-            src={team.imageUrl}
-            alt={team.name}
-            className="absolute inset-0 h-full w-full object-cover opacity-25"
-          />
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/50" />
-
-        <div className="relative mx-auto max-w-7xl px-6 py-20 lg:py-28">
-          <p className="text-xs font-bold uppercase tracking-[0.4em] text-red-500">
-            Red Swans
-          </p>
-
-          <h1 className="mt-5 max-w-4xl text-4xl font-black uppercase leading-none sm:text-5xl lg:text-7xl">
-            {team.name}
-          </h1>
-
-          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-neutral-300 sm:text-base">
-            Découvrez l’effectif officiel de l’équipe, les joueurs, les postes
-            et le staff.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              to={`/equipes/${teamSlug}/calendrier-resultats`}
-              className="rounded-md bg-red-600 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700"
-            >
-              Calendrier & résultats
-            </Link>
-
-            <Link
-              to="/"
-              className="rounded-md border border-white/20 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:border-red-500 hover:text-red-500"
-            >
-              Retour accueil
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* INFOS */}
-      <section className="border-b border-white/10 bg-neutral-900">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-6 py-6 md:grid-cols-4">
-          <div>
-            <p className="text-3xl font-black text-red-500">{players.length}</p>
-            <p className="text-xs uppercase tracking-widest text-neutral-400">
-              Joueurs
+      <section className="bg-white">
+        <div className="bg-black px-6 py-16 text-white">
+          <div className="mx-auto max-w-7xl">
+            <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
+              Effectif
             </p>
-          </div>
 
-          <div>
-            <p className="text-3xl font-black text-red-500">{staff.length}</p>
-            <p className="text-xs uppercase tracking-widest text-neutral-400">
-              Staff
+            <h1 className="mt-4 text-4xl font-black uppercase md:text-6xl">
+              {roster.team?.name || "Effectif"}
+            </h1>
+
+            <p className="mt-6 max-w-3xl text-lg text-zinc-300">
+              Retrouvez les joueurs de l'équipe, leurs postes, numéros et
+              informations principales.
             </p>
-          </div>
 
-          <div>
-            <p className="text-3xl font-black text-red-500">
-              {playersByPosition.length}
-            </p>
-            <p className="text-xs uppercase tracking-widest text-neutral-400">
-              Postes
-            </p>
-          </div>
-
-          <div>
-            <p className="text-3xl font-black text-red-500">RS</p>
-            <p className="text-xs uppercase tracking-widest text-neutral-400">
-              Red Swans
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* JOUEURS */}
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="mb-10">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-500">
-            Effectif
-          </p>
-
-          <h2 className="mt-3 text-3xl font-black uppercase sm:text-4xl">
-            Joueurs
-          </h2>
-        </div>
-
-        {players.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-neutral-400">
-            Aucun joueur n’est encore affiché pour cette équipe.
-          </div>
-        ) : (
-          <div className="space-y-14">
-            {playersByPosition.map(([position, positionPlayers]) => (
-              <div key={position}>
-                <div className="mb-6 flex items-center gap-4">
-                  <h3 className="whitespace-nowrap text-xl font-black uppercase">
-                    {position}
-                  </h3>
-                  <div className="h-px flex-1 bg-red-600/40" />
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {positionPlayers.map((player) => (
-                    <article
-                      key={player._id}
-                      className="group overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 shadow-xl transition duration-300 hover:-translate-y-1 hover:border-red-600/70"
-                    >
-                      <div className="relative h-72 bg-neutral-800">
-                        {player.photoUrl ? (
-                          <img
-                            src={player.photoUrl}
-                            alt={`${player.firstName} ${player.lastName}`}
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-800 to-black">
-                            <span className="text-5xl font-black text-red-600">
-                              {getInitials(player.firstName, player.lastName)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-
-                        {player.number && (
-                          <div className="absolute left-4 top-4 rounded-full bg-red-600 px-4 py-2 text-sm font-black text-white">
-                            N° {player.number}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-5">
-                        <h4 className="text-xl font-black uppercase leading-tight">
-                          {player.firstName} {player.lastName}
-                        </h4>
-
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div className="rounded-xl bg-black/40 p-3">
-                            <p className="text-[10px] uppercase tracking-widest text-neutral-500">
-                              Poste
-                            </p>
-                            <p className="mt-1 font-bold text-neutral-200">
-                              {getPlayerPosition(player)}
-                            </p>
-                          </div>
-
-                          <div className="rounded-xl bg-black/40 p-3">
-                            <p className="text-[10px] uppercase tracking-widest text-neutral-500">
-                              Âge
-                            </p>
-                            <p className="mt-1 font-bold text-neutral-200">
-                              {player.age ? `${player.age} ans` : "À compléter"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+            {teamImageUrl && (
+              <div className="mt-10 w-full overflow-hidden rounded-2xl bg-white">
+                <img
+                  src={teamImageUrl}
+                  alt={roster.team?.name || "Photo de l'équipe"}
+                  className="h-auto w-full object-contain"
+                />
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
+      </section>
+
+      {/* CONTENU */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-7xl">
+          {error && (
+            <div className="mb-10 rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
+              {error}
+            </div>
+          )}
+
+          {players.length === 0 ? (
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-10 text-center">
+              <h2 className="text-2xl font-black uppercase">
+                Aucun joueur affiché
+              </h2>
+
+              <p className="mt-3 text-zinc-600">
+                L'effectif de cette équipe n'est pas encore disponible.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-16">
+              {sortedPositions.map((position) => (
+                <section key={position}>
+                  <div className="mb-8 flex items-center gap-4">
+                    <div className="h-10 w-2 bg-red-600" />
+
+                    <h2 className="text-3xl font-black uppercase">
+                      {position}
+                    </h2>
+                  </div>
+
+                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {groupedPlayers[position].map((player) => {
+                      const number = getPlayerNumber(player);
+
+                      const age =
+                        player.age !== null && player.age !== undefined
+                          ? player.age
+                          : getAgeFromBirthDate(player.birthDate);
+
+                      return (
+                        <article
+                          key={player._id}
+                          className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                        >
+                          <div className="h-80 overflow-hidden bg-zinc-100">
+                            <img
+                              src={getPlayerImage(player)}
+                              alt={`${player.firstName || ""} ${
+                                player.lastName || ""
+                              }`}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            />
+                          </div>
+
+                          <div className="p-6">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h3 className="text-2xl font-black uppercase leading-tight">
+                                  {player.lastName || ""}
+                                </h3>
+
+                                <p className="text-lg font-semibold text-red-600">
+                                  {player.firstName || ""}
+                                </p>
+                              </div>
+
+                              {number !== null && (
+                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black text-xl font-black text-white">
+                                  {number}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-6 space-y-2 text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                              <p>
+                                Poste : {player.position || "Non renseigné"}
+                              </p>
+
+                              {age !== null && <p>Âge : {age} ans</p>}
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* STAFF */}
-      <section className="border-t border-white/10 bg-black">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="mb-10">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-500">
-              Encadrement
-            </p>
+      <section className="border-t border-zinc-200 bg-zinc-50 px-6 py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 flex items-center gap-4">
+            <div className="h-10 w-2 bg-red-600" />
 
-            <h2 className="mt-3 text-3xl font-black uppercase sm:text-4xl">
-              Staff
-            </h2>
+            <h2 className="text-3xl font-black uppercase">Staff</h2>
           </div>
 
           {staff.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-neutral-400">
-              Aucun membre du staff n’est encore affiché pour cette équipe.
+            <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center">
+              <h3 className="text-2xl font-black uppercase">
+                Aucun membre du staff affiché
+              </h3>
+
+              <p className="mt-3 text-zinc-600">
+                Le staff de cette équipe n'est pas encore disponible.
+              </p>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {staff.map((member) => (
                 <article
                   key={member._id}
-                  className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 transition duration-300 hover:-translate-y-1 hover:border-red-600/70"
+                  className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="relative h-64 bg-neutral-800">
-                    {member.photoUrl ? (
-                      <img
-                        src={member.photoUrl}
-                        alt={`${member.firstName} ${member.lastName}`}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-800 to-black">
-                        <span className="text-5xl font-black text-red-600">
-                          {getInitials(member.firstName, member.lastName)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                  <div className="h-80 overflow-hidden bg-zinc-100">
+                    <img
+                      src={getPlayerImage(member)}
+                      alt={`${member.firstName || ""} ${member.lastName || ""}`}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
                   </div>
 
-                  <div className="p-5">
-                    <h4 className="text-xl font-black uppercase leading-tight">
-                      {member.firstName} {member.lastName}
-                    </h4>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-black uppercase leading-tight">
+                      {member.lastName || ""}
+                    </h3>
 
-                    <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-red-500">
-                      {member.position || "Staff"}
+                    <p className="text-lg font-semibold text-red-600">
+                      {member.firstName || ""}
                     </p>
+
+                    <div className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-600">
+                      <p>Fonction : {member.position || "Staff"}</p>
+                    </div>
                   </div>
                 </article>
               ))}
