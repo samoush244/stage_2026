@@ -1,8 +1,35 @@
 import { Link } from "react-router";
 import { FaFacebook, FaInstagram, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
 import { SiTiktok } from "react-icons/si";
+import { useEffect, useState } from "react";
+import API from "../services/api";
+import type {Team} from "../types/team";
 
 function Footer() {
+  const [teams, setTeams] = useState<Team[]>([]);
+
+useEffect(() => {
+  const fetchTeams = async () => {
+    try {
+        const res = await API.get("/teams");
+        const teamsData = (res.data || []) as Team[];
+
+        setTeams(teamsData);
+      } catch (error) {
+        console.error("Erreur récupération équipes navbar :", error);
+      }
+    };
+
+    fetchTeams();
+  }, []);
+
+const firstMaleTeam = teams.find(
+  (team) => team.teamType === "premiere" && team.gender === "masculin"
+);
+
+const firstFemaleTeam = teams.find(
+  (team) => team.teamType === "premiere" && team.gender === "feminin"
+);
   return (
     <footer className="relative bg-zinc-950 text-white overflow-hidden">
 
@@ -98,46 +125,42 @@ function Footer() {
         </div>
 
         {/* Colonne 2 — Équipes */}
-        <div>
-          <div className="mb-1 h-0.5 w-10 bg-red-600" />
-          <h3 className="mt-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
-            Équipes premières
-          </h3>
-          <div className="mt-4 space-y-3">
-            <Link
-              to="/n3-masculine/effectif"
-              className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
-                N3
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white group-hover:text-red-400">Nationale 3 Masculine</p>
-                <p className="text-xs text-zinc-500">Voir l'effectif →</p>
-              </div>
-            </Link>
-            <Link
-              to="/n3-feminine/effectif"
-              className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
-                N2
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white group-hover:text-red-400">Nationale 2 Féminine</p>
-                <p className="text-xs text-zinc-500">Voir l'effectif →</p>
-              </div>
-            </Link>
-            <Link
-              to="/equipes"
-              className="mt-2 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-red-500"
-            >
-              <span>Toutes les équipes</span>
-              <span>→</span>
-            </Link>
-          </div>
-        </div>
+        <div className="mt-4 space-y-3">
+  {firstMaleTeam && (
+    <Link
+      to={`equipes/${firstMaleTeam.slug}/effectif`}
+      className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
+      </div>
 
+      <div>
+        <p className="text-sm font-bold text-white group-hover:text-red-400">
+          {firstMaleTeam.name}
+        </p>
+        <p className="text-xs text-zinc-500">Voir l'effectif →</p>
+      </div>
+    </Link>
+  )}
+
+  {firstFemaleTeam && (
+    <Link
+      to={`equipes/${firstFemaleTeam.slug}/effectif`}
+      className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
+      </div>
+
+      <div>
+        <p className="text-sm font-bold text-white group-hover:text-red-400">
+          {firstFemaleTeam.name}
+        </p>
+        <p className="text-xs text-zinc-500">Voir l'effectif →</p>
+      </div>
+    </Link>
+  )}
+</div>
+         
         {/* Colonne 3 — Contact */}
         <div>
           <div className="mb-1 h-0.5 w-10 bg-red-600" />

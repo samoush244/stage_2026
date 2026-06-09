@@ -188,11 +188,11 @@ const mixedTeams = activeTeams
     </div>
   </div>
 )}
-               
+
             <div className="group relative">
-              <Link to="/equipes" className="hover:text-red-500">
+              <div className="hover:text-red-500">
                 ÉQUIPES
-              </Link>
+                </div>
 
               <div className="absolute left-0 top-full z-50 hidden pt-3 group-hover:block">
                 <div className="w-64 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
@@ -419,14 +419,6 @@ const mixedTeams = activeTeams
                 </summary>
 
                 <div className="mt-3 flex flex-col gap-5 pl-3 text-gray-200">
-                  <Link
-                    to="/equipes"
-                    onClick={closeMobileMenu}
-                    className="font-semibold hover:text-red-500"
-                  >
-                    Voir toutes les équipes
-                  </Link>
-
                   <div>
                     <p className="font-bold text-red-500">
                       Équipes masculines
