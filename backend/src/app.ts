@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "path"
 import authRoutes from "./routes/authroutes";
 import playerRoutes from "./routes/playerRoutes";
-import newsletterRoutes from "./routes/NewsletterSubscriber";
+import newsletterRoutes from "./routes/NewsletterRoutes";
 import contactRoutes from "./routes/ContactRoutes";
 import partnerRoutes from "./routes/partnerRoutes";
 import newsRoutes from "./routes/newsRoutes";
