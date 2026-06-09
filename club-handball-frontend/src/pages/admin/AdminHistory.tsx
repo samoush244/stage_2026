@@ -412,8 +412,8 @@ function AdminHistory() {
               Aucune histoire n'a encore été ajoutée.
             </p>
           ) : (
-            <div className="w-full max-w-full overflow-x-auto rounded-2xl border border-zinc-200">
-              <table className="w-full min-w-[1000px] table-fixed border-collapse bg-white">
+            <div className="w-full max-w-full overflow-x-auto rounded-2xl  border-zinc-200">
+              <table className="w-full min-w-[900px] table-fixed border-collapse bg-white">
                 <thead className="bg-zinc-100">
                   <tr className="text-left text-sm text-zinc-600">
                     <th className="px-5 py-4">Image</th>
