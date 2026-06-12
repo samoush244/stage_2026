@@ -66,14 +66,14 @@ function HeroSection({ clubInfo }: HeroSectionProps) {
           playsInline
         />
       )}
-
+    {/**changement image , enlever le voile noir au cas ou */}
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-black/20" />
       <div className="absolute inset-0 bg-black/25" />
 
       <div className="relative z-10 flex min-h-[620px] items-center">
         <div className="mx-auto w-full max-w-7xl px-6">
           <div className="relative z-20 mx-auto flex max-w-3xl flex-col items-center text-center">
-            <p className="mt-10 max-w-3xl text-lg leading-8 section-font text-white">
+            <p className="mt-10 max-w-3xl text-lg leading-6 section-font text-white">
               {heroText}
             </p>
 
