@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import multer from "multer";
 import {
   getClubInfo,
@@ -12,7 +12,8 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024,
+    // 100 Mo max
+    fileSize: 100 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     const isImage = file.mimetype.startsWith("image/");
@@ -27,13 +28,38 @@ const upload = multer({
   },
 });
 
+const uploadHeroMedia = (req: Request, res: Response, next: NextFunction) => {
+  upload.single("heroMedia")(req, res, (error: any) => {
+    if (error instanceof multer.MulterError) {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({
+          message:
+            "Le fichier est trop lourd. Utilise une image ou une vidéo plus légère.",
+        });
+      }
+
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    if (error) {
+      return res.status(400).json({
+        message: error.message || "Erreur pendant l'upload du fichier.",
+      });
+    }
+
+    next();
+  });
+};
+
 router.get("/", getClubInfo);
 
 router.put(
   "/",
   protect,
   requireRole(["admin"]),
-  upload.single("heroMedia"),
+  uploadHeroMedia,
   updateClubInfo
 );
 
