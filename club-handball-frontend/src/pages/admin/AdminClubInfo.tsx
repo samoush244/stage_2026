@@ -16,6 +16,8 @@ type ClubInfo = {
   heroMediaUrl: string;
 };
 
+const DEFAULT_HERO_TEXT = "Un club, une équipe, une famille.";
+
 const emptyForm: ClubInfo = {
   address: "",
   email: "",
@@ -23,11 +25,28 @@ const emptyForm: ClubInfo = {
   facebook: "",
   instagram: "",
   tiktok: "",
-  heroText:
-    "Un club, une équipe, une famille. Retrouvez les matchs, les équipes, les actualités et toute la vie du club.",
+  heroText: DEFAULT_HERO_TEXT,
   heroMediaType: "none",
   heroMediaUrl: "",
 };
+
+const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api")
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
+
+function getMediaUrl(media?: string) {
+  if (!media) return "";
+
+  if (media.startsWith("http://") || media.startsWith("https://")) {
+    return media;
+  }
+
+  if (media.startsWith("/")) {
+    return `${BACKEND_URL}${media}`;
+  }
+
+  return `${BACKEND_URL}/${media}`;
+}
 
 export default function AdminClubInfo() {
   const [form, setForm] = useState<ClubInfo>(emptyForm);
@@ -50,7 +69,9 @@ export default function AdminClubInfo() {
       };
 
       setForm(data);
-      setPreviewUrl(data.heroMediaUrl || "");
+
+      // Aperçu du média déjà enregistré
+      setPreviewUrl(data.heroMediaUrl ? getMediaUrl(data.heroMediaUrl) : "");
     } catch (error) {
       console.error("Erreur récupération infos club :", error);
       alert("Impossible de récupérer les informations du club.");
@@ -58,6 +79,10 @@ export default function AdminClubInfo() {
       setLoading(false);
     }
   };
+
+  const hasHeroMedia =
+    form.heroMediaType !== "none" &&
+    Boolean(heroFile || previewUrl || form.heroMediaUrl);
 
   const handleHeroFileChange = (file?: File) => {
     if (!file) return;
@@ -88,6 +113,30 @@ export default function AdminClubInfo() {
       ...current,
       heroMediaType: "none",
       heroMediaUrl: "",
+
+      // Si on supprime l'image/vidéo et que le texte est vide,
+      // on remet automatiquement le texte obligatoire.
+      heroText: current.heroText.trim() || DEFAULT_HERO_TEXT,
+    }));
+  };
+
+  const removeHeroText = () => {
+    // Le texte peut être supprimé uniquement s'il y a une image ou une vidéo.
+    if (!hasHeroMedia) {
+      setForm((current) => ({
+        ...current,
+        heroText: DEFAULT_HERO_TEXT,
+      }));
+
+      alert(
+        "Le texte est obligatoire si aucune image ou vidéo n'est utilisée en fond."
+      );
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      heroText: "",
     }));
   };
 
@@ -99,14 +148,25 @@ export default function AdminClubInfo() {
 
       const formData = new FormData();
 
+      const hasMediaToSave =
+        form.heroMediaType !== "none" &&
+        Boolean(heroFile || form.heroMediaUrl || previewUrl);
+
+      // RÈGLE IMPORTANTE :
+      // - Si image/vidéo présente : le texte peut être vide.
+      // - Si aucun média : le texte par défaut est obligatoire.
+      const heroTextToSave =
+        form.heroText.trim() || (!hasMediaToSave ? DEFAULT_HERO_TEXT : "");
+
       formData.append("address", form.address);
       formData.append("email", form.email);
       formData.append("phone", form.phone);
       formData.append("facebook", form.facebook);
       formData.append("instagram", form.instagram);
       formData.append("tiktok", form.tiktok);
-      formData.append("heroText", form.heroText);
+      formData.append("heroText", heroTextToSave);
       formData.append("heroMediaType", form.heroMediaType);
+      formData.append("heroMediaUrl", form.heroMediaUrl);
 
       if (heroFile) {
         formData.append("heroMedia", heroFile);
@@ -125,7 +185,9 @@ export default function AdminClubInfo() {
 
       setForm(updatedData);
       setHeroFile(null);
-      setPreviewUrl(updatedData.heroMediaUrl || "");
+      setPreviewUrl(
+        updatedData.heroMediaUrl ? getMediaUrl(updatedData.heroMediaUrl) : ""
+      );
 
       alert("Informations du club enregistrées !");
     } catch (error) {
@@ -240,25 +302,48 @@ export default function AdminClubInfo() {
             </h2>
 
             <div className="grid gap-4">
-              <textarea
-                value={form.heroText}
-                onChange={(e) =>
-                  setForm({ ...form, heroText: e.target.value })
-                }
-                rows={3}
-                className="rounded-lg border border-zinc-300 px-4 py-3"
-                placeholder="Texte affiché sur la homepage"
-              />
+              <div>
+                <textarea
+                  value={form.heroText}
+                  onChange={(e) =>
+                    setForm({ ...form, heroText: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-3"
+                  placeholder="Texte affiché sur la homepage"
+                />
+
+                <p className="mt-2 text-sm text-zinc-500">
+                  Le texte peut être supprimé si une image ou une vidéo est
+                  utilisée en fond. S’il n’y a aucun média, le texte par défaut
+                  reste obligatoire.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={removeHeroText}
+                  className="mt-3 w-fit rounded-lg border border-zinc-300 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-zinc-100"
+                >
+                  Supprimer le texte d’accueil
+                </button>
+              </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <select
                   value={form.heroMediaType}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value as HeroMediaType;
+
+                    if (value === "none") {
+                      removeHeroMedia();
+                      return;
+                    }
+
                     setForm({
                       ...form,
-                      heroMediaType: e.target.value as HeroMediaType,
-                    })
-                  }
+                      heroMediaType: value,
+                    });
+                  }}
                   className="rounded-lg border border-zinc-300 px-4 py-3"
                 >
                   <option value="none">Aucun média</option>
@@ -269,9 +354,7 @@ export default function AdminClubInfo() {
                 <input
                   type="file"
                   accept="image/*,video/*"
-                  onChange={(e) =>
-                    handleHeroFileChange(e.target.files?.[0])
-                  }
+                  onChange={(e) => handleHeroFileChange(e.target.files?.[0])}
                   className="rounded-lg border border-zinc-300 px-4 py-3"
                 />
               </div>
@@ -357,6 +440,17 @@ export default function AdminClubInfo() {
               <span className="font-bold text-zinc-900">TikTok :</span>{" "}
               {form.tiktok || "Non renseigné"}
             </p>
+
+            <div className="border-t border-zinc-200 pt-4">
+              <p className="font-bold text-zinc-900">Texte homepage :</p>
+              <p>
+                {form.heroText.trim()
+                  ? form.heroText
+                  : hasHeroMedia
+                  ? "Aucun texte affiché"
+                  : DEFAULT_HERO_TEXT}
+              </p>
+            </div>
 
             <div className="border-t border-zinc-200 pt-4">
               <p className="font-bold text-zinc-900">Fond homepage :</p>

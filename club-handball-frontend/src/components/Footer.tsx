@@ -1,38 +1,75 @@
 import { Link } from "react-router";
-import { FaFacebook, FaInstagram, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+} from "react-icons/fa";
 import { SiTiktok } from "react-icons/si";
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import type {Team} from "../types/team";
+import type { Team } from "../types/team";
+
+type ClubInfo = {
+  address?: string;
+  email?: string;
+  phone?: string;
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+};
 
 function Footer() {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [clubInfo, setClubInfo] = useState<ClubInfo | null>(null);
 
-useEffect(() => {
-  const fetchTeams = async () => {
-    try {
-        const res = await API.get("/teams");
-        const teamsData = (res.data || []) as Team[];
+  useEffect(() => {
+    const fetchFooterData = async () => {
+      try {
+        const [teamsRes, clubInfoRes] = await Promise.all([
+          API.get("/teams"),
+          API.get("/club-info"),
+        ]);
+
+        const teamsData = (teamsRes.data || []) as Team[];
 
         setTeams(teamsData);
+        setClubInfo(clubInfoRes.data || null);
       } catch (error) {
-        console.error("Erreur récupération équipes navbar :", error);
+        console.error("Erreur récupération données footer :", error);
       }
     };
 
-    fetchTeams();
+    fetchFooterData();
   }, []);
 
-const firstMaleTeam = teams.find(
-  (team) => team.teamType === "premiere" && team.gender === "masculin"
-);
+  const firstMaleTeam = teams.find(
+    (team) => team.teamType === "premiere" && team.gender === "masculin"
+  );
 
-const firstFemaleTeam = teams.find(
-  (team) => team.teamType === "premiere" && team.gender === "feminin"
-);
+  const firstFemaleTeam = teams.find(
+    (team) => team.teamType === "premiere" && team.gender === "feminin"
+  );
+
+  const email = clubInfo?.email || "contact@club-handball.fr";
+  const phone = clubInfo?.phone || "00 00 00 00 00";
+  const address = clubInfo?.address || "Gymnase du club";
+
+  const phoneHref = phone.replace(/\s/g, "");
+
+  const facebookUrl =
+    clubInfo?.facebook || "https://www.facebook.com/redswans2016";
+
+  const instagramUrl =
+    clubInfo?.instagram ||
+    "https://www.instagram.com/valenciennes_handball_club/";
+
+  const tiktokUrl =
+    clubInfo?.tiktok || "https://www.tiktok.com/@valencienneshandballclub";
+
   return (
-    <footer className="relative bg-zinc-950 text-white overflow-hidden">
-
+    <footer className="relative overflow-hidden bg-zinc-950 text-white">
       {/* Ligne rouge décorative en haut */}
       <div className="h-1 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent" />
 
@@ -40,53 +77,70 @@ const firstFemaleTeam = teams.find(
       <div className="border-b border-zinc-800">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-8 py-8 md:flex-row">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-4 group">
+          <Link to="/" className="group flex items-center gap-4">
             <img
               src="/images/logo/VHB2.png"
               alt="Logo Valenciennes Handball Club"
               className="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-105"
             />
+
             <div>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">Club officiel</p>
-              <p className="text-lg font-black uppercase tracking-wide text-white leading-tight">
-                Valenciennes<br />
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Club officiel
+              </p>
+
+              <p className="text-lg font-black uppercase leading-tight tracking-wide text-white">
+                Valenciennes
+                <br />
                 <span className="text-red-600">Handball Club</span>
               </p>
             </div>
           </Link>
 
-          {/* Réseaux sociaux */}
+          {/* Réseaux sociaux récupérés depuis AdminClubInfo */}
           <div className="flex items-center gap-4">
             <span className="hidden text-xs uppercase tracking-widest text-zinc-500 md:block">
               Suivez-nous
             </span>
-            <div className="h-px w-8 bg-red-600 hidden md:block" />
+
+            <div className="hidden h-px w-8 bg-red-600 md:block" />
+
             <div className="flex gap-3">
-              <a
-                href="https://www.facebook.com/redswans2016"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:border-red-600 hover:bg-red-600 hover:text-white hover:scale-110"
-              >
-                <FaFacebook className="h-5 w-5" />
-              </a>
-              <a
-                href="https://www.instagram.com/valenciennes_handball_club/"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:border-red-600 hover:bg-red-600 hover:text-white hover:scale-110"
-              >
-                <FaInstagram className="h-5 w-5" />
-              </a>
-              <a
-                href="https://www.tiktok.com/@valencienneshandballclub"
-                aria-label="TikTok"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:border-red-600 hover:bg-red-600 hover:text-white hover:scale-110"
-              >
-                <SiTiktok className="h-5 w-5" />
-              </a>
+              {facebookUrl && (
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Facebook"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:scale-110 hover:border-red-600 hover:bg-red-600 hover:text-white"
+                >
+                  <FaFacebook className="h-5 w-5" />
+                </a>
+              )}
+
+              {instagramUrl && (
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:scale-110 hover:border-red-600 hover:bg-red-600 hover:text-white"
+                >
+                  <FaInstagram className="h-5 w-5" />
+                </a>
+              )}
+
+              {tiktokUrl && (
+                <a
+                  href={tiktokUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="TikTok"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 transition-all duration-300 hover:scale-110 hover:border-red-600 hover:bg-red-600 hover:text-white"
+                >
+                  <SiTiktok className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -94,22 +148,27 @@ const firstFemaleTeam = teams.find(
 
       {/* Corps principal */}
       <div className="mx-auto grid max-w-7xl gap-10 px-8 py-12 md:grid-cols-3">
-
         {/* Colonne 1 — Description */}
         <div>
           <div className="mb-1 h-0.5 w-10 bg-red-600" />
+
           <h3 className="mt-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
             Le club
           </h3>
+
           <p className="mt-4 text-sm leading-relaxed text-zinc-400">
             Site officiel du Valenciennes Handball Club : actualités, équipes,
             matchs, billetterie, informations pratiques et vie associative.
           </p>
+
           <div className="mt-6 grid grid-cols-2 gap-2 text-sm">
             {[
               { label: "Histoire", to: "/club/histoire" },
               { label: "Organigramme", to: "/club/organigramme" },
-              { label: "Infos pratiques", to: "/club/informations-pratiques" },
+              {
+                label: "Infos pratiques",
+                to: "/club/informations-pratiques",
+              },
               { label: "Partenaires", to: "/partenaires" },
             ].map(({ label, to }) => (
               <Link
@@ -124,71 +183,79 @@ const firstFemaleTeam = teams.find(
           </div>
         </div>
 
-        {/* Colonne 2 — Équipes */}
+        {/* Colonne 2 — Équipes premières */}
         <div className="mt-4 space-y-3">
-  {firstMaleTeam && (
-    <Link
-      to={`equipes/${firstMaleTeam.slug}/effectif`}
-      className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
-    >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
-      </div>
+          {firstMaleTeam && (
+            <Link
+              to={`/equipes/${firstMaleTeam.slug}/effectif`}
+              className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
+                N3
+              </div>
 
-      <div>
-        <p className="text-sm font-bold text-white group-hover:text-red-400">
-          {firstMaleTeam.name}
-        </p>
-        <p className="text-xs text-zinc-500">Voir l'effectif →</p>
-      </div>
-    </Link>
-  )}
+              <div>
+                <p className="text-sm font-bold text-white group-hover:text-red-400">
+                  {firstMaleTeam.name}
+                </p>
 
-  {firstFemaleTeam && (
-    <Link
-      to={`equipes/${firstFemaleTeam.slug}/effectif`}
-      className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
-    >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
-      </div>
+                <p className="text-xs text-zinc-500">Voir l'effectif →</p>
+              </div>
+            </Link>
+          )}
 
-      <div>
-        <p className="text-sm font-bold text-white group-hover:text-red-400">
-          {firstFemaleTeam.name}
-        </p>
-        <p className="text-xs text-zinc-500">Voir l'effectif →</p>
-      </div>
-    </Link>
-  )}
-</div>
-         
-        {/* Colonne 3 — Contact */}
+          {firstFemaleTeam && (
+            <Link
+              to={`/equipes/${firstFemaleTeam.slug}/effectif`}
+              className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-all hover:border-red-600 hover:bg-zinc-800"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white">
+                N2
+              </div>
+
+              <div>
+                <p className="text-sm font-bold text-white group-hover:text-red-400">
+                  {firstFemaleTeam.name}
+                </p>
+
+                <p className="text-xs text-zinc-500">Voir l'effectif →</p>
+              </div>
+            </Link>
+          )}
+        </div>
+
+        {/* Colonne 3 — Contact récupéré depuis AdminClubInfo */}
         <div>
           <div className="mb-1 h-0.5 w-10 bg-red-600" />
+
           <h3 className="mt-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
             Contact
           </h3>
+
           <ul className="mt-4 space-y-3">
             <li>
               <a
-                href="mailto:contact@club-handball.fr"
+                href={`mailto:${email}`}
                 className="group flex items-center gap-3 text-sm text-zinc-400 transition hover:text-red-500"
               >
                 <FaEnvelope className="h-4 w-4 shrink-0 text-red-600" />
-                contact@club-handball.fr
+                {email}
               </a>
             </li>
+
             <li>
               <a
-                href="tel:0000000000"
+                href={`tel:${phoneHref}`}
                 className="group flex items-center gap-3 text-sm text-zinc-400 transition hover:text-red-500"
               >
                 <FaPhone className="h-4 w-4 shrink-0 text-red-600" />
-                00 00 00 00 00
+                {phone}
               </a>
             </li>
+
             <li className="flex items-start gap-3 text-sm text-zinc-400">
               <FaMapMarkerAlt className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-              Gymnase du club
+              {address}
             </li>
           </ul>
 
@@ -206,17 +273,24 @@ const firstFemaleTeam = teams.find(
       <div className="border-t border-zinc-800">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-8 py-5 text-xs text-zinc-600 md:flex-row">
           <p>© 2026 Valenciennes Handball Club. Tous droits réservés.</p>
+
           <div className="flex gap-5">
-            <Link to="/mentions-legales" className="transition hover:text-red-500">
+            <Link
+              to="/mentions-legales"
+              className="transition hover:text-red-500"
+            >
               Mentions légales
             </Link>
-            <Link to="/politique-confidentialite" className="transition hover:text-red-500">
+
+            <Link
+              to="/politique-confidentialite"
+              className="transition hover:text-red-500"
+            >
               Politique de confidentialité
             </Link>
           </div>
         </div>
       </div>
-
     </footer>
   );
 }
