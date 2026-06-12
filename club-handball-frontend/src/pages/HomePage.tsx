@@ -13,6 +13,31 @@ type Partner = {
   showOnHome?: boolean;
 };
 
+type ClubInfo = {
+  address: string;
+  email: string;
+  phone: string;
+  facebook: string;
+  instagram: string;
+  tiktok: string;
+  heroText: string;
+  heroMediaType: "none" | "image" | "video";
+  heroMediaUrl: string;
+};
+
+const defaultClubInfo: ClubInfo = {
+  address: "",
+  email: "",
+  phone: "",
+  facebook: "",
+  instagram: "",
+  tiktok: "",
+  heroText:
+    "Un club, une équipe, une famille. Retrouvez les matchs, les équipes, les actualités et toute la vie du club.",
+  heroMediaType: "none",
+  heroMediaUrl: "",
+};
+
 const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api")
   .replace(/\/api\/?$/, "")
   .replace(/\/$/, "");
@@ -33,7 +58,25 @@ function getLogoUrl(logo?: string) {
 
 function HomePage() {
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [clubInfo, setClubInfo] = useState<ClubInfo>(defaultClubInfo);
   const [loadingPartners, setLoadingPartners] = useState(true);
+
+  useEffect(() => {
+    const fetchClubInfo = async () => {
+      try {
+        const res = await API.get("/club-info");
+
+        setClubInfo({
+          ...defaultClubInfo,
+          ...res.data,
+        });
+      } catch (error) {
+        console.error("Erreur récupération infos club accueil :", error);
+      }
+    };
+
+    fetchClubInfo();
+  }, []);
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -57,7 +100,7 @@ function HomePage() {
 
   return (
     <>
-      <HeroSection />
+      <HeroSection clubInfo={clubInfo} />
 
       <section className="bg-white py-20">
         <div className="mx-auto max-w-7xl px-6">

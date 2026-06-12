@@ -1,35 +1,150 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import API from "../../services/api";
+
+type HeroMediaType = "none" | "image" | "video";
 
 type ClubInfo = {
-  name: string;
-  logo: string;
+  _id?: string;
   address: string;
   email: string;
   phone: string;
   facebook: string;
   instagram: string;
-  description: string;
+  tiktok: string;
+  heroText: string;
+  heroMediaType: HeroMediaType;
+  heroMediaUrl: string;
+};
+
+const emptyForm: ClubInfo = {
+  address: "",
+  email: "",
+  phone: "",
+  facebook: "",
+  instagram: "",
+  tiktok: "",
+  heroText:
+    "Un club, une équipe, une famille. Retrouvez les matchs, les équipes, les actualités et toute la vie du club.",
+  heroMediaType: "none",
+  heroMediaUrl: "",
 };
 
 export default function AdminClubInfo() {
-  const [clubInfo, setClubInfo] = useState<ClubInfo>({
-    name: "Valenciennes Handball Club",
-    logo: "/images/logo.png",
-    address: "Valenciennes",
-    email: "contact@vhc.fr",
-    phone: "03 00 00 00 00",
-    facebook: "",
-    instagram: "",
-    description:
-      "Le Valenciennes Handball Club est un club engagé dans la formation, la compétition et la vie sportive locale.",
-  });
+  const [form, setForm] = useState<ClubInfo>(emptyForm);
+  const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<ClubInfo>(clubInfo);
+  useEffect(() => {
+    fetchClubInfo();
+  }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  const fetchClubInfo = async () => {
+    try {
+      const res = await API.get("/club-info");
+
+      const data = {
+        ...emptyForm,
+        ...res.data,
+      };
+
+      setForm(data);
+      setPreviewUrl(data.heroMediaUrl || "");
+    } catch (error) {
+      console.error("Erreur récupération infos club :", error);
+      alert("Impossible de récupérer les informations du club.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHeroFileChange = (file?: File) => {
+    if (!file) return;
+
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      alert("Choisis une image ou une vidéo.");
+      return;
+    }
+
+    setHeroFile(file);
+
+    setForm((current) => ({
+      ...current,
+      heroMediaType: isVideo ? "video" : "image",
+    }));
+
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const removeHeroMedia = () => {
+    setHeroFile(null);
+    setPreviewUrl("");
+
+    setForm((current) => ({
+      ...current,
+      heroMediaType: "none",
+      heroMediaUrl: "",
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setClubInfo(form);
-    alert("Informations du club mises à jour !");
+
+    try {
+      setSaving(true);
+
+      const formData = new FormData();
+
+      formData.append("address", form.address);
+      formData.append("email", form.email);
+      formData.append("phone", form.phone);
+      formData.append("facebook", form.facebook);
+      formData.append("instagram", form.instagram);
+      formData.append("tiktok", form.tiktok);
+      formData.append("heroText", form.heroText);
+      formData.append("heroMediaType", form.heroMediaType);
+
+      if (heroFile) {
+        formData.append("heroMedia", heroFile);
+      }
+
+      const res = await API.put("/club-info", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const updatedData = {
+        ...emptyForm,
+        ...res.data,
+      };
+
+      setForm(updatedData);
+      setHeroFile(null);
+      setPreviewUrl(updatedData.heroMediaUrl || "");
+
+      alert("Informations du club enregistrées !");
+    } catch (error) {
+      console.error("Erreur sauvegarde infos club :", error);
+      alert("Erreur lors de l'enregistrement.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold text-zinc-900">
+          Informations du club
+        </h1>
+        <p className="mt-4 text-zinc-600">Chargement...</p>
+      </div>
+    );
   }
 
   return (
@@ -39,133 +154,222 @@ export default function AdminClubInfo() {
           Informations du club
         </h1>
         <p className="mt-2 text-zinc-600">
-          Modifier les informations générales affichées sur le site.
+          Gérer les informations de contact, les réseaux sociaux et le fond de
+          la page d’accueil.
         </p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl bg-white p-6 shadow lg:col-span-2"
+          className="space-y-6 rounded-2xl bg-white p-6 shadow lg:col-span-2"
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Nom du club"
-            />
+          <section>
+            <h2 className="mb-4 text-xl font-bold text-zinc-900">
+              Contact du club
+            </h2>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setForm({
-                    ...form,
-                    logo: URL.createObjectURL(file),
-                  });
+            <div className="grid gap-4 md:grid-cols-2">
+              <input
+                type="text"
+                value={form.address}
+                onChange={(e) =>
+                  setForm({ ...form, address: e.target.value })
                 }
-              }}
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-            />
+                className="rounded-lg border border-zinc-300 px-4 py-3"
+                placeholder="Adresse / Gymnase"
+              />
 
-            <input
-              type="text"
-              value={form.address}
-              onChange={(e) =>
-                setForm({ ...form, address: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3 md:col-span-2"
-              placeholder="Adresse"
-            />
+              <input
+                type="text"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="rounded-lg border border-zinc-300 px-4 py-3"
+                placeholder="Téléphone"
+              />
 
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Email"
-            />
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="rounded-lg border border-zinc-300 px-4 py-3 md:col-span-2"
+                placeholder="Email de contact"
+              />
+            </div>
+          </section>
 
-            <input
-              type="text"
-              value={form.phone}
-              onChange={(e) =>
-                setForm({ ...form, phone: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Téléphone"
-            />
+          <section className="border-t border-zinc-200 pt-6">
+            <h2 className="mb-4 text-xl font-bold text-zinc-900">
+              Réseaux sociaux
+            </h2>
 
-            <input
-              type="url"
-              value={form.facebook}
-              onChange={(e) =>
-                setForm({ ...form, facebook: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Lien Facebook"
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <input
+                type="url"
+                value={form.facebook}
+                onChange={(e) =>
+                  setForm({ ...form, facebook: e.target.value })
+                }
+                className="rounded-lg border border-zinc-300 px-4 py-3"
+                placeholder="Lien Facebook"
+              />
 
-            <input
-              type="url"
-              value={form.instagram}
-              onChange={(e) =>
-                setForm({ ...form, instagram: e.target.value })
-              }
-              className="rounded-lg border border-zinc-300 px-4 py-3"
-              placeholder="Lien Instagram"
-            />
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              rows={7}
-              className="rounded-lg border border-zinc-300 px-4 py-3 md:col-span-2"
-              placeholder="Présentation du club"
-            />
-          </div>
+              <input
+                type="url"
+                value={form.instagram}
+                onChange={(e) =>
+                  setForm({ ...form, instagram: e.target.value })
+                }
+                className="rounded-lg border border-zinc-300 px-4 py-3"
+                placeholder="Lien Instagram"
+              />
+
+              <input
+                type="url"
+                value={form.tiktok}
+                onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
+                className="rounded-lg border border-zinc-300 px-4 py-3 md:col-span-2"
+                placeholder="Lien TikTok"
+              />
+            </div>
+          </section>
+
+          <section className="border-t border-zinc-200 pt-6">
+            <h2 className="mb-4 text-xl font-bold text-zinc-900">
+              Page d’accueil
+            </h2>
+
+            <div className="grid gap-4">
+              <textarea
+                value={form.heroText}
+                onChange={(e) =>
+                  setForm({ ...form, heroText: e.target.value })
+                }
+                rows={3}
+                className="rounded-lg border border-zinc-300 px-4 py-3"
+                placeholder="Texte affiché sur la homepage"
+              />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <select
+                  value={form.heroMediaType}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      heroMediaType: e.target.value as HeroMediaType,
+                    })
+                  }
+                  className="rounded-lg border border-zinc-300 px-4 py-3"
+                >
+                  <option value="none">Aucun média</option>
+                  <option value="image">Photo</option>
+                  <option value="video">Vidéo</option>
+                </select>
+
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) =>
+                    handleHeroFileChange(e.target.files?.[0])
+                  }
+                  className="rounded-lg border border-zinc-300 px-4 py-3"
+                />
+              </div>
+
+              <p className="text-sm text-zinc-500">
+                Conseil : utilise une image large ou une courte vidéo en format
+                paysage pour un meilleur rendu sur la homepage.
+              </p>
+
+              {previewUrl && form.heroMediaType === "image" && (
+                <div className="overflow-hidden rounded-xl border border-zinc-200">
+                  <img
+                    src={previewUrl}
+                    alt="Aperçu du fond accueil"
+                    className="h-72 w-full object-cover"
+                  />
+                </div>
+              )}
+
+              {previewUrl && form.heroMediaType === "video" && (
+                <div className="overflow-hidden rounded-xl border border-zinc-200">
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="h-72 w-full object-cover"
+                  />
+                </div>
+              )}
+
+              {form.heroMediaType !== "none" && (
+                <button
+                  type="button"
+                  onClick={removeHeroMedia}
+                  className="w-fit rounded-lg border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+                >
+                  Supprimer le média de fond
+                </button>
+              )}
+            </div>
+          </section>
 
           <button
             type="submit"
-            className="mt-6 rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700"
+            disabled={saving}
+            className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Enregistrer les informations
+            {saving ? "Enregistrement..." : "Enregistrer les informations"}
           </button>
         </form>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
+        <aside className="rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold text-zinc-900">
-            Aperçu
+            Aperçu rapide
           </h2>
 
-          {clubInfo.logo && (
-            <img
-              src={clubInfo.logo}
-              alt={clubInfo.name}
-              className="mb-4 h-24 object-contain"
-            />
-          )}
+          <div className="space-y-3 text-sm text-zinc-700">
+            <p>
+              <span className="font-bold text-zinc-900">Adresse :</span>{" "}
+              {form.address || "Non renseignée"}
+            </p>
 
-          <h3 className="text-lg font-bold">{clubInfo.name}</h3>
-          <p className="mt-2 text-sm text-zinc-600">
-            {clubInfo.address}
-          </p>
-          <p className="text-sm text-zinc-600">{clubInfo.email}</p>
-          <p className="text-sm text-zinc-600">{clubInfo.phone}</p>
+            <p>
+              <span className="font-bold text-zinc-900">Email :</span>{" "}
+              {form.email || "Non renseigné"}
+            </p>
 
-          <p className="mt-4 text-sm text-zinc-700">
-            {clubInfo.description}
-          </p>
-        </div>
+            <p>
+              <span className="font-bold text-zinc-900">Téléphone :</span>{" "}
+              {form.phone || "Non renseigné"}
+            </p>
+
+            <p>
+              <span className="font-bold text-zinc-900">Facebook :</span>{" "}
+              {form.facebook || "Non renseigné"}
+            </p>
+
+            <p>
+              <span className="font-bold text-zinc-900">Instagram :</span>{" "}
+              {form.instagram || "Non renseigné"}
+            </p>
+
+            <p>
+              <span className="font-bold text-zinc-900">TikTok :</span>{" "}
+              {form.tiktok || "Non renseigné"}
+            </p>
+
+            <div className="border-t border-zinc-200 pt-4">
+              <p className="font-bold text-zinc-900">Fond homepage :</p>
+              <p>
+                {form.heroMediaType === "none"
+                  ? "Aucun média"
+                  : form.heroMediaType === "image"
+                  ? "Photo"
+                  : "Vidéo"}
+              </p>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

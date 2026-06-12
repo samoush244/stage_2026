@@ -11,6 +11,8 @@ import teamRoutes from "./routes/teamRoutes";
 import organizationMemberRoutes from "./routes/organizationMemberRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import historyRoutes from "./routes/historyRoutes";
+import clubInfoRoutes from "./routes/clubInfoRoutes";
+
 const app = express();
 
 app.use(cors());
@@ -32,4 +34,5 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/organization-members", organizationMemberRoutes);
 app.use("/api/events",eventRoutes);
 app.use("/api/histories", historyRoutes);
+app.use("/api/club-info", clubInfoRoutes);
 export default app;
