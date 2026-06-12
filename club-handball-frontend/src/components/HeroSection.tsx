@@ -77,8 +77,9 @@ function HeroSection({ clubInfo }: HeroSectionProps) {
         />
       )}
 
+      {/*pour le voile noir 
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-black/20" />
-      <div className="absolute inset-0 bg-black/25" />
+      <div className="absolute inset-0 bg-black/25" /> */}
 
       <div className="relative z-10 flex min-h-screen items-center">
         <div className="mx-auto w-full max-w-7xl px-6">
