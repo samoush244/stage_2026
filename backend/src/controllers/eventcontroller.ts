@@ -124,13 +124,23 @@ export const createEvent = async (req: Request, res: Response) => {
       isPublished,
     } = req.body;
 
-    if (!title || !description || !date) {
-      return res.status(400).json({
-        message: "Le titre, la description et la date sont obligatoires.",
-      });
-    }
+const cleanTitle = title?.trim();
+const cleanDescription = description?.trim();
 
-    let slug = createSlug(title);
+if (!cleanTitle || !cleanDescription || !date) {
+  return res.status(400).json({
+    message: "Le titre, la description et la date sont obligatoires.",
+  });
+}
+console.log("BODY EVENT :", req.body);
+console.log("TITLE REÇU :", title);
+let slug = createSlug(cleanTitle);
+
+if (!slug) {
+  return res.status(400).json({
+    message: "Le titre ne permet pas de générer un lien valide.",
+  });
+}
 
     const existingEvent = await Event.findOne({ slug });
 
@@ -142,10 +152,10 @@ export const createEvent = async (req: Request, res: Response) => {
     const imageUrl = await uploadImageToCloudinary(file);
 
     const event = await Event.create({
-      title,
+      title: cleanTitle,
       type,
       slug,
-      description,
+      description: cleanDescription,
       date,
       time,
       location,
