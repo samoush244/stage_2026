@@ -57,8 +57,8 @@ function App() {
         {/* Accueil */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Auth */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* Auth — URL discrète, non visible dans la navbar */}
+        <Route path="/vhb-admin-login" element={<LoginPage />} />
         <Route path="/activation-compte" element={<ActivateAccountPage />} />
 
         {/* Club */}
@@ -76,15 +76,13 @@ function App() {
         {/* Équipes premières */}
         <Route
           path="/equipes/:teamSlug/effectif"
-          element={<PublicRosterPage  />}
+          element={<PublicRosterPage />}
         />
 
         <Route
           path="/equipes/:teamSlug/calendrier-resultats"
           element={<CalendrierResultatsPage />}
         />
-
-      
 
         {/* Autres équipes */}
         <Route path="/equipes/:teamSlug" element={<TeamDetailPage />} />
@@ -168,7 +166,7 @@ function App() {
                 </h1>
 
                 <p className="mt-4 text-zinc-600">
-                  La page demandée n’existe pas ou le lien est incorrect.
+                  La page demandée n'existe pas ou le lien est incorrect.
                 </p>
               </div>
             </main>

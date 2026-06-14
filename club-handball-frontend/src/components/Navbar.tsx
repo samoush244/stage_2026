@@ -291,12 +291,7 @@ const mixedTeams = activeTeams
               BILLETTERIE
             </Link>
 
-            <Link
-              to="/login"
-              className="rounded-full border border-zinc-700 px-6 py-3 hover:border-red-500 hover:text-red-500"
-            >
-              CONNEXION
-            </Link>
+            {/* Bouton CONNEXION supprimé — accès admin via /vhb-admin-login */}
           </div>
 
           <button
@@ -510,13 +505,7 @@ const mixedTeams = activeTeams
                 Billetterie
               </Link>
 
-              <Link
-                to="/login"
-                onClick={closeMobileMenu}
-                className="rounded-full border border-zinc-700 p-4 text-center font-bold hover:border-red-500 hover:text-red-500"
-              >
-                Connexion
-              </Link>
+              {/* Bouton Connexion supprimé — accès admin via /vhb-admin-login */}
             </div>
           </div>
         )}
