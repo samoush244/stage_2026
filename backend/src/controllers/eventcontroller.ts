@@ -111,6 +111,8 @@ export const getAllEventsAdmin = async (req: Request, res: Response) => {
 // ADMIN — créer un événement
 export const createEvent = async (req: Request, res: Response) => {
   try {
+    console.log("BODY EVENT REÇU :", req.body);
+
     const {
       title,
       type,
@@ -124,23 +126,43 @@ export const createEvent = async (req: Request, res: Response) => {
       isPublished,
     } = req.body;
 
-const cleanTitle = title?.trim();
-const cleanDescription = description?.trim();
+    const cleanTitle = typeof title === "string" ? title.trim() : "";
+    const cleanDescription =
+      typeof description === "string" ? description.trim() : "";
+    const cleanDate = typeof date === "string" ? date.trim() : "";
 
-if (!cleanTitle || !cleanDescription || !date) {
-  return res.status(400).json({
-    message: "Le titre, la description et la date sont obligatoires.",
-  });
-}
-console.log("BODY EVENT :", req.body);
-console.log("TITLE REÇU :", title);
-let slug = createSlug(cleanTitle);
+    console.log("cleanTitle :", cleanTitle);
+    console.log("cleanDescription :", cleanDescription);
+    console.log("cleanDate :", cleanDate);
 
-if (!slug) {
-  return res.status(400).json({
-    message: "Le titre ne permet pas de générer un lien valide.",
-  });
-}
+    if (!cleanTitle) {
+      return res.status(400).json({
+        message: "Le titre de l'événement est obligatoire.",
+      });
+    }
+
+    if (!cleanDescription) {
+      return res.status(400).json({
+        message: "La description de l'événement est obligatoire.",
+      });
+    }
+
+    if (!cleanDate) {
+      return res.status(400).json({
+        message: "La date de l'événement est obligatoire.",
+      });
+    }
+
+    let slug = createSlug(cleanTitle);
+
+    console.log("SLUG GÉNÉRÉ :", slug);
+
+    if (!slug) {
+      return res.status(400).json({
+        message:
+          "Le titre ne permet pas de générer un lien valide. Mets au moins un mot avec des lettres ou des chiffres.",
+      });
+    }
 
     const existingEvent = await Event.findOne({ slug });
 
@@ -156,7 +178,7 @@ if (!slug) {
       type,
       slug,
       description: cleanDescription,
-      date,
+      date: cleanDate,
       time,
       location,
       image: imageUrl || "",
@@ -167,11 +189,12 @@ if (!slug) {
     });
 
     res.status(201).json(event);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur création événement :", error);
 
     res.status(500).json({
       message: "Erreur lors de la création de l’événement.",
+      error: error.message,
     });
   }
 };
