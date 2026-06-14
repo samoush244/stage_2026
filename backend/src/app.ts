@@ -22,7 +22,7 @@ app.use(helmet());
 // ─── Sécurité : CORS — uniquement ton domaine frontend ───────────────────────
 const allowedOrigins = [
   "http://localhost:5173",         // dev local
-  "https://stage-2026-samoush244s-projects.vercel.app/", // 🔴 remplace par ton vrai domaine
+  "https://stage-2026-samoush244s-projects.vercel.app", // 🔴 remplace par ton vrai domaine
 ];
 
 app.use(
