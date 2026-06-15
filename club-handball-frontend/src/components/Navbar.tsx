@@ -328,7 +328,7 @@ function Navbar() {
               onClick={closeAll}
               className="rounded bg-red-600 px-6 py-3 hover:bg-red-700"
             >
-              EVENEMENTS
+              ÉVÉNEMENTS
             </Link>
           </div>
 

@@ -31,7 +31,7 @@ export default function AdminLayout() {
               Infos club
             </Link>
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/evenements">
-              Événements /Billeterie
+              Événements
             </Link>
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/organigramme">
               Organigramme

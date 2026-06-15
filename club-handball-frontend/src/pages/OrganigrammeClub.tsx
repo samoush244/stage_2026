@@ -104,12 +104,12 @@ function MemberSection({ title, members }: MemberSectionProps) {
             key={member._id}
             className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
           >
-            <div className="h-64 bg-zinc-100">
+            <div className="h-64 bg-zinc-100 ">
               {member.photo ? (
                 <img
                   src={getImageUrl(member.photo)}
                   alt={`${member.firstName} ${member.lastName}`}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover object-center"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-zinc-200 text-5xl font-black text-zinc-500">
