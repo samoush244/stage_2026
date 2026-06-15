@@ -59,7 +59,7 @@ function TicketingPage() {
       <main className="bg-white px-8 py-24 text-black">
         <div className="mx-auto max-w-7xl">
           <p className="text-lg font-semibold text-gray-600">
-            Chargement de la billetterie...
+            Chargement des évènements...
           </p>
         </div>
       </main>
@@ -73,12 +73,10 @@ function TicketingPage() {
         <section className="bg-black px-8 py-16 text-white">
           <div className="mx-auto max-w-7xl">
             <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-              Evènements
+              Evénements
             </p>
-            <h1 className="mt-4 text-5xl font-extrabold">Réservez vos places</h1>
             <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
-              Retrouvez ici les prochains matchs, événements et actions du club
-              nécessitant une réservation ou une inscription en ligne.
+              Retrouvez ici les prochains grands événements du club.
             </p>
           </div>
         </section>
@@ -98,17 +96,6 @@ function TicketingPage() {
           </div>
         </section>
 
-        <section className="bg-black px-8 py-16 text-white">
-          <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Information</p>
-            <h2 className="mt-3 text-3xl font-extrabold">Paiement et réservation</h2>
-            <p className="mt-5 max-w-3xl leading-relaxed text-gray-300">
-              Les réservations peuvent être gérées via une plateforme externe comme HelloAsso.
-              Le club pourra ajouter ici les liens officiels vers les matchs, événements, stages
-              ou campagnes associatives.
-            </p>
-          </div>
-        </section>
       </main>
     );
   }
@@ -117,11 +104,9 @@ function TicketingPage() {
     <main className="bg-white text-black">
       <section className="bg-black px-8 py-16 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Billetterie</p>
-          <h1 className="mt-4 text-5xl font-extrabold">Réservez vos places</h1>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Evénement</p>
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
             Retrouvez ici les prochains matchs, événements et actions du club
-            nécessitant une réservation ou une inscription en ligne.
           </p>
         </div>
       </section>
@@ -129,6 +114,7 @@ function TicketingPage() {
       <section className="bg-zinc-950 px-8 py-20 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
           <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-black shadow-xl">
+            {/** 
             {mainEvent.image ? (
               <img
                 src={getImageUrl(mainEvent.image)}
@@ -139,7 +125,7 @@ function TicketingPage() {
               <div className="flex h-96 items-center justify-center bg-gradient-to-br from-red-700 via-black to-black">
                 <p className="text-2xl font-extrabold uppercase">Match à venir</p>
               </div>
-            )}
+            )}*/}
           </div>
 
           <div>

@@ -290,7 +290,7 @@ function Navbar() {
                         onClick={() => toggleSubMenu("mixed")}
                         className={`flex w-full items-center justify-between px-3 py-2 text-left hover:text-red-500 ${openSubMenu === "mixed" ? "text-red-500" : ""}`}
                       >
-                        <span>Loisirs</span>
+                        <span>Mixte</span>
                         <span className={`transition-transform ${openSubMenu === "mixed" ? "rotate-90" : ""}`}>›</span>
                       </button>
 
@@ -308,7 +308,7 @@ function Navbar() {
                               </Link>
                             ))
                           ) : (
-                            <p className="px-3 py-2 text-sm text-zinc-400">Aucune équipe loisirs</p>
+                            <p className="px-3 py-2 text-sm text-zinc-400">Aucune équipe mixte</p>
                           )}
                         </div>
                       )}
@@ -324,11 +324,11 @@ function Navbar() {
             </Link>
 
             <Link
-              to="/billetterie"
+              to="/événements"
               onClick={closeAll}
               className="rounded bg-red-600 px-6 py-3 hover:bg-red-700"
             >
-              BILLETTERIE
+              EVENEMENTS
             </Link>
           </div>
 
@@ -432,8 +432,8 @@ function Navbar() {
                 Actualités
               </Link>
 
-              <Link to="/billetterie" onClick={closeMobileMenu} className="rounded-lg bg-red-600 p-4 text-center font-bold hover:bg-red-700">
-                Billetterie
+              <Link to="/événements" onClick={closeMobileMenu} className="rounded-lg bg-red-600 p-4 text-center font-bold hover:bg-red-700">
+                Evénements
               </Link>
             </div>
           </div>

@@ -90,7 +90,7 @@ function App() {
         {/* Pages publiques */}
         <Route path="/actualites" element={<NewsPage />} />
         <Route path="/actualites/:slug" element={<NewsDetailPage />} />
-        <Route path="/billetterie" element={<TicketingPage />} />
+        <Route path="/événements" element={<TicketingPage />} />
         <Route path="/partenaires" element={<PartnersPage />} />
         <Route path="/contact" element={<Contact />} />
 
