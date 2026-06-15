@@ -109,7 +109,7 @@ function MemberSection({ title, members }: MemberSectionProps) {
                 <img
                   src={getImageUrl(member.photo)}
                   alt={`${member.firstName} ${member.lastName}`}
-                  className="h-full w-full object-cover object-top"
+                  className="h-full w-full object-cover object-center"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-zinc-200 text-5xl font-black text-zinc-500">
