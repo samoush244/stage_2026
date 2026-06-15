@@ -44,16 +44,35 @@ const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 
 function getLogoUrl(logo?: string) {
   if (!logo) return "";
-
-  if (logo.startsWith("http://") || logo.startsWith("https://")) {
-    return logo;
-  }
-
-  if (logo.startsWith("/")) {
-    return `${BACKEND_URL}${logo}`;
-  }
-
+  if (logo.startsWith("http://") || logo.startsWith("https://")) return logo;
+  if (logo.startsWith("/")) return `${BACKEND_URL}${logo}`;
   return `${BACKEND_URL}/${logo}`;
+}
+
+function PartnerCard({ partner }: { partner: Partner }) {
+  const [active, setActive] = useState(false);
+
+  return (
+    <a
+      href={partner.url}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Voir le site de ${partner.name}`}
+      className="flex min-h-28 items-center justify-center"
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onTouchStart={() => setActive(true)}
+      onTouchEnd={() => setActive(false)}
+    >
+      <img
+        src={getLogoUrl(partner.logo)}
+        alt={partner.name}
+        className={`max-h-24 max-w-[170px] object-contain transition duration-300 ${
+          active ? "scale-110 grayscale-0" : "grayscale"
+        }`}
+      />
+    </a>
+  );
 }
 
 function HomePage() {
@@ -65,16 +84,11 @@ function HomePage() {
     const fetchClubInfo = async () => {
       try {
         const res = await API.get("/club-info");
-
-        setClubInfo({
-          ...defaultClubInfo,
-          ...res.data,
-        });
+        setClubInfo({ ...defaultClubInfo, ...res.data });
       } catch (error) {
         console.error("Erreur récupération infos club accueil :", error);
       }
     };
-
     fetchClubInfo();
   }, []);
 
@@ -89,7 +103,6 @@ function HomePage() {
         setLoadingPartners(false);
       }
     };
-
     fetchPartners();
   }, []);
 
@@ -108,41 +121,25 @@ function HomePage() {
             <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-600">
               Nos partenaires
             </p>
-
             <h2 className="mt-4 text-4xl font-black text-zinc-950">
               Ils soutiennent le club
             </h2>
           </div>
 
           {loadingPartners && (
-            <p className="text-center text-zinc-500">
-              Chargement des partenaires...
-            </p>
+            <p className="text-center text-zinc-500">Chargement des partenaires...</p>
           )}
 
           {!loadingPartners && homePartners.length === 0 && (
             <p className="text-center text-zinc-500">
-              Aucun partenaire sélectionné pour l’accueil pour le moment.
+              Aucun partenaire sélectionné pour l'accueil pour le moment.
             </p>
           )}
 
           {!loadingPartners && homePartners.length > 0 && (
             <div className="grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {homePartners.map((partner) => (
-                <a
-                  key={partner._id}
-                  href={partner.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Voir le site de ${partner.name}`}
-                  className="group flex min-h-28 items-center justify-center"
-                >
-                  <img
-                    src={getLogoUrl(partner.logo)}
-                    alt={partner.name}
-                    className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
-                  />
-                </a>
+                <PartnerCard key={partner._id} partner={partner} />
               ))}
             </div>
           )}

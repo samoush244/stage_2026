@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import {Link} from "react-router";
+import { Link } from "react-router";
 
 type Partner = {
   _id: string;
@@ -18,23 +18,38 @@ const BACKEND_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api"
   .replace(/\/$/, "");
 
 const partnerSections = [
-  {
-    key: "majeur",
-    title: "Partenaires majeurs",
-  },
-  {
-    key: "institutionnel",
-    title: "Partenaires institutionnels",
-  },
-  {
-    key: "officiel",
-    title: "Partenaires officiels",
-  },
-  {
-    key: "autres",
-    title: "Autres partenaires",
-  },
+  { key: "majeur", title: "Partenaires majeurs" },
+  { key: "institutionnel", title: "Partenaires institutionnels" },
+  { key: "officiel", title: "Partenaires officiels" },
+  { key: "autres", title: "Autres partenaires" },
 ];
+
+function PartnerCard({ partner, getLogoUrl }: { partner: Partner; getLogoUrl: (logo?: string) => string }) {
+  const [active, setActive] = useState(false);
+
+  return (
+    <a
+      key={partner._id}
+      href={partner.url}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Voir le site de ${partner.name}`}
+      className="flex min-h-28 items-center justify-center"
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onTouchStart={() => setActive(true)}
+      onTouchEnd={() => setActive(false)}
+    >
+      <img
+        src={getLogoUrl(partner.logo)}
+        alt={partner.name}
+        className={`max-h-24 max-w-[170px] object-contain transition duration-300 ${
+          active ? "scale-110 grayscale-0" : "grayscale"
+        }`}
+      />
+    </a>
+  );
+}
 
 export default function PartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -59,45 +74,16 @@ export default function PartnersPage() {
 
   const getLogoUrl = (logo?: string) => {
     if (!logo) return "";
-
-    if (logo.startsWith("http://") || logo.startsWith("https://")) {
-      return logo;
-    }
-
-    if (logo.startsWith("/")) {
-      return `${BACKEND_URL}${logo}`;
-    }
-
+    if (logo.startsWith("http://") || logo.startsWith("https://")) return logo;
+    if (logo.startsWith("/")) return `${BACKEND_URL}${logo}`;
     return `${BACKEND_URL}/${logo}`;
   };
 
   const normalizeCategory = (category?: string) => {
     const value = category?.trim().toLowerCase();
-
-    if (
-      value === "majeur" ||
-      value === "partenaire majeur" ||
-      value === "partenaires majeurs"
-    ) {
-      return "majeur";
-    }
-
-    if (
-      value === "institutionnel" ||
-      value === "partenaire institutionnel" ||
-      value === "partenaires institutionnels"
-    ) {
-      return "institutionnel";
-    }
-
-    if (
-      value === "officiel" ||
-      value === "partenaire officiel" ||
-      value === "partenaires officiels"
-    ) {
-      return "officiel";
-    }
-
+    if (value === "majeur" || value === "partenaire majeur" || value === "partenaires majeurs") return "majeur";
+    if (value === "institutionnel" || value === "partenaire institutionnel" || value === "partenaires institutionnels") return "institutionnel";
+    if (value === "officiel" || value === "partenaire officiel" || value === "partenaires officiels") return "officiel";
     return "autres";
   };
 
@@ -106,13 +92,7 @@ export default function PartnersPage() {
     .sort((a, b) => {
       const categoryA = normalizeCategory(a.category);
       const categoryB = normalizeCategory(b.category);
-
-      if (categoryA !== categoryB) {
-        return categoryA.localeCompare(categoryB, "fr", {
-          sensitivity: "base",
-        });
-      }
-
+      if (categoryA !== categoryB) return categoryA.localeCompare(categoryB, "fr", { sensitivity: "base" });
       return (a.order ?? 999) - (b.order ?? 999);
     });
 
@@ -131,14 +111,9 @@ export default function PartnersPage() {
           <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
             Le club
           </p>
-
-          <h1 className="mt-4 text-5xl font-black uppercase">
-            Nos partenaires
-          </h1>
-
+          <h1 className="mt-4 text-5xl font-black uppercase">Nos partenaires</h1>
           <p className="mt-6 max-w-2xl text-zinc-300">
-            Découvrez les entreprises et structures qui accompagnent le club
-            dans son développement sportif et associatif.
+            Découvrez les entreprises et structures qui accompagnent le club dans son développement sportif et associatif.
           </p>
         </div>
       </section>
@@ -152,9 +127,7 @@ export default function PartnersPage() {
           )}
 
           {!error && visiblePartners.length === 0 && (
-            <p className="text-center text-zinc-500">
-              Aucun partenaire affiché pour le moment.
-            </p>
+            <p className="text-center text-zinc-500">Aucun partenaire affiché pour le moment.</p>
           )}
 
           {!error &&
@@ -162,33 +135,17 @@ export default function PartnersPage() {
               const sectionPartners = visiblePartners.filter(
                 (partner) => normalizeCategory(partner.category) === section.key
               );
-
               if (sectionPartners.length === 0) return null;
 
               return (
                 <div key={section.key}>
-                  <div>
-                    <h2 className="text-3xl font-black uppercase text-red-600 md:text-4xl">
-                      {section.title}
-                    </h2>
-                  </div>
+                  <h2 className="text-3xl font-black uppercase text-red-600 md:text-4xl">
+                    {section.title}
+                  </h2>
 
                   <div className="mt-10 grid grid-cols-2 items-center gap-x-12 gap-y-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {sectionPartners.map((partner) => (
-                      <a
-                        key={partner._id}
-                        href={partner.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`Voir le site de ${partner.name}`}
-                        className="group flex min-h-28 items-center justify-center"
-                      >
-                        <img
-                          src={getLogoUrl(partner.logo)}
-                          alt={partner.name}
-                          className="max-h-24 max-w-[170px] object-contain grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
-                        />
-                      </a>
+                      <PartnerCard key={partner._id} partner={partner} getLogoUrl={getLogoUrl} />
                     ))}
                   </div>
                 </div>
@@ -200,17 +157,10 @@ export default function PartnersPage() {
       <section className="bg-zinc-950 py-20 text-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 md:flex-row md:items-center">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
-              Sponsoring
-            </p>
-
-            <h2 className="mt-4 text-3xl font-black uppercase md:text-4xl">
-              Devenir partenaire du club
-            </h2>
-
+            <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">Sponsoring</p>
+            <h2 className="mt-4 text-3xl font-black uppercase md:text-4xl">Devenir partenaire du club</h2>
             <p className="mt-5 max-w-2xl text-zinc-300">
-              Vous souhaitez associer votre entreprise à un projet sportif local,
-              dynamique et engagé ? Rejoignez les partenaires du club.
+              Vous souhaitez associer votre entreprise à un projet sportif local, dynamique et engagé ? Rejoignez les partenaires du club.
             </p>
           </div>
 

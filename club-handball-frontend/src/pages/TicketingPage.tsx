@@ -73,7 +73,7 @@ function TicketingPage() {
         <section className="bg-black px-8 py-16 text-white">
           <div className="mx-auto max-w-7xl">
             <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-              Billetterie
+              Evènements
             </p>
             <h1 className="mt-4 text-5xl font-extrabold">Réservez vos places</h1>
             <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
@@ -200,20 +200,6 @@ function TicketingPage() {
                     <h3 className="mt-3 text-2xl font-extrabold">{event.title}</h3>
                     <p className="mt-2 text-sm font-semibold text-gray-500">{event.location}</p>
                     <p className="mt-4 leading-relaxed text-gray-600">{event.description}</p>
-                    {event.ticketUrl ? (
-                      <a
-                        href={event.ticketUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-6 inline-block rounded bg-red-600 px-5 py-3 text-sm font-semibold text-white hover:bg-red-700"
-                      >
-                        Réserver
-                      </a>
-                    ) : (
-                      <p className="mt-6 text-sm font-semibold text-gray-400">
-                        Billetterie bientôt disponible
-                      </p>
-                    )}
                   </div>
                 </article>
               ))}
@@ -221,18 +207,6 @@ function TicketingPage() {
           </div>
         </section>
       )}
-
-      <section className="bg-black px-8 py-16 text-white">
-        <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Information</p>
-          <h2 className="mt-3 text-3xl font-extrabold">Paiement et réservation</h2>
-          <p className="mt-5 max-w-3xl leading-relaxed text-gray-300">
-            Les réservations peuvent être gérées via une plateforme externe comme HelloAsso.
-            Le club pourra ajouter ici les liens officiels vers les matchs, événements, stages
-            ou campagnes associatives.
-          </p>
-        </div>
-      </section>
     </main>
   );
 }
