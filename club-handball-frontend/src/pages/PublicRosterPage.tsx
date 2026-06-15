@@ -373,7 +373,7 @@ export default function PublicRosterPage() {
                               alt={`${player.firstName || ""} ${
                                 player.lastName || ""
                               }`}
-                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                              className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
                             />
 
                             {number !== null && (
