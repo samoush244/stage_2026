@@ -25,8 +25,6 @@ export const trainingCategories: TrainingCategory[] = [
     title: "Baby Hand",
     ageRange: "3 à 5 ans",
     logoUrl: "/images/categories/baby.png",
-    coachName: "Joe Doe",
-    coachEmail: "joe@mail.com",
     columns: ["Baby Hand"],
     rows: [
       {
@@ -43,10 +41,19 @@ export const trainingCategories: TrainingCategory[] = [
   {
     id: 3,
     title: "Mini Hand",
-    ageRange: "7 à 9 ans",
+    ageRange: "6 à 8 ans",
     logoUrl: "/images/categories/mini.png",
     columns: ["Mini-hand"],
     rows: [
+      {
+        day: "Mercredi",
+        cells: [
+          {
+            time: "16h00 - 17h00",
+            location: "Salle des tertiales",
+          },
+        ],
+      },
       {
         day: "Samedi",
         cells: [
@@ -66,16 +73,22 @@ export const trainingCategories: TrainingCategory[] = [
     columns: ["Moins de 11 ans"],
     rows: [
       {
-        day: "Mardi",
+        day: "Lundi",
         cells: [
-          {},
+          {
+            time: "18h00 - 19h30",
+            location: "Salle des tertiales",
+          },
           
         ],
       },
       {
         day: "Mercredi",
         cells: [
-          {},
+          {
+            time: "16h00- 17h00",
+            location: "Salle des tertiales",
+          },
         ],
       },
     ],
@@ -85,18 +98,32 @@ export const trainingCategories: TrainingCategory[] = [
     title: "Moins de 13 ans",
     ageRange: "10 à 12 ans",
     logoUrl: "/images/categories/ecole de hand.png",
-    columns: ["Moins de 13 ans"],
+    columns: ["Moins de 13 ans","Moins de 13 ans Feminine",],
     rows: [
       {
-        day: "Lundi",
+        day: "Mardi",
         cells: [
-          {},
+          {
+            time: "18h00 - 19h30",
+            location: "Salle des tertiales",
+          },
+          {
+            time: "18h00 - 19h30",
+            location: "Salle des tertiales",
+          },
         ],
       },
       {
         day: "Mercredi",
         cells: [
-          {},
+          {
+            time: "17h00 - 19h30",
+            location: "Salle des tertiales",
+          },
+          {
+            time: "17h00 - 19h30",
+            location: "Salle des tertiales",
+          },
         ],
       },
     ],
@@ -104,10 +131,9 @@ export const trainingCategories: TrainingCategory[] = [
   {
     id: 6,
     title: "Moins de 15 ans",
-    ageRange: "13 à 14 ans",
+    ageRange: "12 à 14 ans",
     columns: [
       "Régionale Masculine",
-      "Départementale Masculine",
       "Départementale Féminine",
     ],
     rows: [
@@ -118,17 +144,12 @@ export const trainingCategories: TrainingCategory[] = [
             time: "18h00-19h30",
             location: "Salle des tertiales",
           },
-          {
-            time: "18h00-19h30",
-            location: "Salle des tertiales",
-          },
           {},
         ],
       },
       {
         day: "Mardi",
         cells: [
-          {},
           {},
           {
             time: "18h00 - 19h30",
@@ -143,9 +164,6 @@ export const trainingCategories: TrainingCategory[] = [
             time: "18h30 - 20h00",
             location: "Salle des tertiales",
           },
-          {  time: "18h30 - 20h00",
-            location: "Salle des tertiales",
-        },
           {  time: "17h30 - 19h00",
             location: "Salle des tertiales",
         },
@@ -187,7 +205,7 @@ export const trainingCategories: TrainingCategory[] = [
         day: "jeudi",
         cells: [
             {
-            time: "19h30 - 21h00",
+            time: "19h00 - 20h00",
             location: "Salle des tertiales",
             },
           {
@@ -224,7 +242,10 @@ export const trainingCategories: TrainingCategory[] = [
         {
         day: "Lundi",
         cells: [
-          {},
+          {
+            time: "20h00 - 21h30",
+            location: "Salle des tertiales",
+          },
         {},
         {},
         {
@@ -233,14 +254,11 @@ export const trainingCategories: TrainingCategory[] = [
           },
         ],
         },
-           {
+          {
         day: "Mardi",
         cells: [
           {},
-         {
-            time: "19h-30 - 21h00",
-            location: "Salle des tertiales",
-          },
+        {},
         {
             time: "19h-30 - 21h30",
             location: "Salle des tertiales",
@@ -255,9 +273,30 @@ export const trainingCategories: TrainingCategory[] = [
             time: "20h00 - 21h30",
             location: "Salle des tertiales",
           },
+          {
+            time: "20h00 - 21h30",
+            location: "Salle des tertiales",
+          },
+        {},
+        {},
+        ],
+      },
+      {
+        day: "jeudi",
+        cells: [
+          {
+            time: "20h00 - 21h30",
+            location: "Salle des tertiales",
+          },
           {},
-        {},
-        {},
+        {
+          time: "19h30 - 21h00",
+          location: "Salle des tertiales",
+        },
+        {
+          time: "18h00- 19h30",
+          location: "Salle des tertiales",
+        },
         ],
       },
        {
@@ -291,10 +330,10 @@ export const trainingCategories: TrainingCategory[] = [
     columns: ["Loisirs"],
     rows: [
       {
-        day: "Mercredi",
+        day: "Mardi",
         cells: [
           {
-            time: "20h00 - 21h30",
+            time: "19h30 - 21h00",
             location: "Salle des tertiales",
           },
         ],
