@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import { Link } from "react-router";
+
 
 type Partner = {
   _id: string;
