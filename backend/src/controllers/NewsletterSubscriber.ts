@@ -4,7 +4,7 @@ import NewsletterSubscriber from "../models/NewsletterSubscriber";
 import { sendWelcomeEmail } from "../services/mailServices";
 
 const CONSENT_TEXT =
-  "J’accepte de recevoir par email les actualités, événements et informations du club.";
+  "J’accepte de recevoir les actualités du club par email. Je pourrai me désabonner à tout moment.";
 
 const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -38,9 +38,12 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
       email: cleanEmail,
     });
 
+    // Si l'email est déjà inscrit, on répond directement
+    // pour éviter de bloquer ou d'afficher une erreur côté frontend.
     if (existingSubscriber && existingSubscriber.isActive) {
-      return res.status(409).json({
+      return res.status(200).json({
         message: "Cet email est déjà inscrit à la newsletter.",
+        alreadySubscribed: true,
       });
     }
 
@@ -67,6 +70,7 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
         consentDate: new Date(),
         consentText: CONSENT_TEXT,
         unsubscribeToken,
+        welcomeEmailSent: false,
       });
     }
 
@@ -75,27 +79,24 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
 
     const unsubscribeUrl = `${backendUrl}/api/newsletter/unsubscribe/${subscriber.unsubscribeToken}`;
 
-    let welcomeEmailSent = false;
+    // On répond tout de suite au frontend
+    res.status(201).json({
+      message: "Inscription réussie.",
+      subscriber,
+      welcomeEmailSent: false,
+    });
 
+    // Ensuite seulement, on envoie l'email en arrière-plan
     try {
       await sendWelcomeEmail(cleanEmail, unsubscribeUrl);
 
       subscriber.welcomeEmailSent = true;
       subscriber.welcomeEmailSentAt = new Date();
-      await subscriber.save();
 
-      welcomeEmailSent = true;
+      await subscriber.save();
     } catch (emailError) {
       console.error("Erreur envoi email de bienvenue :", emailError);
     }
-
-    return res.status(201).json({
-      message: welcomeEmailSent
-        ? "Inscription réussie. Un email de bienvenue a été envoyé."
-        : "Inscription réussie, mais l'email de bienvenue n'a pas pu être envoyé.",
-      subscriber,
-      welcomeEmailSent,
-    });
   } catch (error) {
     return res.status(500).json({
       message: "Erreur lors de l'inscription à la newsletter.",

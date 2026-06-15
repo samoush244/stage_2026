@@ -1,12 +1,11 @@
 import nodemailer from "nodemailer";
 
+let transporter: nodemailer.Transporter | null = null;
+
 const getTransporter = () => {
-  console.log("SMTP_HOST:", process.env.SMTP_HOST);
-  console.log("SMTP_PORT:", process.env.SMTP_PORT);
-  console.log("SMTP_SECURE:", process.env.SMTP_SECURE);
-  console.log("SMTP_USER:", process.env.SMTP_USER);
-  console.log("SMTP_PASS présent:", !!process.env.SMTP_PASS);
-  console.log("MAIL_FROM:", process.env.MAIL_FROM);
+  if (transporter) {
+    return transporter;
+  }
 
   if (
     !process.env.SMTP_HOST ||
@@ -16,7 +15,7 @@ const getTransporter = () => {
     throw new Error("Configuration SMTP manquante.");
   }
 
-  return nodemailer.createTransport({
+  transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === "true",
@@ -25,6 +24,8 @@ const getTransporter = () => {
       pass: process.env.SMTP_PASS,
     },
   });
+
+  return transporter;
 };
 
 export const sendWelcomeEmail = async (
@@ -33,16 +34,13 @@ export const sendWelcomeEmail = async (
 ) => {
   const transporter = getTransporter();
 
-  await transporter.verify();
-  console.log("Connexion SMTP validée");
-
   const result = await transporter.sendMail({
     from: process.env.MAIL_FROM || `"Red Swans" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Bienvenue dans la newsletter des Red Swans",
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Bienvenue dans la famille Red Army !</h2>
+        <h2>Bienvenue dans la famille Red Swans !</h2>
 
         <p>Merci pour votre inscription à la newsletter du club.</p>
 
@@ -79,5 +77,5 @@ Se désinscrire : ${unsubscribeUrl}
     `,
   });
 
-  console.log("Email envoyé :", result.messageId);
+  console.log("Email de bienvenue envoyé :", result.messageId);
 };

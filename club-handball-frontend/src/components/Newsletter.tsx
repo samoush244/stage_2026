@@ -4,7 +4,9 @@ import { useLocation } from "react-router";
 // ============================================================
 // CONFIGURATION
 // ============================================================
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000")
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
 
 const CONSENT_TEXT =
   "J’accepte de recevoir les actualités du club par email. Je pourrai me désabonner à tout moment.";
@@ -19,6 +21,11 @@ async function subscribeToNewsletter(email: string): Promise<void> {
       consentText: CONSENT_TEXT,
     }),
   });
+
+  // Si l'email existe déjà, on peut considérer que l'inscription est OK
+  if (response.status === 409) {
+    return;
+  }
 
   if (!response.ok) {
     throw new Error("Erreur lors de l'inscription");
@@ -88,11 +95,19 @@ export default function Newsletter() {
     try {
       await subscribeToNewsletter(email);
 
-      setStatus("success");
-      localStorage.setItem(STORAGE_KEY, "subscribed");
+  setStatus("success");
+localStorage.setItem(STORAGE_KEY, "subscribed");
 
-      // Ferme automatiquement après 3s
-      setTimeout(() => setOpen(false), 3000);
+setTimeout(() => {
+  setOpen(false);
+
+  // Reset propre du formulaire
+  setStatus("idle");
+  setEmail("");
+  setConsent(false);
+  setFieldError(false);
+  setConsentError(false);
+}, 3000);
     } catch {
       setStatus("error");
     }
