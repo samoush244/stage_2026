@@ -113,10 +113,10 @@ function HeroSection({ clubInfo }: HeroSectionProps) {
             */}
             <div className="mt-16 flex flex-wrap items-center justify-center gap-7 sm:flex-row">
               <Link
-                to="/billetterie"
+                to="/événement"
                 className="rounded-md bg-red-600 px-7 py-4 font-bold text-white transition hover:bg-red-700"
               >
-                Billetterie
+                Événement
               </Link>
 
               <Link

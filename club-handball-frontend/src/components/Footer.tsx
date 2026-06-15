@@ -261,10 +261,10 @@ function Footer() {
 
           {/* CTA Billetterie */}
           <Link
-            to="/billetterie"
+            to="/événements"
             className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700 active:scale-95"
           >
-            🎟 Billetterie
+              ✨ Événements
           </Link>
         </div>
       </div>

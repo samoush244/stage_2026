@@ -104,7 +104,7 @@ function TicketingPage() {
     <main className="bg-white text-black">
       <section className="bg-black px-8 py-16 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Evénement</p>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">Événements</p>
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
             Retrouvez ici les prochains matchs, événements et actions du club
           </p>

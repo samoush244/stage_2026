@@ -164,12 +164,10 @@ export default function PartnersPage() {
             </p>
           </div>
 
-          <Link
-            to="/contact"
-            className="inline-flex bg-red-600 px-8 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700"
-          >
-            Nous contacter
-          </Link>
+          <a href="mailto:contact@tonclub.fr"
+            className="inline-block rounded-lg bg-red-600 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700 active:scale-95">
+              ✉️ marketing@valenciennes.fr
+        </a>
         </div>
       </section>
     </main>
