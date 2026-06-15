@@ -114,7 +114,7 @@ function TicketingPage() {
       <section className="bg-zinc-950 px-8 py-20 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
           <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-black shadow-xl">
-            {/** 
+            
             {mainEvent.image ? (
               <img
                 src={getImageUrl(mainEvent.image)}
@@ -125,7 +125,7 @@ function TicketingPage() {
               <div className="flex h-96 items-center justify-center bg-gradient-to-br from-red-700 via-black to-black">
                 <p className="text-2xl font-extrabold uppercase">Match à venir</p>
               </div>
-            )}*/}
+            )}
           </div>
 
           <div>
@@ -139,6 +139,7 @@ function TicketingPage() {
               <p><span className="font-bold text-white">Lieu :</span> {mainEvent.location}</p>
             </div>
             <p className="mt-6 leading-relaxed text-gray-300">{mainEvent.description}</p>
+            {/**
             {mainEvent.ticketUrl ? (
               <a
                 href={mainEvent.ticketUrl}
@@ -150,7 +151,7 @@ function TicketingPage() {
               </a>
             ) : (
               <p className="mt-8 font-semibold text-gray-400">Billetterie bientôt disponible.</p>
-            )}
+            )} */}
           </div>
         </div>
       </section>
