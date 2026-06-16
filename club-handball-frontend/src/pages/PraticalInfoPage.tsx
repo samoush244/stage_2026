@@ -11,7 +11,7 @@ function CategoryLogo({ category }: { category: PracticeCategory }) {
           <img
             src={category.logoUrl}
             alt={category.title}
-            className="max-h-full max-w-full object-contain"
+            className="max-h-full max-w-full object-cover"
           />
         </div>
       ) : (
