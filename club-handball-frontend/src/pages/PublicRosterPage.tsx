@@ -365,7 +365,7 @@ export default function PublicRosterPage() {
                           key={player._id}
                           className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
-                          <div className="relative h-80 overflow-hidden bg-zinc-100">
+                          <div className="aspect-[4/5] w-full overflow-hidden bg-zinc-100">
                             <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
 
                             <img
