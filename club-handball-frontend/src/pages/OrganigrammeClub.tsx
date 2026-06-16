@@ -104,7 +104,7 @@ function MemberSection({ title, members }: MemberSectionProps) {
             key={member._id}
             className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
           >
-            <div className="h-64 bg-zinc-100 ">
+            <div className="aspect-[4/5] w-full overflow-hidden bg-zinc-100 ">
               {member.photo ? (
                 <img
                   src={getImageUrl(member.photo)}
