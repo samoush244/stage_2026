@@ -69,7 +69,7 @@ export default function Communaute() {
           <div className="relative">
             <div className="absolute -left-4 -top-4 h-full w-full bg-red-600" />
             <img
-              src="/images/img.jpg"
+              src="/images/img.png"
               alt="Vie du club"
               className="relative z-10 h-[420px] w-full object-cover shadow-2xl"
             />
