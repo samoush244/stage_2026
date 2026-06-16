@@ -1,7 +1,9 @@
 import type { Key } from "react";
-import { trainingCategories, type TrainingCategory } from "../data/praticalInfo";
+import { useEffect, useState } from "react";
+import API from "../services/api";
+import type { PracticeCategory, ScheduleCell } from "../types/practiceCategory";
 
-function CategoryLogo({ category }: { category: TrainingCategory }) {
+function CategoryLogo({ category }: { category: PracticeCategory }) {
   return (
     <div className="flex flex-col items-center gap-4">
       {category.logoUrl ? (
@@ -18,32 +20,18 @@ function CategoryLogo({ category }: { category: TrainingCategory }) {
 
       <div className="text-center lg:hidden">
         <p className="text-xl font-extrabold">{category.title}</p>
-        {category.ageRange && (
+
+        {category.birthYearsLabel && (
           <p className="mt-1 text-sm font-semibold text-red-600">
-            {category.ageRange}
+            {category.birthYearsLabel}
           </p>
-        )}
-      </div>
-      <div className="hidden text-center lg:block"> 
-        {category.coachName && (
-          <p className="text-sm font-bold uppercase text-zinc-600">
-            Coach : {category.coachName}
-          </p>
-        )}
-        {category.coachEmail && (
-          <a
-            href={`mailto:${category.coachEmail}`}
-            className="mt-1 text-sm italic text-red-600"
-          >
-            {category.coachEmail}
-          </a>
         )}
       </div>
     </div>
   );
 }
 
-function DesktopScheduleTable({ category }: { category: TrainingCategory }) {
+function DesktopScheduleTable({ category }: { category: PracticeCategory }) {
   return (
     <div className="hidden overflow-x-auto lg:block">
       <div
@@ -66,52 +54,58 @@ function DesktopScheduleTable({ category }: { category: TrainingCategory }) {
           </div>
         ))}
 
-        {category.rows.map((row: { day: Key; cells: any[]; }, rowIndex: number) => (
-          <div key={row.day} className="contents">
-            <div
-              className={`border-t border-zinc-200 px-5 py-5 font-extrabold ${
-                rowIndex % 2 === 0 ? "bg-zinc-100" : "bg-red-50"
-              }`}
-            >
-              {row.day}
-            </div>
-
-            {row.cells.map((cell, index) => (
+        {category.rows.map(
+          (row: { day: Key; cells: ScheduleCell[] }, rowIndex: number) => (
+            <div key={String(row.day)} className="contents">
               <div
-                key={`${row.day}-${index}`}
-                className={`border-l border-t border-zinc-200 px-5 py-5 text-center ${
+                className={`border-t border-zinc-200 px-5 py-5 font-extrabold ${
                   rowIndex % 2 === 0 ? "bg-zinc-100" : "bg-red-50"
                 }`}
               >
-                {cell.time ? (
-                  <>
-                    <p className="text-lg font-extrabold text-black">
-                      {cell.time}
-                    </p>
-                    <p className="mt-1 text-sm italic text-zinc-700">
-                      {cell.location}
-                    </p>
-                  </>
-                ) : (
-                  <span className="text-sm text-zinc-400">—</span>
-                )}
+                {row.day}
               </div>
-            ))}
-          </div>
-        ))}
+
+              {category.columns.map((_, index) => {
+                const cell = row.cells[index] || {};
+
+                return (
+                  <div
+                    key={`${String(row.day)}-${index}`}
+                    className={`border-l border-t border-zinc-200 px-5 py-5 text-center ${
+                      rowIndex % 2 === 0 ? "bg-zinc-100" : "bg-red-50"
+                    }`}
+                  >
+                    {cell.time ? (
+                      <>
+                        <p className="text-lg font-extrabold text-black">
+                          {cell.time}
+                        </p>
+                        <p className="mt-1 text-sm italic text-zinc-700">
+                          {cell.location}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="text-sm text-zinc-400">—</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )
+        )}
       </div>
     </div>
   );
 }
 
-function MobileScheduleCards({ category }: { category: TrainingCategory }) {
+function MobileScheduleCards({ category }: { category: PracticeCategory }) {
   return (
     <div className="space-y-4 lg:hidden">
       {category.rows.map((row) => {
-        const sessions = row.cells
-          .map((cell: any, index: number) => ({
-            ...cell,
-            group: category.columns[index],
+        const sessions = category.columns
+          .map((column, index) => ({
+            ...(row.cells[index] || {}),
+            group: column,
           }))
           .filter((cell) => cell.time);
 
@@ -151,15 +145,22 @@ function MobileScheduleCards({ category }: { category: TrainingCategory }) {
   );
 }
 
-function TrainingCategorySection({ category }: { category: TrainingCategory }) {
+function TrainingCategorySection({
+  category,
+}: {
+  category: PracticeCategory;
+}) {
   return (
     <section className="border-t border-zinc-200 px-6 py-14 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 hidden lg:block">
           <h2 className="text-4xl font-extrabold text-zinc-900">
             {category.title}
-            {category.ageRange && (
-              <span className="text-zinc-500"> ({category.ageRange})</span>
+            {category.birthYearsLabel && (
+              <span className="text-zinc-500">
+                {" "}
+                ({category.birthYearsLabel})
+              </span>
             )}
           </h2>
         </div>
@@ -178,6 +179,29 @@ function TrainingCategorySection({ category }: { category: TrainingCategory }) {
 }
 
 function PracticalInfoPage() {
+  const [categories, setCategories] = useState<PracticeCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const res = await API.get("/practice-categories");
+        setCategories(res.data || []);
+      } catch (err) {
+        console.error("Erreur récupération informations pratiques :", err);
+        setError("Impossible de charger les informations pratiques.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <main className="bg-white text-black">
       <section className="bg-black px-8 py-16 text-white">
@@ -215,9 +239,39 @@ function PracticalInfoPage() {
         </div>
       </section>
 
-      {trainingCategories.map((category) => (
-        <TrainingCategorySection key={category.id} category={category} />
-      ))}
+      {loading && (
+        <section className="px-8 py-16">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center">
+            <p className="font-semibold text-zinc-600">
+              Chargement des informations pratiques...
+            </p>
+          </div>
+        </section>
+      )}
+
+      {!loading && error && (
+        <section className="px-8 py-16">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+            <p className="font-semibold text-red-700">{error}</p>
+          </div>
+        </section>
+      )}
+
+      {!loading && !error && categories.length === 0 && (
+        <section className="px-8 py-16">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center">
+            <p className="font-semibold text-zinc-600">
+              Aucune catégorie n’a encore été renseignée.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {!loading &&
+        !error &&
+        categories.map((category) => (
+          <TrainingCategorySection key={category._id} category={category} />
+        ))}
 
       <section className="bg-black px-8 py-16 text-white">
         <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
