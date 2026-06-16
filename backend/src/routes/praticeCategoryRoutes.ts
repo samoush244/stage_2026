@@ -5,7 +5,7 @@ import {
   getAdminPracticeCategories,
   getPublicPracticeCategories,
   updatePracticeCategory,
-} from "../controllers/practicecategoryController";
+} from "../controllers/practiceCategoryController";
 import { uploadPracticeCategoryLogo } from "../middlewares/uploadPracticeCategory";
 
 // À sécuriser ensuite avec ton middleware admin.
