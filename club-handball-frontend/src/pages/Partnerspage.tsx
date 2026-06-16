@@ -166,7 +166,7 @@ export default function PartnersPage() {
 
           <a href="mailto:contact@tonclub.fr"
             className="inline-block rounded-lg bg-red-600 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-700 active:scale-95">
-              ✉️ marketing@valenciennes.fr
+              ✉️ marketing@valencienneshandball.fr
         </a>
         </div>
       </section>

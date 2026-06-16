@@ -10,7 +10,7 @@ function CategoryLogo({ category }: { category: PracticeCategory }) {
         <img
           src={category.logoUrl}
           alt={category.title}
-          className="h-32 w-32 rounded-full object-cover ring-4 ring-red-600 md:h-40 md:w-40"
+          className="h-32 w-32 rounded-full object-cover object-contain ring-4 ring-red-600 md:h-40 md:w-40"
         />
       ) : (
         <div className="flex h-32 w-32 items-center justify-center rounded-full bg-zinc-200 text-sm font-bold uppercase text-zinc-600 ring-4 ring-red-600 md:h-40 md:w-40">
