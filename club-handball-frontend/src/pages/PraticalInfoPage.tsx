@@ -7,15 +7,15 @@ function CategoryLogo({ category }: { category: PracticeCategory }) {
   return (
     <div className="flex flex-col items-center gap-4">
       {category.logoUrl ? (
-        <div className="flex min-h-40 w-44 items-center justify-center md:min-h-52 md:w-56">
+        <div className="flex w-48 items-center justify-center md:w-56">
           <img
             src={category.logoUrl}
             alt={category.title}
-            className="h-auto w-auto max-h-40 max-w-44 object-contain md:max-h-52 md:max-w-56"
+            className="!h-auto !w-full !max-h-none !object-contain"
           />
         </div>
       ) : (
-        <div className="flex min-h-40 w-44 items-center justify-center text-center text-sm font-bold uppercase text-zinc-600 md:min-h-52 md:w-56">
+        <div className="flex w-48 items-center justify-center text-center text-sm font-bold uppercase text-zinc-600 md:w-56">
           {category.title}
         </div>
       )}
@@ -32,6 +32,7 @@ function CategoryLogo({ category }: { category: PracticeCategory }) {
     </div>
   );
 }
+
 function DesktopScheduleTable({ category }: { category: PracticeCategory }) {
   return (
     <div className="hidden overflow-x-auto lg:block">
