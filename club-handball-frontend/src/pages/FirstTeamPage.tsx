@@ -1,5 +1,3 @@
-// src/pages/FirstTeamPage.tsx
-
 import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import API from "../services/api";

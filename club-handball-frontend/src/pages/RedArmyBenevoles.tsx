@@ -127,7 +127,7 @@ export default function Communaute() {
             <article className="group overflow-hidden bg-white text-zinc-950">
               <div className="relative h-[300px] overflow-hidden">
                 <img
-                  src="/images/benevoles-1.jpg"
+                  src="/images/benevole.jpg"
                   alt="Bénévoles"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
@@ -283,7 +283,7 @@ export default function Communaute() {
                 Buvette
               </h3>
               <p className="mt-4 text-zinc-600">
-                Participer au service et à la convivialité pendant les matchs.
+                Participer aux services et à la convivialité pendant les matchs.
               </p>
             </div>
 

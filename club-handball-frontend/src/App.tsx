@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router";
 
+
 import ScrollToTop from "./components/scrollToTop";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -177,6 +178,7 @@ function App() {
       <Newsletter />
 
       <Footer />
+      
     </>
   );
 }
