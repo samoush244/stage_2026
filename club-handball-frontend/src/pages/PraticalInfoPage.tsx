@@ -287,8 +287,8 @@ function PracticalInfoPage() {
             <div>
               <h3 className="font-extrabold text-white">Essai</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                Les nouveaux joueurs peuvent généralement participer à une
-                séance d’essai avant l’inscription définitive.
+                Les nouveaux joueurs peuvent généralement participer à trois
+                séances d’essai avant l’inscription définitive.
               </p>
             </div>
 
