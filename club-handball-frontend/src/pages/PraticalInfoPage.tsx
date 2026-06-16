@@ -7,13 +7,15 @@ function CategoryLogo({ category }: { category: PracticeCategory }) {
   return (
     <div className="flex flex-col items-center gap-4">
       {category.logoUrl ? (
-        <img
-          src={category.logoUrl}
-          alt={category.title}
-          className="h-32 w-32 object-contain md:h-40 md:w-40"
-        />
+        <div className="flex h-32 w-40 items-center justify-center md:h-40 md:w-52">
+          <img
+            src={category.logoUrl}
+            alt={category.title}
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
       ) : (
-        <div className="flex h-32 w-32 items-center justify-center text-center text-sm font-bold uppercase text-zinc-600 md:h-40 md:w-40">
+        <div className="flex h-32 w-40 items-center justify-center text-center text-sm font-bold uppercase text-zinc-600 md:h-40 md:w-52">
           {category.title}
         </div>
       )}
