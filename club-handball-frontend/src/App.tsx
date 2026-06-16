@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router";
+import { Analytics } from "@vercel/analytics/react";
 
 import ScrollToTop from "./components/scrollToTop";
 import Navbar from "./components/Navbar";
@@ -177,6 +178,8 @@ function App() {
       <Newsletter />
 
       <Footer />
+
+      <Analytics />
     </>
   );
 }
