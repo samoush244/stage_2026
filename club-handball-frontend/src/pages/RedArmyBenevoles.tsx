@@ -69,7 +69,7 @@ export default function Communaute() {
           <div className="relative">
             <div className="absolute -left-4 -top-4 h-full w-full bg-red-600" />
             <img
-              src="/images/kop.jpg"
+              src="/images/img.jpg"
               alt="Vie du club"
               className="relative z-10 h-[420px] w-full object-cover shadow-2xl"
             />
@@ -93,7 +93,7 @@ export default function Communaute() {
             <article className="group overflow-hidden bg-white text-zinc-950">
               <div className="relative h-[300px] overflow-hidden">
                 <img
-                  src="/images/red-army-1.jpg"
+                  src="/images/kop.jpg"
                   alt="Red Army"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
