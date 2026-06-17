@@ -154,7 +154,7 @@ function Navbar() {
                     La Red Army & Les bénévoles
                   </Link>
                   <Link to="/club/ecole-arbitrage" onClick={closeAll} className="block px-3 py-2 hover:text-red-500">
-                    Ecole d'arbitrage
+                    école d'arbitrage
                   </Link>
                 </div>
               )}
