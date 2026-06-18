@@ -247,7 +247,7 @@ function EcoleArbitragePage() {
             <RolesBox />
             </div>
          {/* Organigramme */}
-          <div className="min-w-0 overflow-x-auto pb-4 lg:overflow-visible">
+          <div className="flex flex-col items-center">
             {/* Niveau 1 */}
             <div className="w-full max-w-md">
               <OrgCard
