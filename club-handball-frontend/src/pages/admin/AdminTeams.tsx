@@ -220,9 +220,6 @@ const getImageUrl = (image?: string) => {
     <main className="min-h-screen bg-zinc-100 px-6 py-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-600">
-            Dashboard admin
-          </p>
           <h1 className="mt-3 text-4xl font-black text-black">
             Gestion des équipes
           </h1>

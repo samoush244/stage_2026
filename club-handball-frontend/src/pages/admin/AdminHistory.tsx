@@ -228,10 +228,6 @@ function AdminHistory() {
     <main className="min-h-screen bg-zinc-100 px-6 py-8 text-black">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-red-600">
-            Dashboard admin
-          </p>
-
           <h1 className="mt-2 text-3xl font-black uppercase text-zinc-900">
             Gestion de l'histoire du club
           </h1>

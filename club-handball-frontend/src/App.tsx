@@ -16,6 +16,7 @@ import ClubHistoryPage from "./pages/HistoireClub";
 import OrganizationChartPage from "./pages/OrganigrammeClub";
 import PraticalInfoPage from "./pages/PraticalInfoPage";
 import RedArmyVolunteersPage from "./pages/RedArmyBenevoles";
+import EcoleArbitragePage from "./pages/EcoleArbitrage";
 
 import PublicRosterPage from "./pages/PublicRosterPage";
 import CalendrierResultatsPage from "./pages/CalendrierResultats";
@@ -66,14 +67,10 @@ function App() {
         {/* Club */}
         <Route path="/club/histoire" element={<ClubHistoryPage />} />
         <Route path="/club/organigramme" element={<OrganizationChartPage />} />
-        <Route
-          path="/club/informations-pratiques"
-          element={<PraticalInfoPage />}
-        />
-        <Route
-          path="/club/red-army-benevoles"
-          element={<RedArmyVolunteersPage />}
-        />
+        <Route path="/club/informations-pratiques" element={<PraticalInfoPage />}/>
+        <Route path="/club/red-army-benevoles" element={<RedArmyVolunteersPage />}/>
+        <Route path="/club/ecole-arbitrage" element={<EcoleArbitragePage/>}/>
+
 
         {/* Équipes premières */}
         <Route

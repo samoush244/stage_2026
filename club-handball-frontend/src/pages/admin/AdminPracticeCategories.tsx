@@ -333,10 +333,6 @@ function AdminPracticeCategories() {
     <main className="min-h-screen bg-zinc-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-            Administration
-          </p>
-
           <h1 className="mt-3 text-4xl font-extrabold">
             Informations pratiques
           </h1>
