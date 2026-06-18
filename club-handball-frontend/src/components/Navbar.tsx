@@ -356,7 +356,7 @@ function Navbar() {
                   <Link to="/club/organigramme" onClick={closeMobileMenu} className="hover:text-red-500">Organigramme</Link>
                   <Link to="/club/informations-pratiques" onClick={closeMobileMenu} className="hover:text-red-500">Informations pratiques</Link>
                   <Link to="/club/red-army-benevoles" onClick={closeMobileMenu} className="hover:text-red-500">La Red Army & Les bénévoles</Link>
-                  <Link to="/club/ecole-arbitrage" onClick={closeAll} className="block px-3 py-2 hover:text-red-500">école d'arbitrage</Link>
+                  <Link to="/club/ecole-arbitrage" onClick={closeMobileMenu} className="hover:text-red-500">école d'arbitrage</Link>
                 </div>
               </details>
 
