@@ -54,11 +54,15 @@ const arbitrationRoles = [
 
 function RolesBox() {
   return (
-    <div className="w-full max-w-[220px] rounded-[26px] border border-cyan-200/40 bg-cyan-400 px-4 py-5 text-white shadow-lg">
-      <ul className="space-y-3 text-xs leading-relaxed">
+    <div className="w-full max-w-[220px] rounded-[26px] border border-red-600/30 bg-gradient-to-br from-gray-950 to-gray-900 px-4 py-5 text-white shadow-xl shadow-red-950/20">
+      <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-red-500">
+        Légende
+      </p>
+
+      <ul className="space-y-3 text-xs leading-relaxed text-gray-200">
         {arbitrationRoles.map((role) => (
           <li key={role} className="flex items-start gap-2">
-            <span className="mt-[1px] text-white">•</span>
+            <span className="mt-[1px] text-red-500">•</span>
             <span>{role}</span>
           </li>
         ))}
