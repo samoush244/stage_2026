@@ -233,6 +233,11 @@ function EcoleArbitragePage() {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-12 text-center">
+             <img
+        src="/images/arbitre.jfif"
+    alt="Logo école d’arbitrage"
+    className="h-14 w-14 shrink-0 rounded-full bg-white object-contain p-2 shadow-md ring-2 ring-red-600/20 md:h-16 md:w-16"
+  />
             <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-red-600">
               Organisation
             </p>
