@@ -241,13 +241,13 @@ function EcoleArbitragePage() {
             </p>
           </div>
 
-            <div className="grid items-start gap-8 xl:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="grid items-start gap-8 xl:grid-cols-[240px_minmax(0,1fr)]">
             {/* Carré des rôles */}
-            <div className="flex justify-center xl:justify-start">
+            <div className="flex justify-center lg:justify-start">
             <RolesBox />
             </div>
          {/* Organigramme */}
-          <div className="flex flex-col items-center">
+          <div className="min-w-0 overflow-x-auto pb-4 lg:overflow-visible">
             {/* Niveau 1 */}
             <div className="w-full max-w-md">
               <OrgCard
