@@ -47,6 +47,30 @@ const workAxes: WorkAxis[] = [
   },
 ];
 
+const arbitrationRoles = [
+  "Animateur Ecole d'Arbitrage",
+  "Accompagnateur Territorial",
+  "Accompagnateur Club",
+  "Animateur Territorial",
+  "Accompagnateur EA",
+  "Arbitre Régional",
+];
+
+function RolesBox() {
+  return (
+    <div className="w-full max-w-[260px] rounded-[28px] border border-cyan-200/40 bg-cyan-400 px-5 py-6 text-white shadow-lg">
+      <ul className="space-y-4 text-sm leading-relaxed">
+        {arbitrationRoles.map((role) => (
+          <li key={role} className="flex items-start gap-2">
+            <span className="mt-[2px] text-white">•</span>
+            <span>{role}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function OrgCard({ title, name, role, variant = "light" }: OrgMember) {
   const styles = {
     red: "border-red-600 bg-red-600 text-white",
@@ -201,7 +225,7 @@ function EcoleArbitragePage() {
 
       {/* ORGANIGRAMME */}
       <section className="py-16">
-        <div className="mx-auto max-w-6xl px-4">
+        <div className="mx-auto max-w-7xl px-4">
           <div className="mb-12 text-center">
             <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-red-600">
               Organisation
@@ -217,6 +241,12 @@ function EcoleArbitragePage() {
             </p>
           </div>
 
+            <div className="grid items-start gap-8 xl:grid-cols-[260px_minmax(0,1fr)]">
+            {/* Carré des rôles */}
+            <div className="flex justify-center xl:justify-start">
+            <RolesBox />
+            </div>
+         {/* Organigramme */}
           <div className="flex flex-col items-center">
             {/* Niveau 1 */}
             <div className="w-full max-w-md">
@@ -339,6 +369,7 @@ function EcoleArbitragePage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </section>
     </main>
