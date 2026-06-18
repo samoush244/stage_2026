@@ -66,7 +66,7 @@ const defaultPlayerImage = "/images/default-player.png";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/$/, "");
 
-function optimizeCloudinaryImage(url: string, width = 800) {
+function optimizeCloudinaryImage(url: string, width = 900) {
   if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
     return url;
   }
@@ -77,7 +77,7 @@ function optimizeCloudinaryImage(url: string, width = 800) {
   );
 }
 
-function getBackendImageUrl(image?: string | null, width = 800) {
+function getBackendImageUrl(image?: string | null, width = 900) {
   if (!image || image.trim() === "") return null;
 
   let finalUrl = image;
@@ -128,15 +128,15 @@ function getPlayerNumber(player: PublicMember) {
 
 function getMemberImage(member: PublicMember) {
   if (member.photoUrl && member.photoUrl.trim() !== "") {
-    return getBackendImageUrl(member.photoUrl, 450) || defaultPlayerImage;
+    return getBackendImageUrl(member.photoUrl, 700) || defaultPlayerImage;
   }
 
   if (member.photo && member.photo.trim() !== "") {
-    return getBackendImageUrl(member.photo, 450) || defaultPlayerImage;
+    return getBackendImageUrl(member.photo, 700) || defaultPlayerImage;
   }
 
   if (member.imageUrl && member.imageUrl.trim() !== "") {
-    return getBackendImageUrl(member.imageUrl, 450) || defaultPlayerImage;
+    return getBackendImageUrl(member.imageUrl, 700) || defaultPlayerImage;
   }
 
   return defaultPlayerImage;
@@ -276,7 +276,7 @@ export default function PublicRosterPage() {
 
   const teamImageUrl = getBackendImageUrl(
     roster.team?.imageUrl || roster.team?.image,
-    1400
+    1600
   );
 
   if (loading) {
@@ -311,17 +311,17 @@ export default function PublicRosterPage() {
             informations principales.
           </p>
 
-          <div className="mt-8 w-full overflow-hidden rounded-[2rem] bg-black">
+          <div className="mt-6 w-full overflow-hidden bg-black">
             {teamImageUrl ? (
               <img
                 src={teamImageUrl}
                 alt={roster.team?.name || "Photo de l'équipe"}
-                className="max-h-[520px] w-full object-contain"
+                className="max-h-[680px] w-full object-contain"
                 loading="lazy"
                 decoding="async"
               />
             ) : (
-              <div className="flex min-h-[340px] items-center justify-center bg-zinc-900">
+              <div className="flex min-h-[420px] items-center justify-center bg-zinc-900">
                 <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
                   Photo d'équipe à venir
                 </p>
@@ -368,7 +368,7 @@ export default function PublicRosterPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {groupedPlayers[position].map((player) => {
                       const number = getPlayerNumber(player);
 
@@ -380,9 +380,9 @@ export default function PublicRosterPage() {
                       return (
                         <article
                           key={player._id}
-                          className="group mx-auto w-full max-w-[245px] overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                          className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
-                          <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-100">
+                          <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-100">
                             <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
 
                             <img
@@ -396,22 +396,22 @@ export default function PublicRosterPage() {
                             />
 
                             {number !== null && (
-                              <div className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full bg-black text-xl font-black text-white shadow-xl ring-4 ring-red-600">
+                              <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
                                 {number}
                               </div>
                             )}
                           </div>
 
-                          <div className="p-5">
-                            <h4 className="text-xl font-black uppercase leading-tight">
+                          <div className="p-6">
+                            <h4 className="text-2xl font-black uppercase leading-tight">
                               {player.lastName || ""}
                             </h4>
 
-                            <p className="text-base font-bold text-red-600">
+                            <p className="text-lg font-bold text-red-600">
                               {player.firstName || ""}
                             </p>
 
-                            <div className="mt-5 space-y-2 border-t border-zinc-200 pt-4 text-xs font-bold uppercase tracking-wide text-zinc-600">
+                            <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
                               <p>
                                 Poste : {player.position || "Non renseigné"}
                               </p>
@@ -475,7 +475,7 @@ export default function PublicRosterPage() {
                         className="group rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 transition duration-300 hover:-translate-y-1 hover:border-red-600/60 hover:bg-white/[0.07]"
                       >
                         <div className="flex gap-5">
-                          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
+                          <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
                             <img
                               src={getMemberImage(member)}
                               alt={`${member.firstName || ""} ${
