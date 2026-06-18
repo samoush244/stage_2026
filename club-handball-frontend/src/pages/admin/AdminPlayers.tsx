@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../../services/api";
 import type { ChangeEvent, FormEvent } from "react";
 
@@ -96,7 +96,8 @@ function buildImageUrl(imagePath: string) {
 }
 
 function formatPlayerFromApi(player: any): PlayerItem {
-  const memberType: MemberType = player.memberType === "staff" ? "staff" : "player";
+  const memberType: MemberType =
+    player.memberType === "staff" ? "staff" : "player";
 
   return {
     _id: player._id,
@@ -128,6 +129,8 @@ function formatPlayerFromApi(player: any): PlayerItem {
 }
 
 export default function AdminPlayers() {
+  const formRef = useRef<HTMLDivElement | null>(null);
+
   const [players, setPlayers] = useState<PlayerItem[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -157,6 +160,15 @@ export default function AdminPlayers() {
   const [importMessage, setImportMessage] = useState("");
   const [importError, setImportError] = useState("");
   const [importSummary, setImportSummary] = useState<ImportSummary | null>(null);
+
+  function scrollToForm() {
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  }
 
   async function fetchPlayers() {
     try {
@@ -352,6 +364,8 @@ export default function AdminPlayers() {
     setStatus(player.status);
     setFormError("");
     setShowForm(true);
+
+    scrollToForm();
   }
 
   async function handleDelete(player: PlayerItem) {
@@ -362,9 +376,14 @@ export default function AdminPlayers() {
       return;
     }
 
-    const label = player.memberType === "staff" ? "ce membre du staff" : "ce joueur";
+    const label =
+      player.memberType === "staff" ? "ce membre du staff" : "ce joueur";
 
-    if (!window.confirm(`Supprimer ${label} : ${player.firstName} ${player.lastName} ?`)) {
+    if (
+      !window.confirm(
+        `Supprimer ${label} : ${player.firstName} ${player.lastName} ?`
+      )
+    ) {
       return;
     }
 
@@ -372,7 +391,9 @@ export default function AdminPlayers() {
       await API.delete(`/players/${id}`);
       await fetchPlayers();
     } catch (error: any) {
-      setPageError(error.response?.data?.message || "Erreur lors de la suppression.");
+      setPageError(
+        error.response?.data?.message || "Erreur lors de la suppression."
+      );
     }
   }
 
@@ -389,7 +410,8 @@ export default function AdminPlayers() {
       await fetchPlayers();
     } catch (error: any) {
       setPageError(
-        error.response?.data?.message || "Erreur lors du changement d'affichage."
+        error.response?.data?.message ||
+          "Erreur lors du changement d'affichage."
       );
     }
   }
@@ -437,7 +459,9 @@ export default function AdminPlayers() {
 
       await fetchPlayers();
     } catch (error: any) {
-      setImportError(error.response?.data?.message || "Erreur lors de l'importation.");
+      setImportError(
+        error.response?.data?.message || "Erreur lors de l'importation."
+      );
     } finally {
       setImportLoading(false);
       setExcelFile(null);
@@ -467,6 +491,7 @@ export default function AdminPlayers() {
             onClick={() => {
               resetForm("player");
               setShowForm(true);
+              scrollToForm();
             }}
             className="rounded-lg bg-red-600 px-5 py-3 font-medium text-white transition hover:bg-red-700"
           >
@@ -478,6 +503,7 @@ export default function AdminPlayers() {
             onClick={() => {
               resetForm("staff");
               setShowForm(true);
+              scrollToForm();
             }}
             className="rounded-lg bg-black px-5 py-3 font-medium text-white transition hover:bg-zinc-800"
           >
@@ -567,7 +593,10 @@ export default function AdminPlayers() {
       </div>
 
       {showForm && (
-        <div className="mb-8 rounded-2xl bg-white p-6 shadow">
+        <div
+          ref={formRef}
+          className="mb-8 scroll-mt-28 rounded-2xl bg-white p-6 shadow"
+        >
           <h2 className="mb-4 text-xl font-bold text-zinc-900">
             {editingId
               ? memberType === "staff"
@@ -758,152 +787,155 @@ export default function AdminPlayers() {
       )}
 
       <div className="w-full max-w-full overflow-hidden rounded-2xl bg-white shadow">
-  <div className="w-full overflow-x-auto">
-    <table className="w-full table-fixed border-collapse">
-      <colgroup>
-        <col className="w-[8%]" />
-        <col className="w-[9%]" />
-        <col className="w-[14%]" />
-        <col className="w-[7%]" />
-        <col className="w-[13%]" />
-        <col className="w-[14%]" />
-        <col className="w-[8%]" />
-        <col className="w-[7%]" />
-        <col className="w-[9%]" />
-        <col className="w-[11%]" />
-      </colgroup>
-          <thead className="bg-zinc-100">
-            <tr className="text-left text-sm text-zinc-600">
-              <th className="px-4 py-4">Photo</th>
-              <th className="px-4 py-4">Type</th>
-              <th className="px-4 py-4">Nom</th>
-              <th className="px-4 py-4">Âge</th>
-              <th className="px-4 py-4">Équipe</th>
-              <th className="px-4 py-4">Poste / Fonction</th>
-              <th className="px-4 py-4">Numéro</th>
-              <th className="px-4 py-4">Ordre</th>
-              <th className="px-4 py-4">Statut</th>
-              <th className="px-4 py-4">Actions</th>
-            </tr>
-          </thead>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col className="w-[8%]" />
+              <col className="w-[9%]" />
+              <col className="w-[14%]" />
+              <col className="w-[7%]" />
+              <col className="w-[13%]" />
+              <col className="w-[14%]" />
+              <col className="w-[8%]" />
+              <col className="w-[7%]" />
+              <col className="w-[9%]" />
+              <col className="w-[11%]" />
+            </colgroup>
 
-          <tbody>
-            {!loadingPlayers && players.length === 0 && (
-              <tr>
-                <td
-                  colSpan={10}
-                  className="break-words px-4 py-4 text-center text-sm text-zinc-500"
-                >
-                  Aucun membre trouvé.
-                </td>
+            <thead className="bg-zinc-100">
+              <tr className="text-left text-sm text-zinc-600">
+                <th className="px-4 py-4">Photo</th>
+                <th className="px-4 py-4">Type</th>
+                <th className="px-4 py-4">Nom</th>
+                <th className="px-4 py-4">Âge</th>
+                <th className="px-4 py-4">Équipe</th>
+                <th className="px-4 py-4">Poste / Fonction</th>
+                <th className="px-4 py-4">Numéro</th>
+                <th className="px-4 py-4">Ordre</th>
+                <th className="px-4 py-4">Statut</th>
+                <th className="px-4 py-4">Actions</th>
               </tr>
-            )}
+            </thead>
 
-            {players.map((player) => {
-              const age = calculateAge(player.birthDate);
-
-              return (
-                <tr
-                  key={getPlayerId(player)}
-                  className="border-t border-zinc-200"
-                >
-                  <td className="px-6 py-4">
-                    {player.image ? (
-                      <img
-                        src={player.image}
-                        alt={`${player.firstName} ${player.lastName}`}
-                        className="h-16 w-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-12 items-center justify-center rounded-lg bg-zinc-200 text-xs text-zinc-500">
-                        —
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-                        player.memberType === "staff"
-                          ? "bg-black text-white"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {player.memberType === "staff" ? "Staff" : "Joueur"}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 font-medium text-zinc-800">
-                    {player.lastName} {player.firstName}
-                  </td>
-
-                  <td className="px-6 py-4 text-zinc-600">
-                    {player.memberType === "player" && age ? `${age} ans` : "—"}
-                  </td>
-
-                  <td className="px-6 py-4 text-zinc-600">
-                    {player.teamName}
-                  </td>
-
-                  <td className="px-6 py-4 text-zinc-600">
-                    {player.position || "—"}
-                  </td>
-
-                  <td className="px-6 py-4 text-zinc-600">
-                    {player.memberType === "player" && player.number
-                      ? `#${player.number}`
-                      : "—"}
-                  </td>
-
-                  <td className="px-6 py-4 text-zinc-600">
-                    {player.displayOrder || "0"}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        player.status === "Visible"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-zinc-100 text-zinc-600"
-                      }`}
-                    >
-                      {player.status}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(player)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Modifier
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleToggleDisplay(player)}
-                        className="text-zinc-700 hover:underline"
-                      >
-                        {player.status === "Visible" ? "Masquer" : "Afficher"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(player)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
+            <tbody>
+              {!loadingPlayers && players.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="break-words px-4 py-4 text-center text-sm text-zinc-500"
+                  >
+                    Aucun membre trouvé.
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              )}
+
+              {players.map((player) => {
+                const age = calculateAge(player.birthDate);
+
+                return (
+                  <tr
+                    key={getPlayerId(player)}
+                    className="border-t border-zinc-200"
+                  >
+                    <td className="px-6 py-4">
+                      {player.image ? (
+                        <img
+                          src={player.image}
+                          alt={`${player.firstName} ${player.lastName}`}
+                          className="h-16 w-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-12 items-center justify-center rounded-lg bg-zinc-200 text-xs text-zinc-500">
+                          —
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
+                          player.memberType === "staff"
+                            ? "bg-black text-white"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {player.memberType === "staff" ? "Staff" : "Joueur"}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 font-medium text-zinc-800">
+                      {player.lastName} {player.firstName}
+                    </td>
+
+                    <td className="px-6 py-4 text-zinc-600">
+                      {player.memberType === "player" && age
+                        ? `${age} ans`
+                        : "—"}
+                    </td>
+
+                    <td className="px-6 py-4 text-zinc-600">
+                      {player.teamName}
+                    </td>
+
+                    <td className="px-6 py-4 text-zinc-600">
+                      {player.position || "—"}
+                    </td>
+
+                    <td className="px-6 py-4 text-zinc-600">
+                      {player.memberType === "player" && player.number
+                        ? `#${player.number}`
+                        : "—"}
+                    </td>
+
+                    <td className="px-6 py-4 text-zinc-600">
+                      {player.displayOrder || "0"}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          player.status === "Visible"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-zinc-100 text-zinc-600"
+                        }`}
+                      >
+                        {player.status}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(player)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Modifier
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDisplay(player)}
+                          className="text-zinc-700 hover:underline"
+                        >
+                          {player.status === "Visible" ? "Masquer" : "Afficher"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(player)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
