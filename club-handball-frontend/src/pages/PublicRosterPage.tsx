@@ -66,18 +66,31 @@ const defaultPlayerImage = "/images/default-player.png";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/$/, "");
 
-function getBackendImageUrl(image?: string | null) {
+function optimizeCloudinaryImage(url: string, width = 800) {
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
+    return url;
+  }
+
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_auto,c_limit,w_${width}/`
+  );
+}
+
+function getBackendImageUrl(image?: string | null, width = 800) {
   if (!image || image.trim() === "") return null;
 
+  let finalUrl = image;
+
   if (image.startsWith("http://") || image.startsWith("https://")) {
-    return image;
+    finalUrl = image;
+  } else if (image.startsWith("/")) {
+    finalUrl = `${SERVER_URL}${image}`;
+  } else {
+    finalUrl = `${SERVER_URL}/${image}`;
   }
 
-  if (image.startsWith("/")) {
-    return `${SERVER_URL}${image}`;
-  }
-
-  return `${SERVER_URL}/${image}`;
+  return optimizeCloudinaryImage(finalUrl, width);
 }
 
 function getAgeFromBirthDate(birthDate?: string) {
@@ -115,15 +128,15 @@ function getPlayerNumber(player: PublicMember) {
 
 function getMemberImage(member: PublicMember) {
   if (member.photoUrl && member.photoUrl.trim() !== "") {
-    return getBackendImageUrl(member.photoUrl) || defaultPlayerImage;
+    return getBackendImageUrl(member.photoUrl, 450) || defaultPlayerImage;
   }
 
   if (member.photo && member.photo.trim() !== "") {
-    return getBackendImageUrl(member.photo) || defaultPlayerImage;
+    return getBackendImageUrl(member.photo, 450) || defaultPlayerImage;
   }
 
   if (member.imageUrl && member.imageUrl.trim() !== "") {
-    return getBackendImageUrl(member.imageUrl) || defaultPlayerImage;
+    return getBackendImageUrl(member.imageUrl, 450) || defaultPlayerImage;
   }
 
   return defaultPlayerImage;
@@ -262,7 +275,8 @@ export default function PublicRosterPage() {
   }, [groupedStaff]);
 
   const teamImageUrl = getBackendImageUrl(
-    roster.team?.imageUrl || roster.team?.image
+    roster.team?.imageUrl || roster.team?.image,
+    1400
   );
 
   if (loading) {
@@ -283,36 +297,39 @@ export default function PublicRosterPage() {
     <main className="min-h-screen bg-white text-black">
       {/* HERO */}
       <section className="bg-black px-6 py-16 text-white">
-  <div className="mx-auto max-w-7xl">
-    <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-      Effectif
-    </p>
-
-    <h1 className="mt-6 text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
-      {roster.team?.name || "Effectif"}
-    </h1>
-
-    <p className="mt-6 max-w-4xl text-lg leading-relaxed text-zinc-300">
-      Retrouvez les joueurs de l'équipe, leurs postes, numéros et informations principales.
-    </p>
-
-    <div className="mt-4 w-full overflow-hidden bg-black">
-      {teamImageUrl ? (
-        <img
-          src={teamImageUrl}
-          alt={roster.team?.name || "Photo de l'équipe"}
-          className="w-full object-contain"
-        />
-      ) : (
-        <div className="flex min-h-[420px] items-center justify-center bg-zinc-900">
-          <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-            Photo d'équipe à venir
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
+            Effectif
           </p>
+
+          <h1 className="mt-6 text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
+            {roster.team?.name || "Effectif"}
+          </h1>
+
+          <p className="mt-6 max-w-4xl text-lg leading-relaxed text-zinc-300">
+            Retrouvez les joueurs de l'équipe, leurs postes, numéros et
+            informations principales.
+          </p>
+
+          <div className="mt-8 w-full overflow-hidden rounded-[2rem] bg-black">
+            {teamImageUrl ? (
+              <img
+                src={teamImageUrl}
+                alt={roster.team?.name || "Photo de l'équipe"}
+                className="max-h-[520px] w-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div className="flex min-h-[340px] items-center justify-center bg-zinc-900">
+                <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                  Photo d'équipe à venir
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* JOUEURS */}
       <section className="bg-white px-6 py-20">
@@ -351,7 +368,7 @@ export default function PublicRosterPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                     {groupedPlayers[position].map((player) => {
                       const number = getPlayerNumber(player);
 
@@ -363,9 +380,9 @@ export default function PublicRosterPage() {
                       return (
                         <article
                           key={player._id}
-                          className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                          className="group mx-auto w-full max-w-[245px] overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
-                          <div className="aspect-[4/5] w-full overflow-hidden bg-zinc-100">
+                          <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-100">
                             <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
 
                             <img
@@ -374,25 +391,27 @@ export default function PublicRosterPage() {
                                 player.lastName || ""
                               }`}
                               className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
+                              loading="lazy"
+                              decoding="async"
                             />
 
                             {number !== null && (
-                              <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
+                              <div className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full bg-black text-xl font-black text-white shadow-xl ring-4 ring-red-600">
                                 {number}
                               </div>
                             )}
                           </div>
 
-                          <div className="p-6">
-                            <h4 className="text-2xl font-black uppercase leading-tight">
+                          <div className="p-5">
+                            <h4 className="text-xl font-black uppercase leading-tight">
                               {player.lastName || ""}
                             </h4>
 
-                            <p className="text-lg font-bold text-red-600">
+                            <p className="text-base font-bold text-red-600">
                               {player.firstName || ""}
                             </p>
 
-                            <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
+                            <div className="mt-5 space-y-2 border-t border-zinc-200 pt-4 text-xs font-bold uppercase tracking-wide text-zinc-600">
                               <p>
                                 Poste : {player.position || "Non renseigné"}
                               </p>
@@ -456,13 +475,15 @@ export default function PublicRosterPage() {
                         className="group rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 transition duration-300 hover:-translate-y-1 hover:border-red-600/60 hover:bg-white/[0.07]"
                       >
                         <div className="flex gap-5">
-                          <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
+                          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
                             <img
                               src={getMemberImage(member)}
                               alt={`${member.firstName || ""} ${
                                 member.lastName || ""
                               }`}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </div>
 
