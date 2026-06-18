@@ -22,10 +22,10 @@ type OrgMember = {
 
 const workAxes: WorkAxis[] = [
   {
-    title: "Formation aux règles du jeu",
+    title: "Formation aux fondamentaux des règles du jeu",
     description:
-      "Accompagner les jeunes arbitres dans l’apprentissage des règles, des gestes officiels, des fautes, des sanctions et de la gestion d’un match.",
-    icon: <FaBookOpen />,
+      "Mettre en place des sessions de formation destinées aux jeunes arbitres afin de renforcer leur connaissance des règles de handball.Harmoniser les contenus pédagogiques pour garantir une compréhension commune des fondamentaux.",
+     icon: <FaBookOpen />,
   },
   {
     title: "Mise en situation sur le terrain",
