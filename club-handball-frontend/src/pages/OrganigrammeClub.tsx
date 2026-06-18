@@ -7,22 +7,43 @@ const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replac
   ""
 );
 
+const SERVER_URL = API_URL.replace(/\/api\/?$/, "");
+
+function optimizeCloudinaryImage(url: string, width = 700, height = 760) {
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
+    return url;
+  }
+
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_auto,c_fill,g_auto,w_${width},h_${height}/`
+  );
+}
+
 function getImageUrl(photo?: string) {
   if (!photo) {
     return "";
   }
 
+  let finalUrl = photo;
+
   if (photo.startsWith("http://") || photo.startsWith("https://")) {
-    return photo;
+    finalUrl = photo;
+  } else if (photo.startsWith("/")) {
+    finalUrl = `${SERVER_URL}${photo}`;
+  } else {
+    finalUrl = `${SERVER_URL}/${photo}`;
   }
 
-  if (photo.startsWith("/")) {
-    return `${API_URL}${photo}`;
-  }
-
-  return `${API_URL}/${photo}`;
+  return optimizeCloudinaryImage(finalUrl);
 }
 
+function getInitials(member: OrganizationMember) {
+  const firstInitial = member.firstName?.charAt(0) || "";
+  const lastInitial = member.lastName?.charAt(0) || "";
+
+  return `${firstInitial}${lastInitial}`.toUpperCase();
+}
 
 function OrganigrammePage() {
   const [members, setMembers] = useState<OrganizationMember[]>([]);
@@ -45,6 +66,7 @@ function OrganigrammePage() {
 
   const bureauMembers = members.filter((member) => member.group === "bureau");
   const caMembers = members.filter((member) => member.group === "ca");
+
   if (loading) {
     return (
       <main className="bg-white px-6 py-24 text-black">
@@ -102,19 +124,20 @@ function MemberSection({ title, members }: MemberSectionProps) {
         {members.map((member) => (
           <article
             key={member._id}
-            className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
+            className="mx-auto w-full max-w-[360px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
           >
-            <div className="aspect-[4/5] w-full overflow-hidden bg-zinc-100 ">
+            <div className="h-[300px] w-full overflow-hidden bg-zinc-100 sm:h-[330px] lg:h-[350px]">
               {member.photo ? (
                 <img
                   src={getImageUrl(member.photo)}
                   alt={`${member.firstName} ${member.lastName}`}
                   className="h-full w-full object-cover object-center"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-zinc-200 text-5xl font-black text-zinc-500">
-                  {member.firstName.charAt(0)}
-                  {member.lastName.charAt(0)}
+                  {getInitials(member)}
                 </div>
               )}
             </div>
@@ -124,14 +147,12 @@ function MemberSection({ title, members }: MemberSectionProps) {
                 {member.firstName} {member.lastName}
               </h3>
 
-              <p className="mt-2 font-semibold text-red-600">
-                {member.role}
-              </p>
+              <p className="mt-2 font-semibold text-red-600">{member.role}</p>
 
               {member.email && (
                 <a
                   href={`mailto:${member.email}`}
-                  className="mt-4 inline-block text-sm text-zinc-600 hover:text-red-600"
+                  className="mt-4 inline-block break-all text-sm text-zinc-600 hover:text-red-600"
                 >
                   {member.email}
                 </a>
