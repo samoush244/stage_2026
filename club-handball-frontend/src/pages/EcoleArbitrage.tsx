@@ -55,10 +55,6 @@ const arbitrationRoles = [
 function RolesBox() {
   return (
     <div className="w-full max-w-[220px] rounded-[26px] border border-red-600/30 bg-gradient-to-br from-gray-950 to-gray-900 px-4 py-5 text-white shadow-xl shadow-red-950/20">
-      <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-red-500">
-        Légende
-      </p>
-
       <ul className="space-y-3 text-xs leading-relaxed text-gray-200">
         {arbitrationRoles.map((role) => (
           <li key={role} className="flex items-start gap-2">
@@ -263,9 +259,9 @@ function EcoleArbitragePage() {
                 {/* Niveau 1 */}
                 <div className="w-full max-w-[280px]">
                   <OrgCard
-                    title="Animateur École d’Arbitrage"
+                    title=""
                     name="Fabrice Millet"
-                    role="Organisation générale, suivi de l’école d’arbitrage et coordination avec le club."
+                    role=""
                     variant="red"
                   />
                 </div>
@@ -285,7 +281,7 @@ function EcoleArbitragePage() {
 
                     <div className="w-full max-w-[230px]">
                       <OrgCard
-                        title="Accompagnateur Territorial"
+                        title=""
                         name="David Bardin"
                         variant="dark"
                       />
@@ -297,7 +293,7 @@ function EcoleArbitragePage() {
 
                     <div className="w-full max-w-[230px]">
                       <OrgCard
-                        title="Accompagnateur Club"
+                        title=""
                         name="Florian Millet"
                         variant="dark"
                       />
