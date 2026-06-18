@@ -287,7 +287,7 @@ function Navbar() {
                       )}
                     </div>
 
-                    {/* Sous-menu Loisirs */}
+                    {/* Sous-menu Mixte */}
                     <div className="relative">
                       <button
                         onClick={() => toggleSubMenu("mixed")}
@@ -356,6 +356,7 @@ function Navbar() {
                   <Link to="/club/organigramme" onClick={closeMobileMenu} className="hover:text-red-500">Organigramme</Link>
                   <Link to="/club/informations-pratiques" onClick={closeMobileMenu} className="hover:text-red-500">Informations pratiques</Link>
                   <Link to="/club/red-army-benevoles" onClick={closeMobileMenu} className="hover:text-red-500">La Red Army & Les bénévoles</Link>
+                  <Link to="/club/ecole-arbitrage" onClick={closeAll} className="block px-3 py-2 hover:text-red-500">école d'arbitrage</Link>
                 </div>
               </details>
 
@@ -417,14 +418,14 @@ function Navbar() {
                   </div>
 
                   <div>
-                    <p className="font-bold text-red-500">Loisirs</p>
+                    <p className="font-bold text-red-500">Mixte</p>
                     <div className="mt-2 flex flex-col gap-2 pl-3 text-gray-400">
                       {mixedTeams.length > 0 ? (
                         mixedTeams.map((team) => (
                           <Link key={team._id} to={`/equipes/${team.slug}`} onClick={closeMobileMenu} className="block py-1 hover:text-red-500">{team.name}</Link>
                         ))
                       ) : (
-                        <p className="text-sm text-zinc-500">Aucune équipe loisirs</p>
+                        <p className="text-sm text-zinc-500">Aucune équipe mixte</p>
                       )}
                     </div>
                   </div>
