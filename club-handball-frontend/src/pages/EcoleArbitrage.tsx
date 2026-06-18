@@ -1,11 +1,11 @@
 import type { ReactElement } from "react";
 import {
   FaBookOpen,
-  FaClipboardCheck,
-  FaHandsHelping,
-  FaUsers,
-  FaGavel,
+  FaChalkboardTeacher,
 } from "react-icons/fa";
+
+import {GiWhistle} from "react-icons/gi";
+import { MdAssessment } from "react-icons/md";
 
 type WorkAxis = {
   title: string;
@@ -28,28 +28,22 @@ const workAxes: WorkAxis[] = [
      icon: <FaBookOpen />,
   },
   {
-    title: "Mise en situation sur le terrain",
+    title: "Formation aux fondamentaux de l'arbitrage",
     description:
-      "Permettre aux jeunes arbitres de pratiquer lors de rencontres adaptées, afin de gagner en expérience et en confiance.",
-    icon: <FaGavel />,
+      "Développer des modules spécifiques sur les techniques et principes de l’arbitrage. Accompagner les jeunes arbitres dans l’acquisition des compétences nécessaires à la gestion des rencontres.",
+    icon: <GiWhistle />,
   },
   {
-    title: "Accompagnement des jeunes arbitres",
+    title: "Formation des accompagnateurs ",
     description:
-      "Suivre les arbitres en formation avant, pendant et après les matchs pour les aider à progresser étape par étape.",
-    icon: <FaHandsHelping />,
+      "Mettre en place des formations à destination des accompagnateurs d’écoles d’arbitrage et des accompagnateurs de club. Sensibiliser ces acteurs aux règles et aux principes de l’arbitrage afin d’assurer un accompagnement cohérent et constructif des jeunes arbitres.",
+    icon: <FaChalkboardTeacher/>,
   },
   {
-    title: "Développement de la confiance",
+    title: "Suivi et évaluation des jeunes arbitres",
     description:
-      "Aider les jeunes à prendre des décisions, à communiquer clairement et à gérer les situations de match avec calme.",
-    icon: <FaUsers />,
-  },
-  {
-    title: "Respect et esprit sportif",
-    description:
-      "Sensibiliser les joueurs, entraîneurs et supporters au respect de l’arbitre, des adversaires et des valeurs du handball.",
-    icon: <FaClipboardCheck />,
+      "Élaborer des fiches de suivi par catégorie, en cohérence avec les objectifs de la filière jeune et en lien avec la CTJA.Assurer un suivi régulier sur l’ensemble des rencontres jeunes, des catégories moins de 11 ans à moins de 15 ans.Identifier les axes de progression et accompagner le développement des compétences arbitrales tout au long de la saison",
+    icon: <MdAssessment />,
   },
 ];
 
@@ -177,8 +171,8 @@ function EcoleArbitragePage() {
 
             <p className="mx-auto mt-4 max-w-3xl text-gray-600">
               L’école d’arbitrage repose sur plusieurs axes permettant
-              d’accompagner les jeunes dans leur progression, à la fois sur le
-              plan théorique, pratique et humain.
+              de structurer, accompagner et valoriser la formation des jeunes arbitres en développant un dispositif complet de formation,
+              d’accompagnement Club et d’alimenter la filière CTJA
             </p>
           </div>
 
@@ -219,8 +213,7 @@ function EcoleArbitragePage() {
 
             <p className="mx-auto mt-4 max-w-3xl text-gray-600">
               L’école d’arbitrage est encadrée par une équipe référente chargée
-              de l’organisation, de la formation et du suivi des jeunes
-              arbitres.
+              de l’organisation, de la formation et du suivi des jeunes arbitres.
             </p>
           </div>
 
@@ -228,8 +221,8 @@ function EcoleArbitragePage() {
             {/* Niveau 1 */}
             <div className="w-full max-w-md">
               <OrgCard
-                title="Responsable école d’arbitrage"
-                name="Nom Prénom"
+                title="Animateur Ecole d'Arbitrage"
+                name="Fabrice Millet"
                 role="Organisation générale, suivi de l’école d’arbitrage et coordination avec le club."
                 variant="red"
               />
@@ -237,32 +230,50 @@ function EcoleArbitragePage() {
 
             <div className="h-10 w-1 bg-red-600" />
 
+            {/* Ligne horizontale niveau 2 */}
+            <div className="hidden w-full max-w-4xl items-center md:flex">
+              <div className="h-1 flex-1 bg-red-600" />
+              <div className="h-1 flex-1 bg-red-600" />
+            </div>
             {/* Niveau 2 */}
-            <div className="w-full max-w-md">
-              <OrgCard
-                title="Coordinateur arbitrage"
-                name="Nom Prénom"
-                role="Lien entre les arbitres, les encadrants, les équipes et les instances."
-                variant="dark"
-              />
+            <div className="grid w-full gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-1 bg-red-600" />
+                <OrgCard
+                  title="Accompagnateur Territorial"
+                  name="David Bardin"
+                  role=""
+                  variant="dark"
+                />
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-1 bg-red-600" />
+                <OrgCard
+                  title="Accompagnateur Club"
+                  name="Florian Millet"
+                  role=""
+                  variant="dark"
+                />
+              </div>
             </div>
 
             <div className="h-10 w-1 bg-red-600" />
 
-            {/* Ligne horizontale desktop */}
+            {/* Ligne horizontale niveau 3 */}
             <div className="hidden w-full max-w-4xl items-center md:flex">
               <div className="h-1 flex-1 bg-red-600" />
               <div className="h-1 flex-1 bg-red-600" />
             </div>
 
             {/* Niveau 3 */}
-            <div className="grid w-full gap-6 md:grid-cols-3">
+            <div className="grid w-full gap-6 md:grid-cols-4">
               <div className="flex flex-col items-center">
                 <div className="h-8 w-1 bg-red-600" />
                 <OrgCard
-                  title="Référent formation"
-                  name="Nom Prénom"
-                  role="Apprentissage des règles, séances théoriques et accompagnement pédagogique."
+                  title=""
+                  name="Yanis HADJADJ AOUL"
+                  role=""
                   variant="light"
                 />
               </div>
@@ -270,9 +281,9 @@ function EcoleArbitragePage() {
               <div className="flex flex-col items-center">
                 <div className="h-8 w-1 bg-red-600" />
                 <OrgCard
-                  title="Référent terrain"
-                  name="Nom Prénom"
-                  role="Suivi des jeunes arbitres pendant les matchs et retours après les rencontres."
+                  title=""
+                  name="Guilhem DEMKIW"
+                  role=""
                   variant="light"
                 />
               </div>
@@ -280,9 +291,19 @@ function EcoleArbitragePage() {
               <div className="flex flex-col items-center">
                 <div className="h-8 w-1 bg-red-600" />
                 <OrgCard
-                  title="Référent administratif"
-                  name="Nom Prénom"
-                  role="Gestion des plannings, informations, convocations et communication."
+                  title=""
+                  name="Géral OVERSTEYNS"
+                  role=""
+                  variant="light"
+                />
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-1 bg-red-600" />
+                <OrgCard
+                  title=""
+                  name="Arnaud WALESSA"
+                  role=""
                   variant="light"
                 />
               </div>
@@ -290,14 +311,32 @@ function EcoleArbitragePage() {
 
             <div className="h-10 w-1 bg-red-600" />
 
+            {/* Ligne horizontale niveau 4 */}
+            <div className="hidden w-full max-w-4xl items-center md:flex">
+              <div className="h-1 flex-1 bg-red-600" />
+              <div className="h-1 flex-1 bg-red-600" />
+            </div>
             {/* Niveau 4 */}
-            <div className="w-full max-w-lg">
-              <OrgCard
-                title="Jeunes arbitres accompagnés"
-                name="Groupe des jeunes arbitres"
-                role="Licenciés du club engagés dans la découverte, la formation et la pratique de l’arbitrage."
-                variant="dark"
-              />
+            <div className="grid w-full gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-1 bg-red-600" />
+                <OrgCard
+                  title=""
+                  name="Grégory LAGNEAU"
+                  role=""
+                  variant="dark"
+                />
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-1 bg-red-600" />
+                <OrgCard
+                  title=""
+                  name="JaJ Club CTJA"
+                  role=""
+                  variant="dark"
+                />
+              </div>
             </div>
           </div>
         </div>
