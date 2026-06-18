@@ -1,10 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  FaBookOpen,
-  FaChalkboardTeacher,
-} from "react-icons/fa";
-
-import {GiWhistle} from "react-icons/gi";
+import { FaBookOpen, FaChalkboardTeacher } from "react-icons/fa";
+import { GiWhistle } from "react-icons/gi";
 import { MdAssessment } from "react-icons/md";
 
 type WorkAxis = {
@@ -14,9 +10,9 @@ type WorkAxis = {
 };
 
 type OrgMember = {
-  title: string;
+  title?: string;
   name: string;
-  role: string;
+  role?: string;
   variant?: "red" | "dark" | "light";
 };
 
@@ -24,8 +20,8 @@ const workAxes: WorkAxis[] = [
   {
     title: "Formation aux fondamentaux des règles du jeu",
     description:
-      "Mettre en place des sessions de formation destinées aux jeunes arbitres afin de renforcer leur connaissance des règles de handball.Harmoniser les contenus pédagogiques pour garantir une compréhension commune des fondamentaux.",
-     icon: <FaBookOpen />,
+      "Mettre en place des sessions de formation destinées aux jeunes arbitres afin de renforcer leur connaissance des règles de handball. Harmoniser les contenus pédagogiques pour garantir une compréhension commune des fondamentaux.",
+    icon: <FaBookOpen />,
   },
   {
     title: "Formation aux fondamentaux de l'arbitrage",
@@ -34,21 +30,21 @@ const workAxes: WorkAxis[] = [
     icon: <GiWhistle />,
   },
   {
-    title: "Formation des accompagnateurs ",
+    title: "Formation des accompagnateurs",
     description:
       "Mettre en place des formations à destination des accompagnateurs d’écoles d’arbitrage et des accompagnateurs de club. Sensibiliser ces acteurs aux règles et aux principes de l’arbitrage afin d’assurer un accompagnement cohérent et constructif des jeunes arbitres.",
-    icon: <FaChalkboardTeacher/>,
+    icon: <FaChalkboardTeacher />,
   },
   {
     title: "Suivi et évaluation des jeunes arbitres",
     description:
-      "Élaborer des fiches de suivi par catégorie, en cohérence avec les objectifs de la filière jeune et en lien avec la CTJA.Assurer un suivi régulier sur l’ensemble des rencontres jeunes, des catégories moins de 11 ans à moins de 15 ans.Identifier les axes de progression et accompagner le développement des compétences arbitrales tout au long de la saison",
+      "Élaborer des fiches de suivi par catégorie, en cohérence avec les objectifs de la filière jeune et en lien avec la CTJA. Assurer un suivi régulier sur l’ensemble des rencontres jeunes, des catégories moins de 11 ans à moins de 15 ans. Identifier les axes de progression et accompagner le développement des compétences arbitrales tout au long de la saison.",
     icon: <MdAssessment />,
   },
 ];
 
 const arbitrationRoles = [
-  "Animateur Ecole d'Arbitrage",
+  "Animateur École d’Arbitrage",
   "Accompagnateur Territorial",
   "Accompagnateur Club",
   "Animateur Territorial",
@@ -58,11 +54,11 @@ const arbitrationRoles = [
 
 function RolesBox() {
   return (
-    <div className="w-full max-w-[260px] rounded-[28px] border border-cyan-200/40 bg-cyan-400 px-5 py-6 text-white shadow-lg">
-      <ul className="space-y-4 text-sm leading-relaxed">
+    <div className="w-full max-w-[220px] rounded-[26px] border border-cyan-200/40 bg-cyan-400 px-4 py-5 text-white shadow-lg">
+      <ul className="space-y-3 text-xs leading-relaxed">
         {arbitrationRoles.map((role) => (
           <li key={role} className="flex items-start gap-2">
-            <span className="mt-[2px] text-white">•</span>
+            <span className="mt-[1px] text-white">•</span>
             <span>{role}</span>
           </li>
         ))}
@@ -78,23 +74,32 @@ function OrgCard({ title, name, role, variant = "light" }: OrgMember) {
     light: "border-gray-200 bg-white text-gray-900",
   };
 
+  const hasTitle = title && title.trim() !== "";
+  const hasRole = role && role.trim() !== "";
+
   return (
     <div
-      className={`w-full rounded-2xl border px-5 py-4 text-center shadow-md ${styles[variant]}`}
+      className={`relative z-10 flex min-h-[74px] w-full flex-col justify-center rounded-xl border px-3 py-3 text-center shadow-md ${styles[variant]}`}
     >
-      <p className="text-sm font-semibold uppercase tracking-wide opacity-80">
-        {title}
-      </p>
+      {hasTitle && (
+        <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80 sm:text-xs">
+          {title}
+        </p>
+      )}
 
-      <h3 className="mt-2 text-lg font-bold">{name}</h3>
+      <h3 className="mt-1 break-words text-xs font-bold sm:text-sm">
+        {name}
+      </h3>
 
-      <p
-        className={`mt-2 text-sm leading-relaxed ${
-          variant === "light" ? "text-gray-600" : "text-white/90"
-        }`}
-      >
-        {role}
-      </p>
+      {hasRole && (
+        <p
+          className={`mt-2 text-xs leading-relaxed ${
+            variant === "light" ? "text-gray-600" : "text-white/90"
+          }`}
+        >
+          {role}
+        </p>
+      )}
     </div>
   );
 }
@@ -194,13 +199,14 @@ function EcoleArbitragePage() {
             </h2>
 
             <p className="mx-auto mt-4 max-w-3xl text-gray-600">
-              L’école d’arbitrage repose sur plusieurs axes permettant
-              de structurer, accompagner et valoriser la formation des jeunes arbitres en développant un dispositif complet de formation,
-              d’accompagnement Club et d’alimenter la filière CTJA
+              L’école d’arbitrage repose sur plusieurs axes permettant de
+              structurer, accompagner et valoriser la formation des jeunes
+              arbitres en développant un dispositif complet de formation,
+              d’accompagnement club et d’alimentation de la filière CTJA.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {workAxes.map((axis) => (
               <article
                 key={axis.title}
@@ -241,135 +247,136 @@ function EcoleArbitragePage() {
             </p>
           </div>
 
-            <div className="grid items-start gap-8 xl:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
             {/* Carré des rôles */}
             <div className="flex justify-center lg:justify-start">
-            <RolesBox />
-            </div>
-         {/* Organigramme */}
-          <div className="flex flex-col items-center">
-            {/* Niveau 1 */}
-            <div className="w-full max-w-md">
-              <OrgCard
-                title="Animateur Ecole d'Arbitrage"
-                name="Fabrice Millet"
-                role="Organisation générale, suivi de l’école d’arbitrage et coordination avec le club."
-                variant="red"
-              />
+              <RolesBox />
             </div>
 
-            <div className="h-10 w-1 bg-red-600" />
+            {/* Organigramme */}
+            <div className="min-w-0 overflow-x-auto pb-4 lg:overflow-visible">
+              <div className="mx-auto flex min-w-[720px] max-w-[760px] flex-col items-center px-2 lg:min-w-0 lg:px-0">
+                {/* Niveau 1 */}
+                <div className="w-full max-w-[280px]">
+                  <OrgCard
+                    title="Animateur École d’Arbitrage"
+                    name="Fabrice Millet"
+                    role="Organisation générale, suivi de l’école d’arbitrage et coordination avec le club."
+                    variant="red"
+                  />
+                </div>
 
-            {/* Ligne horizontale niveau 2 */}
-            <div className="hidden w-full max-w-4xl items-center md:flex">
-              <div className="h-1 flex-1 bg-red-600" />
-              <div className="h-1 flex-1 bg-red-600" />
-            </div>
-            {/* Niveau 2 */}
-            <div className="grid w-full gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title="Accompagnateur Territorial"
-                  name="David Bardin"
-                  role=""
-                  variant="dark"
-                />
-              </div>
+                <div className="h-7 w-1 bg-red-600" />
 
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title="Accompagnateur Club"
-                  name="Florian Millet"
-                  role=""
-                  variant="dark"
-                />
-              </div>
-            </div>
+                {/* Ligne horizontale niveau 2 */}
+                <div className="flex w-full max-w-[520px] items-center">
+                  <div className="h-1 flex-1 bg-red-600" />
+                  <div className="h-1 flex-1 bg-red-600" />
+                </div>
 
-            <div className="h-10 w-1 bg-red-600" />
+                {/* Niveau 2 */}
+                <div className="grid w-full grid-cols-2 gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
 
-            {/* Ligne horizontale niveau 3 */}
-            <div className="hidden w-full max-w-4xl items-center md:flex">
-              <div className="h-1 flex-1 bg-red-600" />
-              <div className="h-1 flex-1 bg-red-600" />
-            </div>
+                    <div className="w-full max-w-[230px]">
+                      <OrgCard
+                        title="Accompagnateur Territorial"
+                        name="David Bardin"
+                        variant="dark"
+                      />
+                    </div>
+                  </div>
 
-            {/* Niveau 3 */}
-            <div className="grid w-full gap-6 md:grid-cols-4">
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="Yanis HADJADJ AOUL"
-                  role=""
-                  variant="light"
-                />
-              </div>
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
 
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="Guilhem DEMKIW"
-                  role=""
-                  variant="light"
-                />
-              </div>
+                    <div className="w-full max-w-[230px]">
+                      <OrgCard
+                        title="Accompagnateur Club"
+                        name="Florian Millet"
+                        variant="dark"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="Géral OVERSTEYNS"
-                  role=""
-                  variant="light"
-                />
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="Arnaud WALESSA"
-                  role=""
-                  variant="light"
-                />
-              </div>
-            </div>
+                <div className="h-7 w-1 bg-red-600" />
 
-            <div className="h-10 w-1 bg-red-600" />
+                {/* Ligne horizontale niveau 3 */}
+                <div className="flex w-full max-w-[720px] items-center">
+                  <div className="h-1 flex-1 bg-red-600" />
+                  <div className="h-1 flex-1 bg-red-600" />
+                </div>
 
-            {/* Ligne horizontale niveau 4 */}
-            <div className="hidden w-full max-w-4xl items-center md:flex">
-              <div className="h-1 flex-1 bg-red-600" />
-              <div className="h-1 flex-1 bg-red-600" />
-            </div>
-            {/* Niveau 4 */}
-            <div className="grid w-full gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="Grégory LAGNEAU"
-                  role=""
-                  variant="dark"
-                />
-              </div>
+                {/* Niveau 3 */}
+                <div className="grid w-full grid-cols-4 gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
 
-              <div className="flex flex-col items-center">
-                <div className="h-8 w-1 bg-red-600" />
-                <OrgCard
-                  title=""
-                  name="JaJ Club CTJA"
-                  role=""
-                  variant="dark"
-                />
+                    <div className="w-full">
+                      <OrgCard name="Yanis HADJADJ AOUL" variant="light" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
+
+                    <div className="w-full">
+                      <OrgCard name="Guilhem DEMKIW" variant="light" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
+
+                    <div className="w-full">
+                      <OrgCard name="Géral OVERSTEYNS" variant="light" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
+
+                    <div className="w-full">
+                      <OrgCard name="Arnaud WALESSA" variant="light" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-7 w-1 bg-red-600" />
+
+                {/* Ligne horizontale niveau 4 */}
+                <div className="flex w-full max-w-[420px] items-center">
+                  <div className="h-1 flex-1 bg-red-600" />
+                  <div className="h-1 flex-1 bg-red-600" />
+                </div>
+
+                {/* Niveau 4 */}
+                <div className="grid w-full max-w-[520px] grid-cols-2 gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
+
+                    <div className="w-full max-w-[230px]">
+                      <OrgCard name="Grégory LAGNEAU" variant="dark" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-1 bg-red-600" />
+
+                    <div className="w-full max-w-[230px]">
+                      <OrgCard name="JaJ Club CTJA" variant="dark" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+
+          <p className="mt-4 text-center text-xs text-gray-500 lg:hidden">
+            Faites glisser horizontalement pour voir tout l’organigramme.
+          </p>
         </div>
       </section>
     </main>
