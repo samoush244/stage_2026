@@ -1,5 +1,6 @@
 import type { Key } from "react";
 import { useEffect, useState } from "react";
+import {Link} from "react-router";
 import API from "../services/api";
 import type { PracticeCategory, ScheduleCell } from "../types/practiceCategory";
 
@@ -274,8 +275,8 @@ function PracticalInfoPage() {
         !error &&
         categories.map((category) => (
           <TrainingCategorySection key={category._id} category={category} />
-        ))}
-
+        ))} 
+        {/** 
       <section className="bg-black px-8 py-16 text-white">
         <div className="mx-auto max-w-7xl rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
@@ -312,7 +313,29 @@ function PracticalInfoPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>*/}
+      <section className="mt-12 rounded-[28px] bg-gray-950 p-8 text-white shadow-xl">
+  <p className="text-sm font-bold uppercase tracking-[0.25em] text-red-500">
+    Licences
+  </p>
+
+  <h2 className="mt-3 text-2xl font-extrabold md:text-3xl">
+    Inscriptions et tarifs
+  </h2>
+
+  <p className="mt-4 max-w-3xl text-gray-300">
+    Retrouvez les documents nécessaires pour l’inscription, les moyens de
+    paiement acceptés, les réductions possibles et les tarifs des licences.
+  </p>
+
+  <Link
+    to="/inscription-tarifs"
+    className="mt-6 inline-flex rounded-full bg-red-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+  >
+    Voir les inscriptions et tarifs
+  </Link>
+</section>
+
     </main>
   );
 }

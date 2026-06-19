@@ -41,13 +41,16 @@ export default function AdminLayout() {
             </Link>
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/contact-messages">
               Messages contact
-              </Link>
-              <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/histoire">
+            </Link>
+            <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/histoire">
               Histoire du Club
-              </Link>
+            </Link>
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/informations-pratiques">
               Informations Pratiques
-              </Link>
+            </Link>
+            <Link className="rounded-xl px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-red-50 hover:text-red-600"to="/admin/inscription-tarifs">
+              Inscription & Tarifs
+            </Link>
           </nav>
         </aside>
 

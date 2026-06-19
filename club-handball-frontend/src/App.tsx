@@ -15,6 +15,7 @@ import ActivateAccountPage from "./pages/ActivateAccountPage";
 import ClubHistoryPage from "./pages/HistoireClub";
 import OrganizationChartPage from "./pages/OrganigrammeClub";
 import PraticalInfoPage from "./pages/PraticalInfoPage";
+import InscriptionTarifsPage from "./pages/InscriptionsTarifsPage";
 import RedArmyVolunteersPage from "./pages/RedArmyBenevoles";
 import EcoleArbitragePage from "./pages/EcoleArbitrage";
 
@@ -48,6 +49,7 @@ import AdminEvents from "./pages/admin/AdminEvents";
 import AdminContactMessages from "./pages/admin/AdminContactMessage";
 import AdminHistory from "./pages/admin/AdminHistory";
 import AdminPracticeCategories from "./pages/admin/AdminPracticeCategories";
+import AdminRegistrationInfoPage from "./pages/admin/AdminRegistrationInfoPage";
 
 function App() {
   return (
@@ -68,6 +70,7 @@ function App() {
         <Route path="/club/histoire" element={<ClubHistoryPage />} />
         <Route path="/club/organigramme" element={<OrganizationChartPage />} />
         <Route path="/club/informations-pratiques" element={<PraticalInfoPage />}/>
+        <Route path="/inscription-tarifs" element={<InscriptionTarifsPage />} />
         <Route path="/club/red-army-benevoles" element={<RedArmyVolunteersPage />}/>
         <Route path="/club/ecole-arbitrage" element={<EcoleArbitragePage/>}/>
 
@@ -152,7 +155,9 @@ function App() {
           <Route path="evenements" element={<AdminEvents />} />
           <Route path="contact-messages" element={<AdminContactMessages />} />
           <Route path="histoire" element={<AdminHistory />} />
-          <Route path="/admin/informations-pratiques" element={<AdminPracticeCategories />}/>
+          <Route path="informations-pratiques" element={<AdminPracticeCategories />}/>
+        <Route path="inscription-tarifs"element={<AdminRegistrationInfoPage />}/>
+
         </Route>
 
         {/* 404 */}
