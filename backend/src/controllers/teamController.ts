@@ -138,6 +138,7 @@ export const createTeam = async (req: Request, res: Response) => {
       gender,
       category,
       level,
+      description,
       ffhandballUrl,
       scorencoUrl,
       order,
@@ -170,6 +171,7 @@ export const createTeam = async (req: Request, res: Response) => {
       gender: gender || "mixte",
       category,
       level,
+      description,
       image: imageUrl,
       ffhandballUrl,
       scorencoUrl,
@@ -207,6 +209,7 @@ export const updateTeam = async (req: Request, res: Response) => {
       gender,
       category,
       level,
+      description,
       ffhandballUrl,
       scorencoUrl,
       order,
@@ -238,6 +241,7 @@ export const updateTeam = async (req: Request, res: Response) => {
     if (gender !== undefined) team.gender = gender;
     if (category !== undefined) team.category = category;
     if (level !== undefined) team.level = level;
+    if (description !== undefined) team.description = description
     if (ffhandballUrl !== undefined) team.ffhandballUrl = ffhandballUrl;
     if (scorencoUrl !== undefined) team.scorencoUrl = scorencoUrl;
     if (order !== undefined) team.order = Number(order);

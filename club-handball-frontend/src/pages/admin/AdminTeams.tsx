@@ -14,6 +14,7 @@ interface Team {
   gender: Gender;
   category?: string;
   level?: string;
+  description?: string;
   image?: string;
   ffhandballUrl?: string;
   scorencoUrl?: string;
@@ -28,6 +29,7 @@ interface TeamForm {
   gender: Gender;
   category: string;
   level: string;
+  description: string;
   ffhandballUrl: string;
   scorencoUrl: string;
   order: string;
@@ -42,6 +44,7 @@ const initialForm: TeamForm = {
   gender: "mixte",
   category: "",
   level: "",
+  description: "",
   ffhandballUrl: "",
   scorencoUrl: "",
   order: "0",
@@ -90,7 +93,7 @@ const getImageUrl = (image?: string) => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
@@ -139,6 +142,7 @@ const getImageUrl = (image?: string) => {
       data.append("gender", form.gender);
       data.append("category", form.category);
       data.append("level", form.level);
+      data.append("description", form.description);
       data.append("ffhandballUrl", form.ffhandballUrl);
       data.append("scorencoUrl", form.scorencoUrl);
       data.append("order", form.order);
@@ -186,6 +190,7 @@ const getImageUrl = (image?: string) => {
       gender: team.gender || "mixte",
       category: team.category || "",
       level: team.level || "",
+      description: team.description || "",
       ffhandballUrl: team.ffhandballUrl || "",
       scorencoUrl: team.scorencoUrl || "",
       order: String(team.order || 0),
@@ -363,6 +368,25 @@ const getImageUrl = (image?: string) => {
                   placeholder="0"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block font-bold text-zinc-800">
+                Description de l'équipe
+            </label>
+
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={5}
+                className="w-full resize-y rounded-lg border border-zinc-300 px-4 py-3 outline-none focus:border-red-600"
+                placeholder="Ex : Le Baby Hand permet aux enfants de découvrir le handball à travers des jeux, des parcours et des activités adaptées à leur âge."/>
+
+                <p className="mt-2 text-sm text-zinc-500">
+                Cette description sera affichée sur la page publique de l’équipe.
+                Si elle est vide, le texte par défaut sera utilisé.
+                </p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">

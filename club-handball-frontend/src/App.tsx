@@ -28,13 +28,13 @@ import NewsDetailPage from "./pages/NewsDetailPage";
 import TicketingPage from "./pages/TicketingPage";
 import PartnersPage from "./pages/Partnerspage";
 import Contact from "./pages/contact";
-
+{/** 
 import MemberSpace from "./pages/member/MemberSpasce";
 import MyConvocationsPage from "./pages/member/MyConvocationPage";
 
 import CoachDashboard from "./pages/coach/CoachDashboard";
 import CoachTeamsPage from "./pages/coach/CoachTeamsPage";
-
+*/}
 import AdminLayout from "./pages/admin/adminLayout";
 import AdminDashboard from "./pages/admin/adminDashboard";
 import AdminNews from "./pages/admin/AdminNews";
@@ -96,7 +96,7 @@ function App() {
         <Route path="/partenaires" element={<PartnersPage />} />
         <Route path="/contact" element={<Contact />} />
 
-        {/* Espace membre */}
+        {/* Espace membre 
         <Route
           path="/espace-membre"
           element={
@@ -114,8 +114,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Espace coach */}
+*/}
+        {/* Espace coach 
         <Route
           path="/coach"
           element={
@@ -132,7 +132,7 @@ function App() {
               <CoachTeamsPage />
             </ProtectedRoute>
           }
-        />
+        />*/}
 
         {/* Admin */}
         <Route

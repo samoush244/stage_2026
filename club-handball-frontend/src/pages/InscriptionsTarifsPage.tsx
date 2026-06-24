@@ -70,10 +70,6 @@ function InscriptionTarifsPage() {
     );
   }
 
-  const documents = [...registrationInfo.documents].sort(
-    (a, b) => a.order - b.order
-  );
-
   return (
     <main className="min-h-screen bg-gray-50">
       <section className="bg-gray-950 px-4 py-16 text-white">
@@ -96,52 +92,6 @@ function InscriptionTarifsPage() {
 
       <section className="px-4 py-12">
         <div className="mx-auto max-w-6xl space-y-10">
-          <section className="rounded-[28px] bg-white p-6 shadow-sm md:p-8">
-            <div className="mb-6 border-b border-gray-200 pb-4">
-              <p className="text-sm font-bold uppercase tracking-[0.22em] text-red-600">
-                Documents
-              </p>
-
-              <h2 className="mt-2 text-2xl font-extrabold text-gray-950">
-                Documents à télécharger
-              </h2>
-            </div>
-
-            {documents.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {documents.map((document) => (
-                  <article
-                    key={document._id}
-                    className="flex flex-col justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center"
-                  >
-                    <div>
-                      <h3 className="font-bold text-gray-950">
-                        {document.title}
-                      </h3>
-
-                      <p className="mt-1 text-sm text-gray-500">
-                        Document officiel du club
-                      </p>
-                    </div>
-
-                    <a
-                      href={document.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex shrink-0 items-center justify-center rounded-full bg-gray-950 px-5 py-2 text-sm font-bold text-white transition hover:bg-red-600"
-                    >
-                      Télécharger
-                    </a>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">
-                Aucun document n’est disponible pour le moment.
-              </p>
-            )}
-          </section>
-
           <section className="rounded-[28px] bg-white p-6 shadow-sm md:p-8">
             <div className="mb-6 border-b border-gray-200 pb-4">
               <p className="text-sm font-bold uppercase tracking-[0.22em] text-red-600">

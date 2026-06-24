@@ -145,9 +145,9 @@ function TeamDetailPage() {
               </p>
             </div>
 
-            <p className="mt-5 leading-relaxed text-gray-700">
-              Cette page permet de présenter rapidement l’équipe et de rediriger
-              les visiteurs vers les informations officielles de compétition.
+            <p className="mt-5 whitespace-pre-line leading-relaxed text-gray-700">
+              {team.description?.trim() ||
+                  "Cette page permet de présenter rapidement l’équipe et de rediriger les visiteurs vers les informations officielles de compétition."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -162,8 +162,6 @@ function TeamDetailPage() {
                 </a>
               ) : (
                 <p className="font-semibold text-gray-500">
-                  Aucun lien FFHandball n’a encore été renseigné pour cette
-                  équipe.
                 </p>
               )}
 

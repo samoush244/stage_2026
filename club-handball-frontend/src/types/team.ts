@@ -10,6 +10,7 @@ export interface Team {
   category?: string;
   level?: string;
   image?: string;
+  description?: string;
   ffhandballUrl?: string;
   scorencoUrl?: string;
   hasRosterPage?:boolean;
