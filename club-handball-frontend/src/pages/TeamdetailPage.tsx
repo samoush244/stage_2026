@@ -69,7 +69,7 @@ function TeamDetailPage() {
 
           <Link
             to="/equipes"
-            className="mt-8 inline-block rounded bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
+            className="mt-8 inline-block rounded bg-red-600 px-6 py-3 font-semibold text-white hover:bg-red-700"
           >
             Retour aux équipes
           </Link>
@@ -77,10 +77,6 @@ function TeamDetailPage() {
       </main>
     );
   }
-
-  const image480 = getImageUrl(team.image);
-  const image768 = getImageUrl(team.image);
-  const image1200 = getImageUrl(team.image);
 
   return (
     <main className="bg-white text-black">
@@ -90,9 +86,7 @@ function TeamDetailPage() {
             {team.category || "Équipe du club"}
           </p>
 
-          <h1 className="mt-4 text-4xl font-extrabold sm:text-5xl">
-            {team.name}
-          </h1>
+          <h1 className="mt-4 text-5xl font-extrabold">{team.name}</h1>
 
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
             Retrouvez les informations principales de cette équipe, sa photo et
@@ -102,21 +96,17 @@ function TeamDetailPage() {
         </div>
       </section>
 
-      <section className="px-5 py-14 sm:px-8 sm:py-20">
+      <section className="px-8 py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
-          <div className="flex min-h-[280px] items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-zinc-100 shadow-sm sm:min-h-[420px]">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-zinc-100 shadow-sm">
             {team.image ? (
               <img
-                src={image768}
-                srcSet={`${image480} 480w, ${image768} 768w, ${image1200} 1200w`}
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                alt={`Photo de l'équipe ${team.name}`}
-                loading="lazy"
-                decoding="async"
-                className="max-h-[650px] w-full object-contain"
+                src={getImageUrl(team.image)}
+                alt={team.name}
+                className="h-auto w-full object-contain"
               />
             ) : (
-              <div className="flex h-96 w-full items-center justify-center bg-gradient-to-br from-red-700 via-black to-black text-white">
+              <div className="flex h-96 items-center justify-center bg-gradient-to-br from-red-700 via-black to-black text-white">
                 <p className="text-2xl font-extrabold uppercase">
                   Photo équipe
                 </p>
@@ -129,9 +119,7 @@ function TeamDetailPage() {
               Équipe
             </p>
 
-            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-              {team.name}
-            </h2>
+            <h2 className="mt-3 text-4xl font-extrabold">{team.name}</h2>
 
             <div className="mt-5 space-y-2 text-gray-700">
               {team.category && (
@@ -159,21 +147,25 @@ function TeamDetailPage() {
 
             <p className="mt-5 whitespace-pre-line leading-relaxed text-gray-700">
               {team.description?.trim() ||
-                "Cette page permet de présenter rapidement l’équipe et de rediriger les visiteurs vers les informations officielles de compétition."}
+                  "Cette page permet de présenter rapidement l’équipe et de rediriger les visiteurs vers les informations officielles de compétition."}
             </p>
 
-            {team.ffhandballUrl && (
-              <div className="mt-8">
+            <div className="mt-8 flex flex-wrap gap-4">
+              {team.ffhandballUrl ? (
                 <a
                   href={team.ffhandballUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block rounded bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
+                  className="rounded bg-red-600 px-6 py-3 font-semibold text-white hover:bg-red-700"
                 >
                   Voir les résultats
                 </a>
-              </div>
-            )}
+              ) : (
+                <p className="font-semibold text-gray-500">
+                </p>
+              )}
+
+            </div>
           </div>
         </div>
       </section>
