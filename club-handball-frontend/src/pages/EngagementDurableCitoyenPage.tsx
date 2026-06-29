@@ -32,14 +32,14 @@ type EngagementPageData = {
 };
 
 const DEFAULT_INTRO_TEXT =
-  "Grâce au soutien de notre partenaire, le Valenciennes Handball Club met en place des actions durables et citoyennes tout au long de l’année. Ensemble, nous réalisons des activités de sensibilisation, de solidarité et de protection de l’environnement afin de transmettre aux jeunes licenciés les valeurs de respect, d’engagement et de responsabilité.";
+  "Grâce au soutien de notre partenaire, le Valenciennes Handball Club met en place des actions durables et citoyennes tout au long de l'année. Ensemble, nous réalisons des activités de sensibilisation, de solidarité et de protection de l'environnement afin de transmettre aux jeunes licenciés les valeurs de respect, d'engagement et de responsabilité.";
 
 const engagements = [
   {
     number: "01",
     title: "Respect et Fair-Play: apprendre à mieux vivre ensemble ",
     description:
-      "Dans le cadre de notre journée dédiée au développement durable, des ateliers autour du vivre ensemble sont organisés. Ces temps de parole permettent de rappeler l’importance du respect, de l’écoute, de la solidarité et du fair-play, aussi bien sur le terrain qu’en dehors.",
+      "Dans le cadre de notre journée dédiée au développement durable, des ateliers autour du vivre ensemble sont organisés. Ces temps de parole permettent de rappeler l'importance du respect, de l'écoute, de la solidarité et du fair-play, aussi bien sur le terrain qu'en dehors.",
   },
   {
     number: "02",
@@ -51,25 +51,25 @@ const engagements = [
     number: "03",
     title: "Citoyenneté et engagement : se mobiliser pour les autres",
     description:
-      "Le club s’est également engagé dans plusieurs actions solidaires.À l’occasion de Movember ou d'Octobre Rose, des événements sont organisés afin d'apporter un soutien aux associations qui luttent contre le cancer.La citoyenneté passe aussi par la responsabilisation des jeunes. ",
+      "Le club s'est également engagé dans plusieurs actions solidaires.À l'occasion de Movember ou d'Octobre Rose, des événements sont organisés afin d'apporter un soutien aux associations qui luttent contre le cancer.La citoyenneté passe aussi par la responsabilisation des jeunes. ",
   },
   {
     number: "04",
-    title: "Respect de l’environnement : agir concrètement",
+    title: "Respect de l'environnement : agir concrètement",
     description:
-      "Plusieurs actions sont menées afin de sensibiliser les jeunes au respect de l’environnement.Des poubelles de tri ont été mises en place au sein de la structure afin d’encourager les bons gestes au quotidien.",
+      "Plusieurs actions sont menées afin de sensibiliser les jeunes au respect de l'environnement.Des poubelles de tri ont été mises en place au sein de la structure afin d'encourager les bons gestes au quotidien.",
   },
   {
     number: "05",
     title: "Diversité et inclusion : un club ouvert à toutes et tous",
     description:
-      "Le club souhaite être un lieu d’accueil, de respect et d’inclusion pour chacun.Le club renforce son engagement en faveur du sport féminin afin de valoriser la place des filles dans le sport et de leur permettre de s’épanouir pleinement dans la pratique.",
+      "Le club souhaite être un lieu d'accueil, de respect et d'inclusion pour chacun.Le club renforce son engagement en faveur du sport féminin afin de valoriser la place des filles dans le sport et de leur permettre de s'épanouir pleinement dans la pratique.",
   },
   {
     number: "06",
     title: "Former des sportifs responsables",
     description:
-      "À travers l’ensemble de ces actions, le club affirme sa volonté de former des jeunes sportifs respectueux, solidaires, responsables et engagés. Ces initiatives permettent à nos licenciés de grandir avec des valeurs fortes, utiles sur le terrain comme dans la vie quotidienne.",
+      "À travers l'ensemble de ces actions, le club affirme sa volonté de former des jeunes sportifs respectueux, solidaires, responsables et engagés. Ces initiatives permettent à nos licenciés de grandir avec des valeurs fortes, utiles sur le terrain comme dans la vie quotidienne.",
   },
 ];
 
@@ -90,12 +90,17 @@ function formatActionDate(date?: string) {
   }).format(parsedDate);
 }
 
+function isTouchDevice() {
+  return window.matchMedia("(hover: none)").matches;
+}
+
 function EngagementDurableCitoyenPage() {
   const [pageData, setPageData] = useState<EngagementPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] =
     useState<EngagementGalleryItem | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEngagementPage = async () => {
@@ -125,6 +130,7 @@ function EngagementDurableCitoyenPage() {
     const closeModalWithEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelectedItem(null);
+        setActiveItemId(null);
       }
     };
 
@@ -134,6 +140,42 @@ function EngagementDurableCitoyenPage() {
       window.removeEventListener("keydown", closeModalWithEscape);
     };
   }, []);
+
+  // Close active overlay when tapping outside gallery items
+  useEffect(() => {
+    if (!activeItemId) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("[data-gallery-item]")) {
+        setActiveItemId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [activeItemId]);
+
+  const handleGalleryItemClick = (item: EngagementGalleryItem) => {
+    if (isTouchDevice()) {
+      if (activeItemId === item._id) {
+        // Second tap → open modal
+        setSelectedItem(item);
+        setActiveItemId(null);
+      } else {
+        // First tap → show overlay
+        setActiveItemId(item._id);
+      }
+    } else {
+      // Mouse device → open modal directly
+      setSelectedItem(item);
+    }
+  };
 
   const introText = pageData?.introText || DEFAULT_INTRO_TEXT;
   const labels = pageData?.labels || [];
@@ -246,7 +288,7 @@ function EngagementDurableCitoyenPage() {
             </h2>
 
             <p className="mt-5 leading-7 text-gray-600">
-              À travers le sport, le VHC souhaite agir concrètement pour son
+              À travers le sport, le VHB souhaite agir concrètement pour son
               territoire, ses licenciés et les générations futures.
             </p>
           </div>
@@ -289,8 +331,8 @@ function EngagementDurableCitoyenPage() {
               </h2>
 
               <p className="mx-auto mt-5 max-w-2xl leading-7 text-gray-300">
-                Ces labels valorisent l’investissement du club en faveur du
-                sport, de la citoyenneté, de l’inclusion et du développement
+                Ces labels valorisent l'investissement du club en faveur du
+                sport, de la citoyenneté, de l'inclusion et du développement
                 durable.
               </p>
             </div>
@@ -352,37 +394,61 @@ function EngagementDurableCitoyenPage() {
 
           {gallery.length > 0 ? (
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {gallery.map((item) => (
-                <button
-                  key={item._id}
-                  type="button"
-                  onClick={() => setSelectedItem(item)}
-                  className="group relative aspect-[4/3] overflow-hidden bg-gray-200 text-left focus:outline-none focus:ring-4 focus:ring-red-600"
-                  aria-label={`Voir l'action : ${item.title}`}
-                >
-                  <img
-                    src={getImageUrl(item.image)}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
+              {gallery.map((item) => {
+                const isActive = activeItemId === item._id;
 
-                  <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/45 to-transparent p-5 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
-                    <p className="text-lg font-extrabold uppercase text-white">
-                      {item.title}
-                    </p>
+                return (
+                  <button
+                    key={item._id}
+                    type="button"
+                    data-gallery-item
+                    onClick={() => handleGalleryItemClick(item)}
+                    className="group relative aspect-[4/3] overflow-hidden bg-gray-200 text-left focus:outline-none focus:ring-4 focus:ring-red-600"
+                    aria-label={
+                      isActive
+                        ? `Ouvrir l'action : ${item.title}`
+                        : `Voir l'action : ${item.title}`
+                    }
+                  >
+                    <img
+                      src={getImageUrl(item.image)}
+                      alt={item.title}
+                      className={`h-full w-full object-cover transition duration-500 group-hover:scale-110 ${
+                        isActive ? "scale-110" : ""
+                      }`}
+                    />
 
-                    {item.actionDate && (
-                      <p className="mt-1 text-sm font-medium text-red-300">
-                        {formatActionDate(item.actionDate)}
+                    <div
+                      className={`absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/45 to-transparent p-5 transition duration-300 ${
+                        isActive
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                      }`}
+                    >
+                      <p className="text-lg font-extrabold uppercase text-white">
+                        {item.title}
                       </p>
-                    )}
 
-                    <p className="mt-3 line-clamp-2 text-sm leading-6 text-gray-200">
-                      {item.description}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                      {item.actionDate && (
+                        <p className="mt-1 text-sm font-medium text-red-300">
+                          {formatActionDate(item.actionDate)}
+                        </p>
+                      )}
+
+                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-gray-200">
+                        {item.description}
+                      </p>
+
+                      {/* Hint visible only on touch devices when overlay is active */}
+                      {isActive && (
+                        <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-red-300">
+                          Appuyer à nouveau pour ouvrir →
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-10 border border-dashed border-gray-300 px-6 py-12 text-center text-gray-500">
