@@ -108,19 +108,17 @@ function EcoleArbitragePage() {
   return (
     <main className="bg-white">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gray-950 py-20 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.35),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_30%)]" />
-
-        <div className="relative mx-auto max-w-6xl px-4 text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-red-500">
+      <section className="bg-black px-6 py-24 text-white">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-bold uppercase tracking-[0.35em] text-red-500">
             Le club
           </p>
 
-          <h1 className="text-4xl font-extrabold uppercase tracking-tight md:text-6xl">
-            École d’arbitrage
+          <h1 className="mt-4 text-5xl font-extrabold uppercase">
+             École d’arbitrage
           </h1>
 
-          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-gray-300 md:text-lg">
+          <p className="mt-6 max-w-3xl text-lg text-zinc-300">
             L’école d’arbitrage du club accompagne les jeunes arbitres dans leur
             formation, leur progression et leur prise de confiance sur le
             terrain. Elle participe au développement d’une culture du respect,
@@ -128,7 +126,7 @@ function EcoleArbitragePage() {
           </p>
         </div>
       </section>
-
+  
       {/* PRESENTATION */}
       <section className="py-16">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 md:grid-cols-[1.1fr_0.9fr] md:items-center">

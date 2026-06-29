@@ -18,6 +18,7 @@ import PraticalInfoPage from "./pages/PraticalInfoPage";
 import InscriptionTarifsPage from "./pages/InscriptionsTarifsPage";
 import RedArmyVolunteersPage from "./pages/RedArmyBenevoles";
 import EcoleArbitragePage from "./pages/EcoleArbitrage";
+import EngagementDurableCitoyenPage from "./pages/EngagementDurableCitoyenPage";
 
 import PublicRosterPage from "./pages/PublicRosterPage";
 import CalendrierResultatsPage from "./pages/CalendrierResultats";
@@ -50,6 +51,7 @@ import AdminContactMessages from "./pages/admin/AdminContactMessage";
 import AdminHistory from "./pages/admin/AdminHistory";
 import AdminPracticeCategories from "./pages/admin/AdminPracticeCategories";
 import AdminRegistrationInfoPage from "./pages/admin/AdminRegistrationInfoPage";
+import AdminEngagementDurableCitoyenPage from "./pages/admin/AdminEngagementDurableCitoyenPage";
 
 function App() {
   return (
@@ -73,6 +75,8 @@ function App() {
         <Route path="/inscription-tarifs" element={<InscriptionTarifsPage />} />
         <Route path="/club/red-army-benevoles" element={<RedArmyVolunteersPage />}/>
         <Route path="/club/ecole-arbitrage" element={<EcoleArbitragePage/>}/>
+        <Route path="/engagement-durable-et-citoyen" element={<EngagementDurableCitoyenPage />}/>
+
 
 
         {/* Équipes premières */}
@@ -137,12 +141,7 @@ function App() {
         {/* Admin */}
         <Route
           path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
+          element={ <ProtectedRoute allowedRoles={["admin"]}><AdminLayout /></ProtectedRoute> } >
           <Route index element={<AdminDashboard />} />
           <Route path="actualites" element={<AdminNews />} />
           <Route path="equipes" element={<AdminTeams />} />
@@ -156,7 +155,8 @@ function App() {
           <Route path="contact-messages" element={<AdminContactMessages />} />
           <Route path="histoire" element={<AdminHistory />} />
           <Route path="informations-pratiques" element={<AdminPracticeCategories />}/>
-        <Route path="inscription-tarifs"element={<AdminRegistrationInfoPage />}/>
+          <Route path="inscription-tarifs"element={<AdminRegistrationInfoPage />}/>
+          <Route path="/admin/engagement-durable-citoyen" element={<AdminEngagementDurableCitoyenPage />}/>
 
         </Route>
 

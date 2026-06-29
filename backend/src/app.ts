@@ -15,6 +15,8 @@ import historyRoutes from "./routes/historyRoutes";
 import clubInfoRoutes from "./routes/clubInfoRoutes";
 import practiceCategoryRoutes from "./routes/praticeCategoryRoutes";
 import registrationInfoRoutes from "./routes/registrationInfoRoutes";
+import engagementRoutes from "./routes/engagementRoutes";
+
 
 const app = express();
 
@@ -43,5 +45,6 @@ app.use("/api/histories", historyRoutes);
 app.use("/api/club-info", clubInfoRoutes);
 app.use("/api/practice-categories", practiceCategoryRoutes);
 app.use("/api/registration-info", registrationInfoRoutes);
+app.use("/api/engagement-durable-citoyen", engagementRoutes);
 
 export default app;
