@@ -37,39 +37,39 @@ const DEFAULT_INTRO_TEXT =
 const engagements = [
   {
     number: "01",
-    title: "Préserver l’environnement",
+    title: "Respect et Fair-Play: apprendre à mieux vivre ensemble ",
     description:
-      "Réduire les déchets, encourager le tri et adopter des pratiques plus responsables lors des activités du club.",
+      "Dans le cadre de notre journée dédiée au développement durable, des ateliers autour du vivre ensemble sont organisés. Ces temps de parole permettent de rappeler l’importance du respect, de l’écoute, de la solidarité et du fair-play, aussi bien sur le terrain qu’en dehors.",
   },
   {
     number: "02",
-    title: "Agir pour la solidarité",
+    title: "Santé et bien-être : sensibiliser au « bien manger ",
     description:
-      "Participer à des collectes et soutenir des actions utiles au territoire, aux familles et aux associations locales.",
+      "La santé fait également partie des priorités éducatives du club. Une action de sensibilisation autour du bien manger est proposée aux enfants, avec pour objectif de les aider à mieux comprendre comment constituer une assiette équilibrée en suivant des conseils simples de nutrition.",
   },
   {
     number: "03",
-    title: "Favoriser l’inclusion",
+    title: "Citoyenneté et engagement : se mobiliser pour les autres",
     description:
-      "Faire du handball un espace ouvert, accessible et respectueux pour tous les publics.",
+      "Le club s’est également engagé dans plusieurs actions solidaires.À l’occasion de Movember ou d'Octobre Rose, des événements sont organisés afin d'apporter un soutien aux associations qui luttent contre le cancer.La citoyenneté passe aussi par la responsabilisation des jeunes. Enfin, le club poursuit son engagement en faveur de la féminisation de l’arbitrage, avec la mise en place d’une initiation à l’arbitrage 100 % féminine. Cette action vise à encourager les jeunes filles à prendre des responsabilités et à s’investir pleinement dans la vie sportive du club.",
   },
   {
     number: "04",
-    title: "Promouvoir l’égalité",
+    title: "Respect de l’environnement : agir concrètement",
     description:
-      "Valoriser la pratique féminine et lutter contre toutes les formes de discrimination.",
+      "Plusieurs actions sont menées afin de sensibiliser les jeunes au respect de l’environnement.Des poubelles de tri ont été mises en place au sein de la structure afin d’encourager les bons gestes au quotidien.",
   },
   {
     number: "05",
-    title: "Transmettre les valeurs citoyennes",
+    title: "Diversité et inclusion : un club ouvert à toutes et tous",
     description:
-      "Sensibiliser les jeunes au respect, au fair-play, à l’entraide et à l’engagement collectif.",
+      "Le club souhaite être un lieu d’accueil, de respect et d’inclusion pour chacun.Dans cette démarche, les U13 ont participé à la réalisation d’une vidéo de lutte contre le harcèlement, afin de sensibiliser les jeunes à ce sujet important et de rappeler que chacun a un rôle à jouer pour prévenir les comportements blessants ou discriminatoires.Une initiation au handibasket a également été proposée aux jeunes afin de les sensibiliser au handicap, à l’accessibilité de la pratique sportive et au respect des différences. Cette action leur a permis de découvrir une autre façon de pratiquer le sport, tout en développant des valeurs d’entraide, d’adaptation et de solidarité.L’événement « Hand pour Elle » a également été organisé afin d’encourager la pratique féminine et de faire venir un maximum de filles au club. Cette action s’inscrit dans notre volonté de développer la place des filles dans le sport et de leur permettre de s’épanouir pleinement dans la pratique.L’initiation à l’arbitrage pour les filles vient compléter cet engagement, en favorisant leur accès à des rôles de responsabilité et en valorisant leur implication dans la vie du club..",
   },
   {
     number: "06",
-    title: "Valoriser les bénévoles",
+    title: "Former des sportifs responsables",
     description:
-      "Mettre en lumière les personnes qui donnent de leur temps et font vivre le club au quotidien.",
+      "À travers l’ensemble de ces actions, le club affirme sa volonté de former des jeunes sportifs respectueux, solidaires, responsables et engagés.Le développement durable, la citoyenneté, la santé, l’inclusion et le respect de l’environnement sont autant de thématiques qui font partie intégrante de notre projet éducatif. Ces initiatives permettent à nos licenciés de grandir avec des valeurs fortes, utiles sur le terrain comme dans la vie quotidienne.",
   },
 ];
 
