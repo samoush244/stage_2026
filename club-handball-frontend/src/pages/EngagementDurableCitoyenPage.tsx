@@ -51,7 +51,7 @@ const engagements = [
     number: "03",
     title: "Citoyenneté et engagement : se mobiliser pour les autres",
     description:
-      "Le club s’est également engagé dans plusieurs actions solidaires.À l’occasion de Movember ou d'Octobre Rose, des événements sont organisés afin d'apporter un soutien aux associations qui luttent contre le cancer.La citoyenneté passe aussi par la responsabilisation des jeunes. Enfin, le club poursuit son engagement en faveur de la féminisation de l’arbitrage, avec la mise en place d’une initiation à l’arbitrage 100 % féminine. Cette action vise à encourager les jeunes filles à prendre des responsabilités et à s’investir pleinement dans la vie sportive du club.",
+      "Le club s’est également engagé dans plusieurs actions solidaires.À l’occasion de Movember ou d'Octobre Rose, des événements sont organisés afin d'apporter un soutien aux associations qui luttent contre le cancer.La citoyenneté passe aussi par la responsabilisation des jeunes. ",
   },
   {
     number: "04",
@@ -63,13 +63,13 @@ const engagements = [
     number: "05",
     title: "Diversité et inclusion : un club ouvert à toutes et tous",
     description:
-      "Le club souhaite être un lieu d’accueil, de respect et d’inclusion pour chacun.Dans cette démarche, les U13 ont participé à la réalisation d’une vidéo de lutte contre le harcèlement, afin de sensibiliser les jeunes à ce sujet important et de rappeler que chacun a un rôle à jouer pour prévenir les comportements blessants ou discriminatoires.Une initiation au handibasket a également été proposée aux jeunes afin de les sensibiliser au handicap, à l’accessibilité de la pratique sportive et au respect des différences. Cette action leur a permis de découvrir une autre façon de pratiquer le sport, tout en développant des valeurs d’entraide, d’adaptation et de solidarité.L’événement « Hand pour Elle » a également été organisé afin d’encourager la pratique féminine et de faire venir un maximum de filles au club. Cette action s’inscrit dans notre volonté de développer la place des filles dans le sport et de leur permettre de s’épanouir pleinement dans la pratique.L’initiation à l’arbitrage pour les filles vient compléter cet engagement, en favorisant leur accès à des rôles de responsabilité et en valorisant leur implication dans la vie du club..",
+      "Le club souhaite être un lieu d’accueil, de respect et d’inclusion pour chacun.Le club renforce son engagement en faveur du sport féminin afin de valoriser la place des filles dans le sport et de leur permettre de s’épanouir pleinement dans la pratique.",
   },
   {
     number: "06",
     title: "Former des sportifs responsables",
     description:
-      "À travers l’ensemble de ces actions, le club affirme sa volonté de former des jeunes sportifs respectueux, solidaires, responsables et engagés.Le développement durable, la citoyenneté, la santé, l’inclusion et le respect de l’environnement sont autant de thématiques qui font partie intégrante de notre projet éducatif. Ces initiatives permettent à nos licenciés de grandir avec des valeurs fortes, utiles sur le terrain comme dans la vie quotidienne.",
+      "À travers l’ensemble de ces actions, le club affirme sa volonté de former des jeunes sportifs respectueux, solidaires, responsables et engagés. Ces initiatives permettent à nos licenciés de grandir avec des valeurs fortes, utiles sur le terrain comme dans la vie quotidienne.",
   },
 ];
 
