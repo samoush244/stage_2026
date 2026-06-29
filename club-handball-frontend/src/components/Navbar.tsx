@@ -241,6 +241,15 @@ function Navbar() {
                   >
                     École d'arbitrage
                   </Link>
+
+                  <Link
+                    to="/club/engagement-durable-et-citoyen"
+                    onClick={closeAll}
+                    className="block px-3 py-2 hover:text-red-500"
+                  >
+                     Engagement durable et citoyen 
+                  </Link>
+                  
                 </div>
               )}
             </div>
@@ -538,6 +547,14 @@ function Navbar() {
                       className="hover:text-red-500"
                     >
                       École d'arbitrage
+                    </Link>
+
+                    <Link
+                      to="/club/engagement-durable-et-citoyen"
+                      onClick={closeMobileMenu}
+                      className="hover:text-red-500"
+                    >
+                      Engagement durable et citoyen 
                     </Link>
                   </div>
                 </details>

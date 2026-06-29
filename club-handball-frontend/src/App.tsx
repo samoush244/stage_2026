@@ -75,7 +75,7 @@ function App() {
         <Route path="/inscription-tarifs" element={<InscriptionTarifsPage />} />
         <Route path="/club/red-army-benevoles" element={<RedArmyVolunteersPage />}/>
         <Route path="/club/ecole-arbitrage" element={<EcoleArbitragePage/>}/>
-        <Route path="/engagement-durable-et-citoyen" element={<EngagementDurableCitoyenPage />}/>
+        <Route path="/club/engagement-durable-et-citoyen" element={<EngagementDurableCitoyenPage />}/>
 
 
 
@@ -139,9 +139,7 @@ function App() {
         />*/}
 
         {/* Admin */}
-        <Route
-          path="/admin"
-          element={ <ProtectedRoute allowedRoles={["admin"]}><AdminLayout /></ProtectedRoute> } >
+        <Route path="/admin" element={ <ProtectedRoute allowedRoles={["admin"]}><AdminLayout /></ProtectedRoute> } >
           <Route index element={<AdminDashboard />} />
           <Route path="actualites" element={<AdminNews />} />
           <Route path="equipes" element={<AdminTeams />} />
@@ -156,7 +154,7 @@ function App() {
           <Route path="histoire" element={<AdminHistory />} />
           <Route path="informations-pratiques" element={<AdminPracticeCategories />}/>
           <Route path="inscription-tarifs"element={<AdminRegistrationInfoPage />}/>
-          <Route path="/admin/engagement-durable-citoyen" element={<AdminEngagementDurableCitoyenPage />}/>
+          <Route path="engagement-durable-citoyen" element={<AdminEngagementDurableCitoyenPage />}/>
 
         </Route>
 
