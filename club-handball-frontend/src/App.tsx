@@ -154,7 +154,7 @@ function App() {
           <Route path="histoire" element={<AdminHistory />} />
           <Route path="informations-pratiques" element={<AdminPracticeCategories />}/>
           <Route path="inscription-tarifs"element={<AdminRegistrationInfoPage />}/>
-          <Route path="engagement-durable-citoyen" element={<AdminEngagementDurableCitoyenPage />}/>
+          <Route path="engagement-durable-et-citoyen" element={<AdminEngagementDurableCitoyenPage />}/>
 
         </Route>
 
