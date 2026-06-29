@@ -51,8 +51,8 @@ export default function AdminLayout() {
             <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/inscription-tarifs">
               Inscription & Tarifs
             </Link>
-            <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/engagement-durable-et-citoyen">
-              Engagement citoyen et durable
+            <Link className="block rounded px-4 py-2 hover:bg-red-600" to="/admin/engagement-durable-et-citoyen">
+               Engagement durable et citoyen
             </Link>
           </nav>
         </aside>
