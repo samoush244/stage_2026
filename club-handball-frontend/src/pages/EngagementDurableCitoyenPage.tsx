@@ -98,9 +98,8 @@ function EngagementDurableCitoyenPage() {
   const [pageData, setPageData] = useState<EngagementPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedItem, setSelectedItem] =
-    useState<EngagementGalleryItem | null>(null);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [activeCardNumber, setActiveCardNumber] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEngagementPage = async () => {
@@ -129,8 +128,8 @@ function EngagementDurableCitoyenPage() {
   useEffect(() => {
     const closeModalWithEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setSelectedItem(null);
         setActiveItemId(null);
+        setActiveCardNumber(null);
       }
     };
 
@@ -143,12 +142,15 @@ function EngagementDurableCitoyenPage() {
 
   // Close active overlay when tapping outside gallery items
   useEffect(() => {
-    if (!activeItemId) return;
+    if (!activeItemId && !activeCardNumber) return;
 
     const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest("[data-gallery-item]")) {
         setActiveItemId(null);
+      }
+      if (!target.closest("[data-engagement-card]")) {
+        setActiveCardNumber(null);
       }
     };
 
@@ -159,21 +161,19 @@ function EngagementDurableCitoyenPage() {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("touchstart", handleOutsideClick);
     };
-  }, [activeItemId]);
+  }, [activeItemId, activeCardNumber]);
 
   const handleGalleryItemClick = (item: EngagementGalleryItem) => {
     if (isTouchDevice()) {
-      if (activeItemId === item._id) {
-        // Second tap → open modal
-        setSelectedItem(item);
-        setActiveItemId(null);
-      } else {
-        // First tap → show overlay
-        setActiveItemId(item._id);
-      }
+      setActiveItemId((prev) => (prev === item._id ? null : item._id));
     } else {
-      // Mouse device → open modal directly
-      setSelectedItem(item);
+      setActiveItemId((prev) => (prev === item._id ? null : item._id));
+    }
+  };
+
+  const handleCardTap = (number: string) => {
+    if (isTouchDevice()) {
+      setActiveCardNumber((prev) => (prev === number ? null : number));
     }
   };
 
@@ -294,26 +294,39 @@ function EngagementDurableCitoyenPage() {
           </div>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {engagements.map((engagement) => (
-              <article
-                key={engagement.number}
-                className="group border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-600 hover:shadow-lg"
-              >
-                <span className="text-4xl font-black text-red-700">
-                  {engagement.number}
-                </span>
+            {engagements.map((engagement) => {
+              const isCardActive = activeCardNumber === engagement.number;
+              return (
+                <article
+                  key={engagement.number}
+                  data-engagement-card
+                  onClick={() => handleCardTap(engagement.number)}
+                  className={`group border bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-600 hover:shadow-lg ${
+                    isCardActive
+                      ? "-translate-y-1 border-red-600 shadow-lg"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <span className="text-4xl font-black text-red-700">
+                    {engagement.number}
+                  </span>
 
-                <h3 className="mt-6 text-xl font-extrabold uppercase text-black">
-                  {engagement.title}
-                </h3>
+                  <h3 className="mt-6 text-xl font-extrabold uppercase text-black">
+                    {engagement.title}
+                  </h3>
 
-                <p className="mt-4 leading-7 text-gray-600">
-                  {engagement.description}
-                </p>
+                  <p className="mt-4 leading-7 text-gray-600">
+                    {engagement.description}
+                  </p>
 
-                <div className="mt-6 h-1 w-10 bg-black transition-all duration-300 group-hover:w-16 group-hover:bg-red-700" />
-              </article>
-            ))}
+                  <div
+                    className={`mt-6 h-1 bg-black transition-all duration-300 group-hover:w-16 group-hover:bg-red-700 ${
+                      isCardActive ? "w-16 bg-red-700" : "w-10"
+                    }`}
+                  />
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -439,12 +452,7 @@ function EngagementDurableCitoyenPage() {
                         {item.description}
                       </p>
 
-                      {/* Hint visible only on touch devices when overlay is active */}
-                      {isActive && (
-                        <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-red-300">
-                          Appuyer à nouveau pour ouvrir →
-                        </p>
-                      )}
+
                     </div>
                   </button>
                 );
@@ -458,56 +466,6 @@ function EngagementDurableCitoyenPage() {
         </div>
       </section>
 
-      {selectedItem && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Détail de l'action ${selectedItem.title}`}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedItem(null);
-            }
-          }}
-        >
-          <div className="relative max-h-[92vh] w-full max-w-5xl overflow-y-auto bg-white">
-            <button
-              type="button"
-              onClick={() => setSelectedItem(null)}
-              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black text-2xl text-white transition hover:bg-red-700"
-              aria-label="Fermer la photo"
-            >
-              ×
-            </button>
-
-            <img
-              src={getImageUrl(selectedItem.image)}
-              alt={selectedItem.title}
-              className="max-h-[65vh] w-full bg-black object-contain"
-            />
-
-            <div className="p-6 sm:p-8">
-              <p className="text-sm font-bold uppercase tracking-wider text-red-700">
-                Action du club
-              </p>
-
-              <h3 className="mt-2 text-2xl font-black uppercase text-black sm:text-3xl">
-                {selectedItem.title}
-              </h3>
-
-              {selectedItem.actionDate && (
-                <p className="mt-3 font-semibold text-gray-500">
-                  {formatActionDate(selectedItem.actionDate)}
-                </p>
-              )}
-
-              <p className="mt-5 max-w-3xl leading-8 text-gray-700">
-                {selectedItem.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
