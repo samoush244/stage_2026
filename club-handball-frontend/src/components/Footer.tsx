@@ -3,7 +3,6 @@ import {
   FaFacebook,
   FaInstagram,
   FaMapMarkerAlt,
-  FaPhone,
   FaEnvelope,
 } from "react-icons/fa";
 import { SiTiktok } from "react-icons/si";
@@ -53,10 +52,10 @@ function Footer() {
   );
 
   const email = clubInfo?.email || "contact@club-handball.fr";
-  const phone = clubInfo?.phone || "00 00 00 00 00";
+  
   const address = clubInfo?.address || "Gymnase du club";
 
-  const phoneHref = phone.replace(/\s/g, "");
+  
 
   const facebookUrl =
     clubInfo?.facebook || "https://www.facebook.com/redswans2016";
@@ -158,7 +157,7 @@ function Footer() {
 
           <p className="mt-4 text-sm leading-relaxed text-zinc-400">
             Site officiel du Valenciennes Handball Club : actualités, équipes,
-            matchs, billetterie, informations pratiques et vie associative.
+            matchs, événements, informations pratiques et vie associative.
           </p>
 
           <div className="mt-6 grid grid-cols-2 gap-2 text-sm">
@@ -240,16 +239,6 @@ function Footer() {
               >
                 <FaEnvelope className="h-4 w-4 shrink-0 text-red-600" />
                 {email}
-              </a>
-            </li>
-
-            <li>
-              <a
-                href={`tel:${phoneHref}`}
-                className="group flex items-center gap-3 text-sm text-zinc-400 transition hover:text-red-500"
-              >
-                <FaPhone className="h-4 w-4 shrink-0 text-red-600" />
-                {phone}
               </a>
             </li>
 
