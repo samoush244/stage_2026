@@ -270,8 +270,7 @@ function Footer() {
             >
               Mentions légales
             </Link>
-
-            <Link
+    <Link
               to="/politique-confidentialite"
               className="transition hover:text-red-500"
             >

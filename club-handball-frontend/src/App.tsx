@@ -5,6 +5,7 @@ import ScrollToTop from "./components/scrollToTop";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Newsletter from "./components/Newsletter";
+import MentionsLegalesPage from "./pages/MentionsLegalespage";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -99,6 +100,7 @@ function App() {
         <Route path="/événements" element={<TicketingPage />} />
         <Route path="/partenaires" element={<PartnersPage />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
 
         {/* Espace membre 
         <Route
