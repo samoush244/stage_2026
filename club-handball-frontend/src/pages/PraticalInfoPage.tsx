@@ -211,9 +211,6 @@ function PracticalInfoPage() {
 
 
       <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
-        
-
-        <div className="relative mx-auto max-w-6xl text-center">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
             Le club
           </p>
@@ -228,7 +225,7 @@ function PracticalInfoPage() {
             salles utilisées pendant la saison.
           </p>
            */}
-        </div>
+        
       </section>
       
       <section className="bg-zinc-950 px-8 py-10 text-white">

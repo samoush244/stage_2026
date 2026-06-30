@@ -13,7 +13,10 @@ export default function Communaute() {
         
       
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-red-950/40" />
-      
+     
+  {/* Contenu centré verticalement et horizontalement */}
+ 
+  <div className="relative z-10 flex flex-col items-start justify-center h-full px-8 sm:px-16">
         <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
             Le Club
           </p>
@@ -22,13 +25,11 @@ export default function Communaute() {
             Red Army
             <span className="block text-red-500">& Bénévoles</span>
           </h1>
-
-
-          
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
             Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
             il y a des femmes et des hommes qui donnent de leur temps pour faire vivre le club.
           </p>
+          </div>
       </section>
 
       {/* FIL D'ARIANE + INTRO */}
