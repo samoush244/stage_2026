@@ -122,14 +122,16 @@ function EcoleArbitragePage() {
             École d’arbitrage
           </h1>
           <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
-
+          {/**
           <p className="mt-6 max-w-3xl text-lg text-zinc-300">
             L’école d’arbitrage du club accompagne les jeunes arbitres dans leur
             formation, leur progression et leur prise de confiance sur le
             terrain. Elle participe au développement d’une culture du respect,
             de la responsabilité et de l’esprit sportif.
-          </p>
+          </p>*/}
+
         </div>
+
       </section>
   
       {/* PRESENTATION */}

@@ -3,6 +3,7 @@ export default function Communaute() {
   return (
     <main className="min-h-screen bg-white text-zinc-950">
       {/* HERO */}
+
       <section className="relative h-[420px] overflow-hidden bg-zinc-950">
         <img
           src="/images/supporter.jpg"
@@ -11,21 +12,24 @@ export default function Communaute() {
         />
 
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-red-950/40" />
-
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-6">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.35em] text-red-500">
-            Vie du club
+        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
+            Le club
           </p>
 
-          <h1 className="max-w-4xl text-5xl font-black uppercase leading-tight text-white md:text-7xl">
-            Red Army & Bénévoles
+        <div className="relative mx-auto max-w-6xl text-center">
+          
+          <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
+            Red Army
+            <span className="block text-red-500">& Bénévoles</span>
           </h1>
 
+        </div>
+          
+          {/** 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
             Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
             il y a des femmes et des hommes qui donnent de leur temps pour faire vivre le club.
-          </p>
-        </div>
+          </p>*/}
       </section>
 
       {/* FIL D'ARIANE + INTRO */}
