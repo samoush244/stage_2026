@@ -208,6 +208,29 @@ function PracticalInfoPage() {
 
   return (
     <main className="bg-white text-black">
+
+
+      <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
+        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-red-700 opacity-80" />
+        <div className="absolute -bottom-24 -left-16 h-52 w-52 rounded-full border-[30px] border-red-700 opacity-70" />
+
+        <div className="relative mx-auto max-w-6xl text-center">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
+            Le club
+          </p>
+
+          <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
+            Informations pratiques
+          </h1>
+          <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
+          {/**
+           * <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
+            Retrouvez les catégories du club, les horaires d’entraînement et les
+            salles utilisées pendant la saison.
+          </p>
+           */}
+        </div>
+      </section>
       <section className="bg-black px-8 py-16 text-white">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
@@ -218,10 +241,7 @@ function PracticalInfoPage() {
             Informations pratiques
           </h1>
 
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-300">
-            Retrouvez les catégories du club, les horaires d’entraînement et les
-            salles utilisées pendant la saison.
-          </p>
+          
         </div>
       </section>
 

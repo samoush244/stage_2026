@@ -10,8 +10,9 @@ export default function Communaute() {
           alt="Supporters et bénévoles du club"
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
-
+        {/**
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-red-950/40" />
+        */}
         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
             Le club
           </p>
