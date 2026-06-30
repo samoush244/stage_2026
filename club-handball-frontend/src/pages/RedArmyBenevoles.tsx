@@ -10,27 +10,25 @@ export default function Communaute() {
           alt="Supporters et bénévoles du club"
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
-        {/**
+        
+      
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-red-950/40" />
-        */}
-        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
-            Le club
+      
+        <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+            Le Club
           </p>
-
-        <div className="relative mx-auto max-w-6xl text-center">
-          
+        
           <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
             Red Army
             <span className="block text-red-500">& Bénévoles</span>
           </h1>
 
-        </div>
+
           
-          {/** 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
             Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
             il y a des femmes et des hommes qui donnent de leur temps pour faire vivre le club.
-          </p>*/}
+          </p>
       </section>
 
       {/* FIL D'ARIANE + INTRO */}

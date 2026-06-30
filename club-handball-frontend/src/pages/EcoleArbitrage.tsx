@@ -108,30 +108,25 @@ function EcoleArbitragePage() {
   return (
     <main className="bg-white">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
-        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-red-700 opacity-80" />
-        <div className="absolute -bottom-24 -left-16 h-52 w-52 rounded-full border-[30px] border-red-700 opacity-70" />
+      <section className="bg-black px-8 py-16 text-white">
+        <div className="mx-auto max-w-7xl">
 
-         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
-            Le club
+        <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+            Le Club
           </p>
-
-        <div className="relative mx-auto max-w-6xl text-center">
 
           <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
             École d’arbitrage
           </h1>
           <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
-          {/**
+          
           <p className="mt-6 max-w-3xl text-lg text-zinc-300">
             L’école d’arbitrage du club accompagne les jeunes arbitres dans leur
             formation, leur progression et leur prise de confiance sur le
             terrain. Elle participe au développement d’une culture du respect,
             de la responsabilité et de l’esprit sportif.
-          </p>*/}
-
-        </div>
-
+          </p>
+          </div>
       </section>
   
       {/* PRESENTATION */}

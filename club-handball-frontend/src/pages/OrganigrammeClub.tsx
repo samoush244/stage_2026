@@ -84,13 +84,13 @@ function OrganigrammePage() {
             Le Club
           </p>
 
-          <h1 className="mt-4 text-5xl font-extrabold">Organigramme</h1>
+          <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">Organigramme</h1>
 
           <p className="mt-6 max-w-3xl text-lg text-zinc-300">
             Découvrez les membres qui participent à la gestion et au
             développement du club.
           </p>
-          
+
         </div>
       </section>
 

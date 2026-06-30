@@ -211,8 +211,7 @@ function PracticalInfoPage() {
 
 
       <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
-        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-red-700 opacity-80" />
-        <div className="absolute -bottom-24 -left-16 h-52 w-52 rounded-full border-[30px] border-red-700 opacity-70" />
+        
 
         <div className="relative mx-auto max-w-6xl text-center">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
