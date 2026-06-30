@@ -231,20 +231,7 @@ function PracticalInfoPage() {
            */}
         </div>
       </section>
-      <section className="bg-black px-8 py-16 text-white">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-            Le club
-          </p>
-
-          <h1 className="mt-4 text-5xl font-extrabold">
-            Informations pratiques
-          </h1>
-
-          
-        </div>
-      </section>
-
+      
       <section className="bg-zinc-950 px-8 py-10 text-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
