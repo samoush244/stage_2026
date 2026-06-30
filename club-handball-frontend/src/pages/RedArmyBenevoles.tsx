@@ -21,7 +21,7 @@ export default function Communaute() {
             Le Club
           </p>
         
-          <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
+           <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl text-white">
             Red Army
             <span className="block text-red-500">& Bénévoles</span>
           </h1>
