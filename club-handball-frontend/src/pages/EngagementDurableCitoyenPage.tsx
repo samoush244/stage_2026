@@ -234,21 +234,18 @@ function EngagementDurableCitoyenPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
-        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-red-700 opacity-80" />
-        <div className="absolute -bottom-24 -left-16 h-52 w-52 rounded-full border-[30px] border-red-700 opacity-70" />
-
-        <div className="relative mx-auto max-w-6xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
-            Valenciennes Handball Club
+      <section className="bg-black px-8 py-16 text-white">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+            Le Club
           </p>
 
-          <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
+        <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
             Engagement durable
             <span className="block text-red-500">et citoyen</span>
           </h1>
-
-          <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
+            <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
+          
         </div>
       </section>
 
