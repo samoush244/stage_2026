@@ -43,6 +43,7 @@ const playerPositionOrder = [
   "Ailier droit",
   "Ailière droite",
   "Arrière gauche",
+  "Arrière droit",
   "Arrière droite",
   "Demi-centre",
   "Pivot",
