@@ -23,7 +23,7 @@ export default function Communaute() {
         
            <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl text-white">
             Red Army
-            <span className="block font-bold text-red-500">& Bénévoles</span>
+            <span className="block  text-red-500">& Bénévoles</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
             Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
