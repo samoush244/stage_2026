@@ -242,7 +242,7 @@ function EngagementDurableCitoyenPage() {
 
         <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
             Engagement durable
-            <span className="text-sm font-bold text-red-500 ">et citoyen</span>
+            <span className="block text-red-600">et citoyen</span>
           </h1>
             <div className="mx-auto mt-6 h-1 w-20 bg-red-600" />
           
