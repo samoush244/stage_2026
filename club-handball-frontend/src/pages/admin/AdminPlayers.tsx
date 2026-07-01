@@ -45,6 +45,7 @@ const playerPositions = [
   "Ailière droite",
   "Arrière gauche",
   "Arrière droite",
+  "Arrière droit",
   "Demi-centre",
   "Pivot",
 ];
