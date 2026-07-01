@@ -211,8 +211,8 @@ function PracticalInfoPage() {
 
 
       <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:py-24">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-red-400">
-            Le club
+         <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+            Le Club
           </p>
 
           <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">
