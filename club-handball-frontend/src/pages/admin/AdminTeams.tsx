@@ -172,9 +172,19 @@ const getImageUrl = (image?: string) => {
 
       resetForm();
       fetchTeams();
-    } catch (error) {
-      console.error("Erreur enregistrement équipe :", error);
-      setMessage("Erreur lors de l'enregistrement de l'équipe.");
+    } catch (error: any) {
+  console.error(
+    "Erreur enregistrement équipe :",
+    error.response?.data || error
+  );
+
+  const backendMessage =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    "Erreur lors de l'enregistrement de l'équipe.";
+
+  setMessage(backendMessage);
+
     } finally {
       setLoading(false);
     }
