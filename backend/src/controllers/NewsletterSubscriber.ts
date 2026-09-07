@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
 import NewsletterSubscriber from "../models/NewsletterSubscriber";
-import { sendWelcomeEmail } from "../services/mailServices";
+{/*import { sendWelcomeEmail } from "../services/mailServices";*/}
 
 const CONSENT_TEXT =
   "J’accepte de recevoir les actualités du club par email. Je pourrai me désabonner à tout moment.";
@@ -85,18 +85,6 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
       subscriber,
       welcomeEmailSent: false,
     });
-
-    // Ensuite seulement, on envoie l'email en arrière-plan
-    try {
-      await sendWelcomeEmail(cleanEmail, unsubscribeUrl);
-
-      subscriber.welcomeEmailSent = true;
-      subscriber.welcomeEmailSentAt = new Date();
-
-      await subscriber.save();
-    } catch (emailError) {
-      console.error("Erreur envoi email de bienvenue :", emailError);
-    }
   } catch (error) {
     return res.status(500).json({
       message: "Erreur lors de l'inscription à la newsletter.",
