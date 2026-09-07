@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import ContactMessage from "../models/ContactMessage";
+import transporter from "../config/mailer";
 
 export const createContactMessage = async (
   req: Request,
@@ -27,6 +28,7 @@ export const createContactMessage = async (
       });
     }
 
+    // 1. Sauvegarde du message dans MongoDB
     const newMessage = await ContactMessage.create({
       firstName,
       lastName,
@@ -36,11 +38,48 @@ export const createContactMessage = async (
       message,
     });
 
+    // 2. Envoi d'une copie par email
+    try {
+      await transporter.sendMail({
+        from: `"Site Valenciennes Handball" <${process.env.EMAIL_USER}>`,
+
+        // POUR LE TEST : ta boîte Gmail personnelle
+        to: process.env.CONTACT_RECEIVER_EMAIL,
+
+        // Quand tu cliques sur "Répondre",
+        // la réponse part vers le visiteur
+        replyTo: email,
+
+        subject: `Nouveau message du site - ${subject}`,
+
+        text: `
+Nouveau message reçu depuis le site Valenciennes Handball
+
+Nom : ${firstName} ${lastName}
+Email : ${email}
+Téléphone : ${phone || "Non renseigné"}
+Sujet : ${subject}
+
+Message :
+${message}
+        `,
+      });
+
+      console.log("Email de contact envoyé avec succès.");
+    } catch (emailError) {
+      // Important : le message reste enregistré dans MongoDB
+      // même si l'email ne peut pas être envoyé.
+      console.error("Erreur lors de l'envoi de l'email :", emailError);
+    }
+
     return res.status(201).json({
       message: "Message envoyé avec succès.",
       newMessage,
     });
+
   } catch (error) {
+    console.error("Erreur création message :", error);
+
     return res.status(500).json({
       message: "Erreur lors de l'envoi du message.",
       error,
