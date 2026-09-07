@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
+import { Resend } from "resend";
 import ContactMessage from "../models/ContactMessage";
-import transporter from "../config/mailer";
+
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const createContactMessage = async (
   req: Request,
@@ -28,7 +31,7 @@ export const createContactMessage = async (
       });
     }
 
-    // 1. Sauvegarde du message dans MongoDB
+    // 1. Sauvegarde dans MongoDB
     const newMessage = await ContactMessage.create({
       firstName,
       lastName,
@@ -38,20 +41,13 @@ export const createContactMessage = async (
       message,
     });
 
-    // 2. Envoi d'une copie par email
+    // 2. Envoi par Resend
     try {
-      await transporter.sendMail({
-        from: `"Site Valenciennes Handball" <${process.env.EMAIL_USER}>`,
-
-        // POUR LE TEST : ta boîte Gmail personnelle
-        to: process.env.CONTACT_RECEIVER_EMAIL,
-
-        // Quand tu cliques sur "Répondre",
-        // la réponse part vers le visiteur
+      const { data, error } = await resend.emails.send({
+        from: "Valenciennes Handball <onboarding@resend.dev>",
+        to: process.env.CONTACT_RECEIVER_EMAIL!,
         replyTo: email,
-
         subject: `Nouveau message du site - ${subject}`,
-
         text: `
 Nouveau message reçu depuis le site Valenciennes Handball
 
@@ -65,10 +61,12 @@ ${message}
         `,
       });
 
-      console.log("Email de contact envoyé avec succès.");
+      if (error) {
+        console.error("Erreur Resend :", error);
+      } else {
+        console.log("Email envoyé avec succès :", data);
+      }
     } catch (emailError) {
-      // Important : le message reste enregistré dans MongoDB
-      // même si l'email ne peut pas être envoyé.
       console.error("Erreur lors de l'envoi de l'email :", emailError);
     }
 
@@ -76,7 +74,6 @@ ${message}
       message: "Message envoyé avec succès.",
       newMessage,
     });
-
   } catch (error) {
     console.error("Erreur création message :", error);
 
