@@ -62,10 +62,14 @@ const staffPositionOrder = [
   "Non renseigné",
 ];
 
-const defaultPlayerImage = "/images/default-player.png";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/$/, "");
+
+/* =========================================================
+   OPTIMISATION DES IMAGES CLOUDINARY
+========================================================= */
 
 function optimizeCloudinaryImage(url: string, width = 900) {
   if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
@@ -77,6 +81,10 @@ function optimizeCloudinaryImage(url: string, width = 900) {
     `/upload/f_auto,q_auto,c_limit,w_${width}/`
   );
 }
+
+/* =========================================================
+   CONSTRUCTION DE L'URL D'UNE IMAGE
+========================================================= */
 
 function getBackendImageUrl(image?: string | null, width = 900) {
   if (!image || image.trim() === "") return null;
@@ -93,6 +101,10 @@ function getBackendImageUrl(image?: string | null, width = 900) {
 
   return optimizeCloudinaryImage(finalUrl, width);
 }
+
+/* =========================================================
+   CALCUL DE L'ÂGE
+========================================================= */
 
 function getAgeFromBirthDate(birthDate?: string) {
   if (!birthDate) return null;
@@ -115,6 +127,10 @@ function getAgeFromBirthDate(birthDate?: string) {
   return age;
 }
 
+/* =========================================================
+   NUMÉRO DU JOUEUR
+========================================================= */
+
 function getPlayerNumber(player: PublicMember) {
   if (player.number !== null && player.number !== undefined) {
     return player.number;
@@ -127,21 +143,102 @@ function getPlayerNumber(player: PublicMember) {
   return null;
 }
 
+/* =========================================================
+   RÉCUPÉRATION DE LA PHOTO D'UN MEMBRE
+========================================================= */
+
 function getMemberImage(member: PublicMember) {
   if (member.photoUrl && member.photoUrl.trim() !== "") {
-    return getBackendImageUrl(member.photoUrl, 700) || defaultPlayerImage;
+    return getBackendImageUrl(member.photoUrl, 700);
   }
 
   if (member.photo && member.photo.trim() !== "") {
-    return getBackendImageUrl(member.photo, 700) || defaultPlayerImage;
+    return getBackendImageUrl(member.photo, 700);
   }
 
   if (member.imageUrl && member.imageUrl.trim() !== "") {
-    return getBackendImageUrl(member.imageUrl, 700) || defaultPlayerImage;
+    return getBackendImageUrl(member.imageUrl, 700);
   }
 
-  return defaultPlayerImage;
+  return null;
 }
+
+/* =========================================================
+   COMPOSANT PHOTO + PICTOGRAMME PAR DÉFAUT
+
+   Si :
+   - aucune photo n'est renseignée
+   - l'URL ne fonctionne plus
+   - Cloudinary renvoie une erreur
+   - le serveur renvoie une 404
+
+   Alors on affiche automatiquement le pictogramme.
+========================================================= */
+
+function MemberPhoto({
+  member,
+  alt,
+  className = "",
+  fallbackClassName = "bg-zinc-100",
+}: {
+  member: PublicMember;
+  alt: string;
+  className?: string;
+  fallbackClassName?: string;
+}) {
+  const [imageError, setImageError] = useState(false);
+
+  const imageUrl = getMemberImage(member);
+
+  if (!imageUrl || imageError) {
+    return (
+      <div
+        className={`flex h-full w-full items-center justify-center ${fallbackClassName} ${className}`}
+        role="img"
+        aria-label={alt}
+      >
+        <svg
+          viewBox="0 0 120 120"
+          className="h-[38%] w-[38%] max-h-36 max-w-36 text-zinc-400"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          {/* Tête */}
+          <circle cx="60" cy="36" r="24" />
+
+          {/* Épaules / corps */}
+          <path
+            d="
+              M22 77
+              C22 68 29 62 38 62
+              H82
+              C91 62 98 68 98 77
+              V82
+              C98 100 82 108 60 108
+              C38 108 22 100 22 82
+              Z
+            "
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={alt}
+      className={`h-full w-full object-cover object-center ${className}`}
+      loading="lazy"
+      decoding="async"
+      onError={() => setImageError(true)}
+    />
+  );
+}
+
+/* =========================================================
+   REGROUPEMENT PAR POSTE
+========================================================= */
 
 function groupMembersByPosition(members: PublicMember[]) {
   return members.reduce<Record<string, PublicMember[]>>((groups, member) => {
@@ -156,6 +253,10 @@ function groupMembersByPosition(members: PublicMember[]) {
     return groups;
   }, {});
 }
+
+/* =========================================================
+   TRI DES POSTES
+========================================================= */
 
 function sortPositions(positions: string[], order: string[]) {
   return positions.sort((a, b) => {
@@ -173,6 +274,10 @@ function sortPositions(positions: string[], order: string[]) {
   });
 }
 
+/* =========================================================
+   TRI DES MEMBRES
+========================================================= */
+
 function sortMembers(members: PublicMember[]) {
   return [...members].sort((a, b) => {
     const orderA = a.displayOrder ?? 0;
@@ -188,6 +293,10 @@ function sortMembers(members: PublicMember[]) {
   });
 }
 
+/* =========================================================
+   PAGE EFFECTIF
+========================================================= */
+
 export default function PublicRosterPage() {
   const { teamSlug } = useParams();
 
@@ -199,6 +308,10 @@ export default function PublicRosterPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /* =======================================================
+     RÉCUPÉRATION DE L'EFFECTIF
+  ======================================================= */
 
   useEffect(() => {
     const fetchRoster = async () => {
@@ -221,7 +334,9 @@ export default function PublicRosterPage() {
           players: Array.isArray(response.data.players)
             ? response.data.players
             : [],
-          staff: Array.isArray(response.data.staff) ? response.data.staff : [],
+          staff: Array.isArray(response.data.staff)
+            ? response.data.staff
+            : [],
         });
       } catch (err) {
         console.error("Erreur récupération effectif :", err);
@@ -244,11 +359,19 @@ export default function PublicRosterPage() {
   const rawPlayers = Array.isArray(roster.players) ? roster.players : [];
   const rawStaff = Array.isArray(roster.staff) ? roster.staff : [];
 
+  /* =======================================================
+     JOUEURS
+  ======================================================= */
+
   const players = useMemo(() => {
     return sortMembers(
       rawPlayers.filter((member) => member.memberType !== "staff")
     );
   }, [rawPlayers]);
+
+  /* =======================================================
+     STAFF
+  ======================================================= */
 
   const staff = useMemo(() => {
     const separatedStaff =
@@ -259,26 +382,48 @@ export default function PublicRosterPage() {
     return sortMembers(separatedStaff);
   }, [rawStaff, rawPlayers]);
 
+  /* =======================================================
+     REGROUPEMENT JOUEURS
+  ======================================================= */
+
   const groupedPlayers = useMemo(() => {
     return groupMembersByPosition(players);
   }, [players]);
 
   const sortedPlayerPositions = useMemo(() => {
-    return sortPositions(Object.keys(groupedPlayers), playerPositionOrder);
+    return sortPositions(
+      Object.keys(groupedPlayers),
+      playerPositionOrder
+    );
   }, [groupedPlayers]);
+
+  /* =======================================================
+     REGROUPEMENT STAFF
+  ======================================================= */
 
   const groupedStaff = useMemo(() => {
     return groupMembersByPosition(staff);
   }, [staff]);
 
   const sortedStaffPositions = useMemo(() => {
-    return sortPositions(Object.keys(groupedStaff), staffPositionOrder);
+    return sortPositions(
+      Object.keys(groupedStaff),
+      staffPositionOrder
+    );
   }, [groupedStaff]);
+
+  /* =======================================================
+     PHOTO DE L'ÉQUIPE
+  ======================================================= */
 
   const teamImageUrl = getBackendImageUrl(
     roster.team?.imageUrl || roster.team?.image,
     1600
   );
+
+  /* =======================================================
+     CHARGEMENT
+  ======================================================= */
 
   if (loading) {
     return (
@@ -296,9 +441,14 @@ export default function PublicRosterPage() {
 
   return (
     <main className="min-h-screen bg-white text-black">
-      {/* HERO */}
+
+      {/* ===================================================
+          HERO
+      =================================================== */}
+
       <section className="bg-black px-6 py-16 text-white">
         <div className="mx-auto max-w-7xl">
+
           <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
             Effectif
           </p>
@@ -313,6 +463,7 @@ export default function PublicRosterPage() {
           </p>
 
           <div className="mt-6 w-full overflow-hidden bg-black">
+
             {teamImageUrl ? (
               <img
                 src={teamImageUrl}
@@ -328,13 +479,18 @@ export default function PublicRosterPage() {
                 </p>
               </div>
             )}
+
           </div>
         </div>
       </section>
 
-      {/* JOUEURS */}
+      {/* ===================================================
+          JOUEURS
+      =================================================== */}
+
       <section className="bg-white px-6 py-20">
         <div className="mx-auto max-w-7xl">
+
           {error && (
             <div className="mb-10 rounded-xl border border-red-200 bg-red-50 p-6 font-semibold text-red-700">
               {error}
@@ -342,7 +498,9 @@ export default function PublicRosterPage() {
           )}
 
           {players.length === 0 ? (
+
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-10 text-center">
+
               <h3 className="text-2xl font-black uppercase">
                 Aucun joueur affiché
               </h3>
@@ -350,15 +508,25 @@ export default function PublicRosterPage() {
               <p className="mt-3 text-zinc-600">
                 L'effectif de cette équipe n'est pas encore disponible.
               </p>
+
             </div>
+
           ) : (
+
             <div className="space-y-20">
+
               {sortedPlayerPositions.map((position) => (
+
                 <section key={position}>
+
+                  {/* TITRE DU POSTE */}
+
                   <div className="mb-8 flex items-center gap-4">
+
                     <div className="h-12 w-2 bg-red-600" />
 
                     <div>
+
                       <p className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
                         Poste
                       </p>
@@ -366,44 +534,66 @@ export default function PublicRosterPage() {
                       <h3 className="text-3xl font-black uppercase">
                         {position}
                       </h3>
+
                     </div>
                   </div>
 
+                  {/* CARTES JOUEURS */}
+
                   <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
                     {groupedPlayers[position].map((player) => {
+
                       const number = getPlayerNumber(player);
 
                       const age =
-                        player.age !== null && player.age !== undefined
+                        player.age !== null &&
+                        player.age !== undefined
                           ? player.age
                           : getAgeFromBirthDate(player.birthDate);
 
                       return (
+
                         <article
                           key={player._id}
                           className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
+
+                          {/* PHOTO */}
+
                           <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-100">
+
+                            {/* BARRE ROUGE */}
+
                             <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
 
-                            <img
-                              src={getMemberImage(player)}
+                            {/* PHOTO OU PICTOGRAMME */}
+
+                            <MemberPhoto
+                              member={player}
                               alt={`${player.firstName || ""} ${
                                 player.lastName || ""
                               }`}
-                              className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
-                              loading="lazy"
-                              decoding="async"
+                              className="transition duration-500 group-hover:scale-105"
+                              fallbackClassName="bg-zinc-100"
                             />
 
+                            {/* NUMÉRO */}
+
                             {number !== null && (
-                              <div className="absolute right-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
+
+                              <div className="absolute right-4 top-4 z-20 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
                                 {number}
                               </div>
+
                             )}
+
                           </div>
 
+                          {/* INFORMATIONS */}
+
                           <div className="p-6">
+
                             <h4 className="text-2xl font-black uppercase leading-tight">
                               {player.lastName || ""}
                             </h4>
@@ -413,29 +603,51 @@ export default function PublicRosterPage() {
                             </p>
 
                             <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
+
                               <p>
-                                Poste : {player.position || "Non renseigné"}
+                                Poste :{" "}
+                                {player.position || "Non renseigné"}
                               </p>
 
-                              {age !== null && <p>Âge : {age} ans</p>}
+                              {age !== null && (
+                                <p>
+                                  Âge : {age} ans
+                                </p>
+                              )}
+
                             </div>
                           </div>
+
                         </article>
+
                       );
                     })}
+
                   </div>
+
                 </section>
+
               ))}
+
             </div>
+
           )}
+
         </div>
       </section>
 
-      {/* STAFF */}
+      {/* ===================================================
+          STAFF
+      =================================================== */}
+
       <section className="bg-zinc-950 px-6 py-20 text-white">
+
         <div className="mx-auto max-w-7xl">
+
           <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+
             <div>
+
               <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
                 Encadrement
               </p>
@@ -443,11 +655,15 @@ export default function PublicRosterPage() {
               <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">
                 Le staff
               </h2>
+
             </div>
+
           </div>
 
           {staff.length === 0 ? (
+
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-10 text-center">
+
               <h3 className="text-2xl font-black uppercase">
                 Aucun membre du staff affiché
               </h3>
@@ -456,39 +672,61 @@ export default function PublicRosterPage() {
                 Le staff apparaîtra ici dès qu'il sera ajouté depuis
                 l'administration.
               </p>
+
             </div>
+
           ) : (
+
             <div className="space-y-14">
+
               {sortedStaffPositions.map((position) => (
+
                 <section key={position}>
+
+                  {/* TITRE DU POSTE */}
+
                   <div className="mb-8 flex items-center gap-4">
+
                     <div className="h-10 w-2 bg-red-600" />
 
                     <h3 className="text-2xl font-black uppercase">
                       {position}
                     </h3>
+
                   </div>
 
+                  {/* CARTES STAFF */}
+
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
                     {groupedStaff[position].map((member) => (
+
                       <article
                         key={member._id}
                         className="group rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 transition duration-300 hover:-translate-y-1 hover:border-red-600/60 hover:bg-white/[0.07]"
                       >
+
                         <div className="flex gap-5">
+
+                          {/* PHOTO STAFF */}
+
                           <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
-                            <img
-                              src={getMemberImage(member)}
+
+                            <MemberPhoto
+                              member={member}
                               alt={`${member.firstName || ""} ${
                                 member.lastName || ""
                               }`}
-                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                              loading="lazy"
-                              decoding="async"
+                              className="transition duration-500 group-hover:scale-105"
+                              fallbackClassName="bg-zinc-800"
                             />
+
                           </div>
 
+                          {/* INFORMATIONS STAFF */}
+
                           <div className="flex min-w-0 flex-1 flex-col justify-center">
+
                             <p className="text-xs font-black uppercase tracking-[0.25em] text-red-500">
                               Staff
                             </p>
@@ -502,19 +740,32 @@ export default function PublicRosterPage() {
                             </p>
 
                             <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-                              {member.position || "Fonction non renseignée"}
+                              {member.position ||
+                                "Fonction non renseignée"}
                             </p>
+
                           </div>
+
                         </div>
+
                       </article>
+
                     ))}
+
                   </div>
+
                 </section>
+
               ))}
+
             </div>
+
           )}
+
         </div>
+
       </section>
+
     </main>
   );
 }
