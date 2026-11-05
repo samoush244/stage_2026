@@ -1,181 +1,270 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
+import mongoose from "mongoose";
 import NewsletterSubscriber from "../models/NewsletterSubscriber";
-{/*import { sendWelcomeEmail } from "../services/mailServices";*/}
 
 const CONSENT_TEXT =
   "J’accepte de recevoir les actualités du club par email. Je pourrai me désabonner à tout moment.";
 
-const isValidEmail = (email: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const escapeCSV = (value: unknown): string => {
+  let text = String(value ?? "");
+  // Neutralise les cellules interprétables comme formules par Excel.
+  if (/^\s*[=+\-@\t\r\n]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
 };
 
-export const subscribeNewsletter = async (req: Request, res: Response) => {
-  try {
-    const { email, consentGiven } = req.body;
+const subscriberPublicFields = "_id email isActive consentDate createdAt";
 
-    if (!email) {
-      return res.status(400).json({
-        message: "L'email est obligatoire.",
-      });
+// POST /api/newsletter/subscribe (public)
+export const subscribeNewsletter = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { email, consentGiven } = req.body ?? {};
+
+    if (typeof email !== "string" || !email.trim()) {
+      res.status(400).json({ message: "L'email est obligatoire." });
+      return;
     }
 
-    const cleanEmail = String(email).toLowerCase().trim();
-
+    const cleanEmail = email.toLowerCase().trim();
     if (!isValidEmail(cleanEmail)) {
-      return res.status(400).json({
-        message: "Adresse email invalide.",
-      });
+      res.status(400).json({ message: "Adresse email invalide." });
+      return;
     }
 
     if (consentGiven !== true) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Vous devez accepter de recevoir la newsletter.",
       });
+      return;
     }
 
     const existingSubscriber = await NewsletterSubscriber.findOne({
       email: cleanEmail,
     });
 
-    // Si l'email est déjà inscrit, on répond directement
-    // pour éviter de bloquer ou d'afficher une erreur côté frontend.
-    if (existingSubscriber && existingSubscriber.isActive) {
-      return res.status(200).json({
+    if (existingSubscriber?.isActive) {
+      res.status(200).json({
         message: "Cet email est déjà inscrit à la newsletter.",
         alreadySubscribed: true,
       });
+      return;
     }
 
     const unsubscribeToken = crypto.randomBytes(32).toString("hex");
+    const consentDate = new Date();
 
-    let subscriber;
-
-    if (existingSubscriber && !existingSubscriber.isActive) {
+    if (existingSubscriber) {
+      // Réinscription volontaire via le formulaire et nouveau consentement.
       existingSubscriber.isActive = true;
       existingSubscriber.consentGiven = true;
-      existingSubscriber.consentDate = new Date();
+      existingSubscriber.consentDate = consentDate;
       existingSubscriber.consentText = CONSENT_TEXT;
       existingSubscriber.unsubscribeToken = unsubscribeToken;
       existingSubscriber.welcomeEmailSent = false;
       existingSubscriber.welcomeEmailSentAt = undefined;
       existingSubscriber.unsubscribedAt = undefined;
-
-      subscriber = await existingSubscriber.save();
+      await existingSubscriber.save();
     } else {
-      subscriber = await NewsletterSubscriber.create({
+      await NewsletterSubscriber.create({
         email: cleanEmail,
         isActive: true,
         consentGiven: true,
-        consentDate: new Date(),
+        consentDate,
         consentText: CONSENT_TEXT,
         unsubscribeToken,
         welcomeEmailSent: false,
       });
     }
 
-    const backendUrl =
-      process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`;
-
-    const unsubscribeUrl = `${backendUrl}/api/newsletter/unsubscribe/${subscriber.unsubscribeToken}`;
-
-    // On répond tout de suite au frontend
+    // Ne pas renvoyer le document complet (notamment unsubscribeToken).
     res.status(201).json({
       message: "Inscription réussie.",
-      subscriber,
+      alreadySubscribed: false,
       welcomeEmailSent: false,
     });
-  } catch (error) {
-    return res.status(500).json({
+  } catch (error: unknown) {
+    // En cas de deux inscriptions simultanées du même email.
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === 11000
+    ) {
+      res.status(200).json({
+        message: "Cet email est déjà inscrit à la newsletter.",
+        alreadySubscribed: true,
+      });
+      return;
+    }
+    console.error("Erreur inscription newsletter :", error);
+    res.status(500).json({
       message: "Erreur lors de l'inscription à la newsletter.",
-      error,
     });
   }
 };
 
-export const getNewsletterSubscribers = async (req: Request, res: Response) => {
+// GET /api/newsletter (administrateur uniquement)
+export const getNewsletterSubscribers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const subscribers = await NewsletterSubscriber.find().sort({
-      createdAt: -1,
-    });
+    const subscribers = await NewsletterSubscriber.find()
+      .select(subscriberPublicFields)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return res.status(200).json(subscribers);
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).json(subscribers);
   } catch (error) {
-    return res.status(500).json({
+    console.error("Erreur récupération newsletter :", error);
+    res.status(500).json({
       message: "Erreur lors de la récupération des inscrits.",
-      error,
     });
   }
 };
 
+// DELETE /api/newsletter/:id (administrateur uniquement)
 export const deleteNewsletterSubscriber = async (
   req: Request,
   res: Response
-) => {
+): Promise<void> => {
   try {
-    const { id } = req.params;
-
-    const deletedSubscriber = await NewsletterSubscriber.findByIdAndDelete(id);
-
-    if (!deletedSubscriber) {
-      return res.status(404).json({
-        message: "Email introuvable.",
-      });
+    const id = String(req.params.id ?? "");
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Identifiant invalide." });
+      return;
     }
 
-    return res.status(200).json({
-      message: "Email supprimé de la newsletter.",
-    });
+    const subscriber = await NewsletterSubscriber.findByIdAndDelete(id);
+    if (!subscriber) {
+      res.status(404).json({ message: "Email introuvable." });
+      return;
+    }
+
+    res.status(200).json({ message: "Email supprimé de la newsletter." });
   } catch (error) {
-    return res.status(500).json({
-      message: "Erreur lors de la suppression.",
-      error,
-    });
+    console.error("Erreur suppression newsletter :", error);
+    res.status(500).json({ message: "Erreur lors de la suppression." });
   }
 };
 
-export const unsubscribeNewsletter = async (req: Request, res: Response) => {
+// GET /api/newsletter/unsubscribe/:token (public)
+export const unsubscribeNewsletter = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store");
   try {
-    const { token } = req.params;
+    const token = String(req.params.token ?? "");
+    if (!/^[a-f0-9]{64}$/.test(token)) {
+      res.status(404).send(`
+        <div style="font-family:Arial,sans-serif;padding:40px">
+          <h1>Lien invalide</h1><p>Ce lien de désinscription est invalide.</p>
+        </div>`);
+      return;
+    }
 
     const subscriber = await NewsletterSubscriber.findOne({
       unsubscribeToken: token,
     });
-
     if (!subscriber) {
-      return res.status(404).send(`
-        <h1>Lien invalide</h1>
-        <p>Ce lien de désinscription est invalide ou a expiré.</p>
-      `);
+      res.status(404).send(`
+        <div style="font-family:Arial,sans-serif;padding:40px">
+          <h1>Lien invalide</h1><p>Ce lien de désinscription est invalide ou a expiré.</p>
+        </div>`);
+      return;
+    }
+
+    if (!subscriber.isActive) {
+      res.status(200).send(`
+        <div style="font-family:Arial,sans-serif;padding:40px">
+          <h1>Déjà désinscrit</h1><p>Vous êtes déjà désinscrit de la newsletter.</p>
+        </div>`);
+      return;
     }
 
     subscriber.isActive = false;
     subscriber.unsubscribedAt = new Date();
-
     await subscriber.save();
 
-    return res.status(200).send(`
-      <div style="font-family: Arial, sans-serif; padding: 40px;">
+    res.status(200).send(`
+      <div style="font-family:Arial,sans-serif;padding:40px">
         <h1>Désinscription confirmée</h1>
         <p>Vous êtes bien désinscrit de la newsletter du club.</p>
         <p>Vous ne recevrez plus nos actualités par email.</p>
-      </div>
-    `);
+      </div>`);
   } catch (error) {
-    return res.status(500).send(`
-      <h1>Erreur</h1>
-      <p>Une erreur est survenue pendant la désinscription.</p>
-    `);
+    console.error("Erreur désinscription newsletter :", error);
+    res.status(500).send(`
+      <div style="font-family:Arial,sans-serif;padding:40px">
+        <h1>Erreur</h1><p>Une erreur est survenue pendant la désinscription.</p>
+      </div>`);
   }
 };
 
+// PATCH /api/newsletter/:id/status (administrateur uniquement)
+export const updateNewsletterStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const id = String(req.params.id ?? "");
+    const isActive: unknown = req.body?.isActive;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Identifiant invalide." });
+      return;
+    }
+    if (typeof isActive !== "boolean") {
+      res.status(400).json({ message: "Le statut doit être un booléen." });
+      return;
+    }
+    if (isActive) {
+      res.status(403).json({
+        message: "La réactivation nécessite un nouveau consentement de l'abonné.",
+      });
+      return;
+    }
+
+    const subscriber = await NewsletterSubscriber.findById(id);
+    if (!subscriber) {
+      res.status(404).json({ message: "Abonné introuvable." });
+      return;
+    }
+    if (subscriber.isActive) {
+      subscriber.isActive = false;
+      subscriber.unsubscribedAt = new Date();
+      await subscriber.save();
+    }
+
+    res.status(200).json({
+      _id: subscriber._id,
+      email: subscriber.email,
+      isActive: subscriber.isActive,
+      createdAt: subscriber.createdAt,
+      consentDate: subscriber.consentDate,
+    });
+  } catch (error) {
+    console.error("Erreur modification statut :", error);
+    res.status(500).json({
+      message: "Erreur lors de la modification du statut.",
+    });
+  }
+};
+
+// GET /api/newsletter/export (administrateur uniquement)
 export const exportNewsletterSubscribers = async (
   req: Request,
   res: Response
-) => {
+): Promise<void> => {
   try {
-    // Récupérer uniquement les abonnés actifs
     const subscribers = await NewsletterSubscriber.find({
       isActive: true,
       consentGiven: true,
@@ -184,24 +273,7 @@ export const exportNewsletterSubscribers = async (
       .sort({ consentDate: -1 })
       .lean();
 
-    // Sécuriser les valeurs du fichier CSV
-    const escapeCSV = (value: unknown): string => {
-      let text = String(value ?? "");
-
-      // Éviter l'injection de formules dans Excel
-      if (/^\s*[=+\-@]/.test(text)) {
-        text = "'" + text;
-      }
-
-      return `"${text.replace(/"/g, '""')}"`;
-    };
-
-    // En-têtes du fichier
-    const rows: string[][] = [
-      ["Email", "Date d'inscription"],
-    ];
-
-    // Ajouter les abonnés
+    const rows: string[][] = [["Email", "Date d'inscription"]];
     subscribers.forEach((subscriber) => {
       rows.push([
         subscriber.email,
@@ -211,14 +283,9 @@ export const exportNewsletterSubscribers = async (
       ]);
     });
 
-    // Générer le CSV compatible Excel français
     const csv =
-      "\uFEFF" +
-      rows
-        .map((row) => row.map(escapeCSV).join(";"))
-        .join("\r\n");
+      "\uFEFF" + rows.map((row) => row.map(escapeCSV).join(";")).join("\r\n");
 
-    // Configurer le téléchargement
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
@@ -226,13 +293,12 @@ export const exportNewsletterSubscribers = async (
     );
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
-
-    return res.status(200).send(csv);
+    res.status(200).send(csv);
   } catch (error) {
     console.error("Erreur export newsletter :", error);
-
-    return res.status(500).json({
+    res.status(500).json({
       message: "Erreur lors de l'export des inscrits.",
     });
   }
 };
+
