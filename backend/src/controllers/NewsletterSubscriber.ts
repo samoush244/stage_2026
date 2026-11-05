@@ -168,3 +168,71 @@ export const unsubscribeNewsletter = async (req: Request, res: Response) => {
     `);
   }
 };
+
+
+export const exportNewsletterSubscribers = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    // Récupérer uniquement les abonnés actifs
+    const subscribers = await NewsletterSubscriber.find({
+      isActive: true,
+      consentGiven: true,
+    })
+      .select("email consentDate")
+      .sort({ consentDate: -1 })
+      .lean();
+
+    // Sécuriser les valeurs du fichier CSV
+    const escapeCSV = (value: unknown): string => {
+      let text = String(value ?? "");
+
+      // Éviter l'injection de formules dans Excel
+      if (/^\s*[=+\-@]/.test(text)) {
+        text = "'" + text;
+      }
+
+      return `"${text.replace(/"/g, '""')}"`;
+    };
+
+    // En-têtes du fichier
+    const rows: string[][] = [
+      ["Email", "Date d'inscription"],
+    ];
+
+    // Ajouter les abonnés
+    subscribers.forEach((subscriber) => {
+      rows.push([
+        subscriber.email,
+        subscriber.consentDate
+          ? new Date(subscriber.consentDate).toLocaleDateString("fr-FR")
+          : "",
+      ]);
+    });
+
+    // Générer le CSV compatible Excel français
+    const csv =
+      "\uFEFF" +
+      rows
+        .map((row) => row.map(escapeCSV).join(";"))
+        .join("\r\n");
+
+    // Configurer le téléchargement
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="newsletter-valenciennes-handball.csv"'
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    return res.status(200).send(csv);
+  } catch (error) {
+    console.error("Erreur export newsletter :", error);
+
+    return res.status(500).json({
+      message: "Erreur lors de l'export des inscrits.",
+    });
+  }
+};
