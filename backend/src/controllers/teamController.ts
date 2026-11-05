@@ -1,8 +1,7 @@
 // src/controllers/teamController.ts
-
 import { Request, Response } from "express";
+import { put } from "@vercel/blob";
 import Team from "../models/Team";
-import cloudinary from "../config/cloudinary";
 
 const createSlug = (value: string) => {
   return value
@@ -13,64 +12,61 @@ const createSlug = (value: string) => {
     .replace(/(^-|-$)+/g, "");
 };
 
-const uploadImageToCloudinary = async (
+// Envoie une nouvelle photo d'équipe vers Vercel Blob.
+// Les anciennes URL Cloudinary restent valables tant que leurs fichiers existent.
+const uploadImageToVercel = async (
   file?: Express.Multer.File
 ): Promise<string | undefined> => {
-  if (!file) {
-    return undefined;
+  if (!file) return undefined;
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("La variable BLOB_READ_WRITE_TOKEN est absente du backend.");
   }
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "stage-handball/teams",
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  const extensions: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensions[file.mimetype];
+  if (!extension) {
+    throw new Error("Seules les images JPG, PNG et WEBP sont autorisées.");
+  }
 
-        resolve(result?.secure_url);
-      }
-    );
-
-    uploadStream.end(file.buffer);
+  const blob = await put(`teams/${Date.now()}.${extension}`, file.buffer, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.mimetype,
+    token,
   });
+
+  return blob.url;
 };
 
 const toBoolean = (value: unknown, defaultValue = true) => {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === "boolean") return value;
   return value === "true";
 };
-// RECUP LES EQUIPES PREMIERES
-export const getPublicFirstTeams = async (req: Request, res: Response) => {
+
+// PUBLIC - Récupérer les équipes premières
+export const getPublicFirstTeams = async (_req: Request, res: Response) => {
   try {
-    const teams = await Team.find({
-      teamType: "premiere",
-      isActive: true,
-    })
+    const teams = await Team.find({ teamType: "premiere", isActive: true })
       .sort({ order: 1, name: 1 })
       .lean();
 
     return res.status(200).json(teams);
   } catch (error) {
     console.error("Erreur récupération équipes premières :", error);
-
     return res.status(500).json({
       message: "Erreur serveur lors de la récupération des équipes premières.",
     });
   }
 };
-// PUBLIC - récupérer les équipes actives
+
+// PUBLIC - Récupérer les équipes actives
 export const getPublicTeams = async (_req: Request, res: Response) => {
   try {
     const teams = await Team.find({ isActive: true }).sort({
@@ -78,7 +74,6 @@ export const getPublicTeams = async (_req: Request, res: Response) => {
       order: 1,
       createdAt: -1,
     });
-
     return res.status(200).json(teams);
   } catch (error) {
     return res.status(500).json({
@@ -87,22 +82,15 @@ export const getPublicTeams = async (_req: Request, res: Response) => {
   }
 };
 
-// PUBLIC - récupérer une équipe par slug
+// PUBLIC - Récupérer une équipe par slug
 export const getTeamBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-
-    const team = await Team.findOne({
-      slug,
-      isActive: true,
-    });
+    const team = await Team.findOne({ slug, isActive: true });
 
     if (!team) {
-      return res.status(404).json({
-        message: "Équipe introuvable.",
-      });
+      return res.status(404).json({ message: "Équipe introuvable." });
     }
-
     return res.status(200).json(team);
   } catch (error) {
     return res.status(500).json({
@@ -111,7 +99,7 @@ export const getTeamBySlug = async (req: Request, res: Response) => {
   }
 };
 
-// ADMIN - récupérer toutes les équipes
+// ADMIN - Récupérer toutes les équipes
 export const getAllTeamsAdmin = async (_req: Request, res: Response) => {
   try {
     const teams = await Team.find().sort({
@@ -119,7 +107,6 @@ export const getAllTeamsAdmin = async (_req: Request, res: Response) => {
       order: 1,
       createdAt: -1,
     });
-
     return res.status(200).json(teams);
   } catch (error) {
     return res.status(500).json({
@@ -128,7 +115,7 @@ export const getAllTeamsAdmin = async (_req: Request, res: Response) => {
   }
 };
 
-// ADMIN - créer une équipe
+// ADMIN - Créer une équipe
 export const createTeam = async (req: Request, res: Response) => {
   try {
     const {
@@ -153,7 +140,6 @@ export const createTeam = async (req: Request, res: Response) => {
 
     const finalSlug =
       slug && slug.trim() !== "" ? createSlug(slug) : createSlug(name);
-
     const existingTeam = await Team.findOne({ slug: finalSlug });
 
     if (existingTeam) {
@@ -162,7 +148,7 @@ export const createTeam = async (req: Request, res: Response) => {
       });
     }
 
-    const imageUrl = await uploadImageToCloudinary(req.file);
+    const imageUrl = await uploadImageToVercel(req.file);
 
     const team = await Team.create({
       name,
@@ -182,24 +168,20 @@ export const createTeam = async (req: Request, res: Response) => {
     return res.status(201).json(team);
   } catch (error) {
     console.error("Erreur création équipe :", error);
-
     return res.status(500).json({
       message: "Erreur lors de la création de l'équipe.",
     });
   }
 };
 
-// ADMIN - modifier une équipe
+// ADMIN - Modifier une équipe
 export const updateTeam = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const team = await Team.findById(id);
 
     if (!team) {
-      return res.status(404).json({
-        message: "Équipe introuvable.",
-      });
+      return res.status(404).json({ message: "Équipe introuvable." });
     }
 
     const {
@@ -216,24 +198,19 @@ export const updateTeam = async (req: Request, res: Response) => {
       isActive,
     } = req.body;
 
-    if (name !== undefined) {
-      team.name = name;
-    }
+    if (name !== undefined) team.name = name;
 
     if (slug !== undefined && slug.trim() !== "") {
       const newSlug = createSlug(slug);
-
       const existingTeam = await Team.findOne({
         slug: newSlug,
         _id: { $ne: team._id },
       });
-
       if (existingTeam) {
         return res.status(400).json({
           message: "Une équipe existe déjà avec ce slug.",
         });
       }
-
       team.slug = newSlug;
     }
 
@@ -241,45 +218,38 @@ export const updateTeam = async (req: Request, res: Response) => {
     if (gender !== undefined) team.gender = gender;
     if (category !== undefined) team.category = category;
     if (level !== undefined) team.level = level;
-    if (description !== undefined) team.description = description
+    if (description !== undefined) team.description = description;
     if (ffhandballUrl !== undefined) team.ffhandballUrl = ffhandballUrl;
     if (scorencoUrl !== undefined) team.scorencoUrl = scorencoUrl;
     if (order !== undefined) team.order = Number(order);
     if (isActive !== undefined) team.isActive = toBoolean(isActive, team.isActive);
 
-    const imageUrl = await uploadImageToCloudinary(req.file);
-
-    if (imageUrl) {
-      team.image = imageUrl;
-    }
+    // Une modification sans nouveau fichier conserve la photo existante.
+    const imageUrl = await uploadImageToVercel(req.file);
+    if (imageUrl) team.image = imageUrl;
 
     await team.save();
-
     return res.status(200).json(team);
   } catch (error) {
     console.error("Erreur modification équipe :", error);
-
     return res.status(500).json({
       message: "Erreur lors de la modification de l'équipe.",
     });
   }
 };
 
-// ADMIN - supprimer une équipe
+// ADMIN - Supprimer une équipe
 export const deleteTeam = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const team = await Team.findById(id);
 
     if (!team) {
-      return res.status(404).json({
-        message: "Équipe introuvable.",
-      });
+      return res.status(404).json({ message: "Équipe introuvable." });
     }
 
+    // Ne supprime pas automatiquement le fichier Blob : il peut encore être référencé.
     await team.deleteOne();
-
     return res.status(200).json({
       message: "Équipe supprimée avec succès.",
     });
