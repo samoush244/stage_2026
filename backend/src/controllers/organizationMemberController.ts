@@ -1,53 +1,50 @@
 import { Request, Response } from "express";
+import { put } from "@vercel/blob";
 import OrganizationMember from "../models/OrganizationMember";
-import cloudinary from "../config/cloudinary";
 
-const getUploadedFile = (req: Request) => {
+const getUploadedFile = (req: Request): Express.Multer.File | undefined => {
   return (req as Request & { file?: Express.Multer.File }).file;
 };
 
-const uploadImageToCloudinary = async (
+const uploadImageToVercel = async (
   file?: Express.Multer.File
 ): Promise<string | undefined> => {
-  if (!file) {
-    return undefined;
+  if (!file) return undefined;
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("La variable BLOB_READ_WRITE_TOKEN est manquante.");
   }
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "stage-handball/organization",
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  const extensions: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensions[file.mimetype];
+  if (!extension) {
+    throw new Error("Seules les images JPG, PNG et WEBP sont autorisées.");
+  }
 
-        resolve(result?.secure_url);
-      }
-    );
-
-    uploadStream.end(file.buffer);
+  const blob = await put(`organization/${Date.now()}.${extension}`, file.buffer, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.mimetype,
+    token,
   });
+
+  return blob.url;
 };
 
 const toBoolean = (value: unknown, defaultValue = true) => {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === "boolean") return value;
   return value === "true" || value === "Visible";
 };
 
 // PUBLIC - récupérer les membres actifs
 export const getPublicOrganizationMembers = async (
-  req: Request,
+  _req: Request,
   res: Response
 ) => {
   try {
@@ -56,7 +53,6 @@ export const getPublicOrganizationMembers = async (
       order: 1,
       lastName: 1,
     });
-
     return res.status(200).json(members);
   } catch (error) {
     return res.status(500).json({
@@ -67,7 +63,7 @@ export const getPublicOrganizationMembers = async (
 
 // ADMIN - récupérer tous les membres
 export const getAllOrganizationMembers = async (
-  req: Request,
+  _req: Request,
   res: Response
 ) => {
   try {
@@ -76,7 +72,6 @@ export const getAllOrganizationMembers = async (
       order: 1,
       lastName: 1,
     });
-
     return res.status(200).json(members);
   } catch (error) {
     return res.status(500).json({
@@ -97,8 +92,7 @@ export const createOrganizationMember = async (req: Request, res: Response) => {
       });
     }
 
-    const file = getUploadedFile(req);
-    const photoUrl = await uploadImageToCloudinary(file);
+    const photoUrl = await uploadImageToVercel(getUploadedFile(req));
 
     const member = await OrganizationMember.create({
       firstName,
@@ -117,7 +111,6 @@ export const createOrganizationMember = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Erreur création membre organigramme :", error);
-
     return res.status(500).json({
       message: "Erreur lors de la création du membre.",
     });
@@ -128,20 +121,14 @@ export const createOrganizationMember = async (req: Request, res: Response) => {
 export const updateOrganizationMember = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const member = await OrganizationMember.findById(id);
 
     if (!member) {
-      return res.status(404).json({
-        message: "Membre introuvable.",
-      });
+      return res.status(404).json({ message: "Membre introuvable." });
     }
 
     const { firstName, lastName, role, group, email, order, isActive } =
       req.body;
-
-    const file = getUploadedFile(req);
-    const photoUrl = await uploadImageToCloudinary(file);
 
     member.firstName = firstName ?? member.firstName;
     member.lastName = lastName ?? member.lastName;
@@ -152,24 +139,23 @@ export const updateOrganizationMember = async (req: Request, res: Response) => {
     if (order !== undefined) {
       member.order = Number(order) || 0;
     }
-
     if (isActive !== undefined) {
       member.isActive = toBoolean(isActive, member.isActive);
     }
 
+    // Une modification sans nouveau fichier conserve la photo existante.
+    const photoUrl = await uploadImageToVercel(getUploadedFile(req));
     if (photoUrl) {
       member.photo = photoUrl;
     }
 
     const updatedMember = await member.save();
-
     return res.status(200).json({
       message: "Membre modifié avec succès.",
       member: updatedMember,
     });
   } catch (error) {
     console.error("Erreur modification membre organigramme :", error);
-
     return res.status(500).json({
       message: "Erreur lors de la modification du membre.",
     });
@@ -183,16 +169,10 @@ export const deleteOrganizationMember = async (
 ) => {
   try {
     const member = await OrganizationMember.findByIdAndDelete(req.params.id);
-
     if (!member) {
-      return res.status(404).json({
-        message: "Membre introuvable.",
-      });
+      return res.status(404).json({ message: "Membre introuvable." });
     }
-
-    return res.status(200).json({
-      message: "Membre supprimé avec succès.",
-    });
+    return res.status(200).json({ message: "Membre supprimé avec succès." });
   } catch (error) {
     return res.status(500).json({
       message: "Erreur lors de la suppression du membre.",
@@ -207,18 +187,12 @@ export const toggleOrganizationMemberStatus = async (
 ) => {
   try {
     const { id } = req.params;
-
     const member = await OrganizationMember.findById(id);
-
     if (!member) {
-      return res.status(404).json({
-        message: "Membre introuvable.",
-      });
+      return res.status(404).json({ message: "Membre introuvable." });
     }
-
     member.isActive = !member.isActive;
     await member.save();
-
     return res.status(200).json({
       message: "Statut du membre modifié avec succès.",
       member,
