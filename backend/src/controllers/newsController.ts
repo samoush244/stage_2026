@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
+import { put } from "@vercel/blob";
 import News from "../models/News";
-import cloudinary from "../config/cloudinary";
 
 const createSlug = (title: string) => {
   const slug = title
@@ -14,59 +14,54 @@ const createSlug = (title: string) => {
   return slug || `actualite-${Date.now()}`;
 };
 
-const getUploadedFile = (req: Request) => {
-  return (req as Request & { file?: Express.Multer.File }).file;
-};
+const getUploadedFile = (req: Request) => req.file;
 
-const uploadImageToCloudinary = async (
+const uploadImageToVercelBlob = async (
   file?: Express.Multer.File
 ): Promise<string | undefined> => {
-  if (!file) {
-    return undefined;
+  if (!file) return undefined;
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("BLOB_READ_WRITE_TOKEN non configuré sur le serveur.");
   }
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "stage-handball/news",
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  const extensions: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensions[file.mimetype];
+  if (!extension) {
+    throw new Error("Seules les images JPG, PNG et WebP sont autorisées.");
+  }
 
-        resolve(result?.secure_url);
-      }
-    );
-
-    uploadStream.end(file.buffer);
+  const blob = await put(`news/${Date.now()}.${extension}`, file.buffer, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.mimetype,
+    token,
   });
+
+  return blob.url;
 };
 
 const toBoolean = (value: unknown, defaultValue = false) => {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === "boolean") return value;
   return value === "true" || value === "Visible";
 };
 
-export const getPublishedNews = async (req: Request, res: Response) => {
+export const getPublishedNews = async (_req: Request, res: Response) => {
   try {
     const news = await News.find({ isPublished: true }).sort({
       publishedAt: -1,
       createdAt: -1,
     });
 
-    res.status(200).json(news);
+    return res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération des actualités",
     });
   }
@@ -75,35 +70,24 @@ export const getPublishedNews = async (req: Request, res: Response) => {
 export const getNewsBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-
-    const news = await News.findOne({
-      slug,
-      isPublished: true,
-    });
-
+    const news = await News.findOne({ slug, isPublished: true });
     if (!news) {
-      return res.status(404).json({
-        message: "Actualité introuvable",
-      });
+      return res.status(404).json({ message: "Actualité introuvable" });
     }
-
-    res.status(200).json(news);
+    return res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération de l'actualité",
     });
   }
 };
 
-export const getAllNewsAdmin = async (req: Request, res: Response) => {
+export const getAllNewsAdmin = async (_req: Request, res: Response) => {
   try {
-    const news = await News.find().sort({
-      createdAt: -1,
-    });
-
-    res.status(200).json(news);
+    const news = await News.find().sort({ createdAt: -1 });
+    return res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération admin des actualités",
     });
   }
@@ -127,17 +111,13 @@ export const createNews = async (req: Request, res: Response) => {
     const newsType = type === "external" ? "external" : "internal";
 
     if (!cleanTitle) {
-      return res.status(400).json({
-        message: "Le titre est obligatoire",
-      });
+      return res.status(400).json({ message: "Le titre est obligatoire" });
     }
-
     if (newsType === "internal" && !content) {
       return res.status(400).json({
         message: "Le contenu est obligatoire pour une actualité interne",
       });
     }
-
     if (newsType === "external" && (!summary || !externalUrl || !source)) {
       return res.status(400).json({
         message:
@@ -146,16 +126,11 @@ export const createNews = async (req: Request, res: Response) => {
     }
 
     let slug = createSlug(cleanTitle);
-
-    const existingNews = await News.findOne({ slug });
-
-    if (existingNews) {
+    if (await News.findOne({ slug })) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const file = getUploadedFile(req);
-    const uploadedImageUrl = await uploadImageToCloudinary(file);
-
+    const uploadedImageUrl = await uploadImageToVercelBlob(getUploadedFile(req));
     const published = toBoolean(isPublished, false);
 
     const news = await News.create({
@@ -171,11 +146,10 @@ export const createNews = async (req: Request, res: Response) => {
       isPublished: published,
     });
 
-    res.status(201).json(news);
+    return res.status(201).json(news);
   } catch (error) {
     console.error("Erreur createNews :", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la création de l'actualité",
       error: error instanceof Error ? error.message : error,
     });
@@ -185,13 +159,9 @@ export const createNews = async (req: Request, res: Response) => {
 export const updateNews = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const news = await News.findById(id);
-
     if (!news) {
-      return res.status(404).json({
-        message: "Actualité introuvable",
-      });
+      return res.status(404).json({ message: "Actualité introuvable" });
     }
 
     const {
@@ -208,82 +178,43 @@ export const updateNews = async (req: Request, res: Response) => {
 
     if (title !== undefined) {
       const cleanTitle = typeof title === "string" ? title.trim() : "";
-
       if (!cleanTitle) {
-        return res.status(400).json({
-          message: "Le titre est obligatoire",
-        });
+        return res.status(400).json({ message: "Le titre est obligatoire" });
       }
-
       if (cleanTitle !== news.title) {
         let slug = createSlug(cleanTitle);
-
         const existingNews = await News.findOne({
           slug,
           _id: { $ne: news._id },
         });
-
-        if (existingNews) {
-          slug = `${slug}-${Date.now()}`;
-        }
-
+        if (existingNews) slug = `${slug}-${Date.now()}`;
         news.slug = slug;
       }
-
       news.title = cleanTitle;
     }
 
-    const nextType = type === "external" ? "external" : "internal";
-
     if (type !== undefined) {
-      news.type = nextType;
+      news.type = type === "external" ? "external" : "internal";
     }
-
-    if (summary !== undefined) {
-      news.summary = summary;
-    }
-
-    if (content !== undefined) {
-      news.content = content;
-    }
-
-    if (source !== undefined) {
-      news.source = source;
-    }
-
-    if (externalUrl !== undefined) {
-      news.externalUrl = externalUrl;
-    }
-
+    if (summary !== undefined) news.summary = summary;
+    if (content !== undefined) news.content = content;
+    if (source !== undefined) news.source = source;
+    if (externalUrl !== undefined) news.externalUrl = externalUrl;
     if (publishedAt !== undefined && publishedAt !== "") {
       news.publishedAt = new Date(publishedAt);
     }
-
-    const file = getUploadedFile(req);
-    const uploadedImageUrl = await uploadImageToCloudinary(file);
-
-    if (uploadedImageUrl) {
-      news.image = uploadedImageUrl;
-    } else if (image !== undefined && image !== "") {
-      news.image = image;
-    }
-
     if (isPublished !== undefined) {
       const published = toBoolean(isPublished, news.isPublished);
-
       news.isPublished = published;
-
-      if (published && !news.publishedAt) {
-        news.publishedAt = new Date();
-      }
+      if (published && !news.publishedAt) news.publishedAt = new Date();
     }
 
+    // Vérifier l'article avant d'envoyer un nouveau fichier.
     if (news.type === "internal" && !news.content) {
       return res.status(400).json({
         message: "Le contenu est obligatoire pour une actualité interne",
       });
     }
-
     if (
       news.type === "external" &&
       (!news.summary || !news.externalUrl || !news.source)
@@ -294,13 +225,18 @@ export const updateNews = async (req: Request, res: Response) => {
       });
     }
 
-    const updatedNews = await news.save();
+    const uploadedImageUrl = await uploadImageToVercelBlob(getUploadedFile(req));
+    if (uploadedImageUrl) {
+      news.image = uploadedImageUrl;
+    } else if (image !== undefined && image !== "") {
+      news.image = image;
+    }
 
-    res.status(200).json(updatedNews);
+    const updatedNews = await news.save();
+    return res.status(200).json(updatedNews);
   } catch (error) {
     console.error("Erreur updateNews :", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la modification de l'actualité",
       error: error instanceof Error ? error.message : error,
     });
@@ -310,20 +246,13 @@ export const updateNews = async (req: Request, res: Response) => {
 export const deleteNews = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const news = await News.findByIdAndDelete(id);
-
     if (!news) {
-      return res.status(404).json({
-        message: "Actualité introuvable",
-      });
+      return res.status(404).json({ message: "Actualité introuvable" });
     }
-
-    res.status(200).json({
-      message: "Actualité supprimée avec succès",
-    });
+    return res.status(200).json({ message: "Actualité supprimée avec succès" });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la suppression de l'actualité",
     });
   }
@@ -332,26 +261,18 @@ export const deleteNews = async (req: Request, res: Response) => {
 export const togglePublishNews = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const news = await News.findById(id);
-
     if (!news) {
-      return res.status(404).json({
-        message: "Actualité introuvable",
-      });
+      return res.status(404).json({ message: "Actualité introuvable" });
     }
-
     news.isPublished = !news.isPublished;
-
     if (news.isPublished && !news.publishedAt) {
       news.publishedAt = new Date();
     }
-
     await news.save();
-
-    res.status(200).json(news);
+    return res.status(200).json(news);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors du changement de statut de publication",
     });
   }
