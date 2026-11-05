@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
+import { del, put } from "@vercel/blob";
 import History from "../models/history";
-import cloudinary from "../config/cloudinary";
 
 const parseArrayField = (value: unknown): string[] => {
   if (!value) return [];
@@ -27,35 +27,57 @@ const parseArrayField = (value: unknown): string[] => {
   return [];
 };
 
-const getUploadedFile = (req: Request) => {
-  return (req as Request & { file?: Express.Multer.File }).file;
+const getUploadedFile = (req: Request): Express.Multer.File | undefined => {
+  return req.file;
 };
 
-const uploadImageToCloudinary = async (
+const allowedImageExtensions: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+const uploadImageToVercelBlob = async (
   file?: Express.Multer.File
 ): Promise<string | undefined> => {
-  if (!file) {
-    return undefined;
+  if (!file) return undefined;
+
+  const extension = allowedImageExtensions[file.mimetype];
+  if (!extension) {
+    throw new Error("Seules les images JPG, PNG et WEBP sont autorisées.");
   }
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "stage-handball/histories",
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  if (!file.buffer || file.buffer.length === 0) {
+    throw new Error("Le fichier image est vide ou indisponible.");
+  }
 
-        resolve(result?.secure_url);
-      }
-    );
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("BLOB_READ_WRITE_TOKEN n'est pas configuré.");
+  }
 
-    uploadStream.end(file.buffer);
+  const blob = await put(`history/${Date.now()}.${extension}`, file.buffer, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.mimetype,
+    token,
   });
+
+  return blob.url;
+};
+
+// Si MongoDB échoue après l'envoi d'une nouvelle photo, éviter de laisser
+// un fichier inutilisé dans Blob. Ne jamais effacer une ancienne image ici.
+const rollbackNewUpload = async (newUrl?: string) => {
+  if (!newUrl) return;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return;
+
+  try {
+    await del(newUrl, { token });
+  } catch (error) {
+    console.error("Impossible de nettoyer le nouvel upload Blob :", error);
+  }
 };
 
 const toBoolean = (value: unknown, defaultValue = true) => {
@@ -101,6 +123,7 @@ export const getAllHistoriesAdmin = async (_req: Request, res: Response) => {
 };
 
 export const createHistory = async (req: Request, res: Response) => {
+  let newImageUrl: string | undefined;
   try {
     const { year, title, order, isActive } = req.body;
 
@@ -111,29 +134,30 @@ export const createHistory = async (req: Request, res: Response) => {
     }
 
     const file = getUploadedFile(req);
-    const imageUrl = await uploadImageToCloudinary(file);
+    newImageUrl = await uploadImageToVercelBlob(file);
 
     const history = await History.create({
       year,
       title,
-      image: imageUrl || "",
+      image: newImageUrl || "",
       text: parseArrayField(req.body.text),
       details: parseArrayField(req.body.details),
       order: Number(order) || 0,
       isActive: toBoolean(isActive, true),
     });
 
-    res.status(201).json(history);
+    return res.status(201).json(history);
   } catch (error) {
+    await rollbackNewUpload(newImageUrl);
     console.error("Erreur création histoire :", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la création de l'histoire.",
     });
   }
 };
 
 export const updateHistory = async (req: Request, res: Response) => {
+  let newImageUrl: string | undefined;
   try {
     const history = await History.findById(req.params.id);
 
@@ -165,19 +189,19 @@ export const updateHistory = async (req: Request, res: Response) => {
     }
 
     const file = getUploadedFile(req);
-    const imageUrl = await uploadImageToCloudinary(file);
+    newImageUrl = await uploadImageToVercelBlob(file);
 
-    if (imageUrl) {
-      history.image = imageUrl;
+    if (newImageUrl) {
+      history.image = newImageUrl;
     }
 
     const updatedHistory = await history.save();
 
-    res.status(200).json(updatedHistory);
+    return res.status(200).json(updatedHistory);
   } catch (error) {
+    await rollbackNewUpload(newImageUrl);
     console.error("Erreur modification histoire :", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la modification de l'histoire.",
     });
   }
@@ -193,13 +217,15 @@ export const deleteHistory = async (req: Request, res: Response) => {
       });
     }
 
+    // Ne pas supprimer l'image physique pendant la migration :
+    // d'anciennes URL Cloudinary peuvent encore être utilisées ailleurs.
     await history.deleteOne();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Histoire supprimée avec succès.",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la suppression de l'histoire.",
     });
   }
@@ -219,9 +245,9 @@ export const toggleHistoryStatus = async (req: Request, res: Response) => {
 
     const updatedHistory = await history.save();
 
-    res.status(200).json(updatedHistory);
+    return res.status(200).json(updatedHistory);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors du changement de statut.",
     });
   }
