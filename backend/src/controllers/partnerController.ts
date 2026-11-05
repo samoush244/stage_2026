@@ -1,49 +1,47 @@
 import { Request, Response } from "express";
+import { put } from "@vercel/blob";
 import Partner from "../models/partner";
-import cloudinary from "../config/cloudinary";
 
-const getUploadedFile = (req: Request) => {
+const getUploadedFile = (req: Request): Express.Multer.File | undefined => {
   return (req as Request & { file?: Express.Multer.File }).file;
 };
 
-const uploadLogoToCloudinary = async (
+const uploadLogoToVercelBlob = async (
   file?: Express.Multer.File
 ): Promise<string | undefined> => {
-  if (!file) {
-    return undefined;
+  if (!file) return undefined;
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("BLOB_READ_WRITE_TOKEN n'est pas configuré sur le serveur.");
   }
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "stage-handball/partners",
-        resource_type: "image",
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  const allowedExtensions: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
 
-        resolve(result?.secure_url);
-      }
-    );
+  const extension = allowedExtensions[file.mimetype];
+  if (!extension) {
+    throw new Error("Seules les images JPG, PNG et WEBP sont autorisées.");
+  }
 
-    uploadStream.end(file.buffer);
+  const blob = await put(`partners/${Date.now()}.${extension}`, file.buffer, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.mimetype,
+    token,
   });
+
+  return blob.url;
 };
 
 const toBoolean = (value: unknown, defaultValue = true) => {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === "boolean") return value;
 
   const normalizedValue = String(value).trim().toLowerCase();
-
   return (
     normalizedValue === "true" ||
     normalizedValue === "1" ||
@@ -53,7 +51,7 @@ const toBoolean = (value: unknown, defaultValue = true) => {
   );
 };
 
-export const getPartners = async (req: Request, res: Response) => {
+export const getPartners = async (_req: Request, res: Response) => {
   try {
     const partners = await Partner.find({ isActive: true }).sort({
       category: 1,
@@ -61,24 +59,24 @@ export const getPartners = async (req: Request, res: Response) => {
       name: 1,
     });
 
-    res.status(200).json(partners);
+    return res.status(200).json(partners);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération des partenaires",
     });
   }
 };
 
-export const getAllPartnersAdmin = async (req: Request, res: Response) => {
+export const getAllPartnersAdmin = async (_req: Request, res: Response) => {
   try {
     const partners = await Partner.find().sort({
       order: 1,
       createdAt: -1,
     });
 
-    res.status(200).json(partners);
+    return res.status(200).json(partners);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération admin des partenaires",
     });
   }
@@ -95,19 +93,13 @@ export const createPartner = async (req: Request, res: Response) => {
     }
 
     const file = getUploadedFile(req);
-
     if (!file) {
-      return res.status(400).json({
-        message: "Le logo est obligatoire",
-      });
+      return res.status(400).json({ message: "Le logo est obligatoire" });
     }
 
-    const logoUrl = await uploadLogoToCloudinary(file);
-
+    const logoUrl = await uploadLogoToVercelBlob(file);
     if (!logoUrl) {
-      return res.status(400).json({
-        message: "Erreur lors de l'upload du logo",
-      });
+      return res.status(400).json({ message: "Erreur lors de l'upload du logo" });
     }
 
     const partner = await Partner.create({
@@ -120,10 +112,10 @@ export const createPartner = async (req: Request, res: Response) => {
       showOnHome: toBoolean(showOnHome, false),
     });
 
-    res.status(201).json(partner);
+    return res.status(201).json(partner);
   } catch (error) {
     console.error("Erreur création partenaire :", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la création du partenaire",
     });
   }
@@ -133,6 +125,12 @@ export const updatePartner = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, url, category, order, isActive, showOnHome } = req.body;
+
+    // Vérifier l'existence avant d'envoyer un éventuel nouveau logo.
+    const existingPartner = await Partner.findById(id);
+    if (!existingPartner) {
+      return res.status(404).json({ message: "Partenaire introuvable" });
+    }
 
     const updateData: {
       name?: string;
@@ -161,10 +159,9 @@ export const updatePartner = async (req: Request, res: Response) => {
     }
 
     const file = getUploadedFile(req);
-    const logoUrl = await uploadLogoToCloudinary(file);
-
-    if (logoUrl) {
-      updateData.logo = logoUrl;
+    if (file) {
+      const logoUrl = await uploadLogoToVercelBlob(file);
+      if (logoUrl) updateData.logo = logoUrl;
     }
 
     const partner = await Partner.findByIdAndUpdate(id, updateData, {
@@ -173,16 +170,13 @@ export const updatePartner = async (req: Request, res: Response) => {
     });
 
     if (!partner) {
-      return res.status(404).json({
-        message: "Partenaire introuvable",
-      });
+      return res.status(404).json({ message: "Partenaire introuvable" });
     }
 
-    res.status(200).json(partner);
+    return res.status(200).json(partner);
   } catch (error) {
     console.error("Erreur modification partenaire :", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la modification du partenaire",
     });
   }
@@ -191,20 +185,17 @@ export const updatePartner = async (req: Request, res: Response) => {
 export const deletePartner = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
     const partner = await Partner.findByIdAndDelete(id);
 
     if (!partner) {
-      return res.status(404).json({
-        message: "Partenaire introuvable",
-      });
+      return res.status(404).json({ message: "Partenaire introuvable" });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Partenaire supprimé avec succès",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la suppression du partenaire",
     });
   }
