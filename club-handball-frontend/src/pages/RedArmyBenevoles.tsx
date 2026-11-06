@@ -4,33 +4,44 @@ export default function Communaute() {
     <main className="min-h-screen bg-white text-zinc-950">
       {/* HERO */}
 
-      <section className="relative h-[420px] overflow-hidden bg-zinc-950">
-        <img
-          src="/images/supporter.jpg"
-          alt="Supporters et bénévoles du club"
-          className="absolute inset-0 h-full w-full object-cover opacity-50"
-        />
-        
       
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-red-950/40" />
-     
-  {/* Contenu centré verticalement et horizontalement */}
- 
-  <div className="relative z-10 flex flex-col items-start justify-center h-full px-8 sm:px-16">
-        <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
-            Le Club
-          </p>
-        
-           <h1 className="text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl text-white">
-            Red Army
-            <span className="block font-bold text-red-500">& Bénévoles</span>
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200">
-            Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
-            il y a des femmes et des hommes qui donnent de leur temps pour faire vivre le club.
-          </p>
-          </div>
-      </section>
+{/* HERO - RED ARMY & BÉNÉVOLES */}
+<section className="relative flex min-h-screen items-end overflow-hidden bg-zinc-950 text-white">
+
+  {/* Image en arrière-plan */}
+  <img
+    src="/images/supporter.jpg"
+    alt="Supporters et bénévoles du club"
+    className="absolute inset-0 h-full w-full object-cover object-center"
+  />
+
+  {/* Dégradé pour la lisibilité de la navbar et du texte */}
+  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/85" />
+
+  {/* Contenu de la bannière */}
+  <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-44 md:pb-24 md:pt-52">
+
+    <p className="text-sm font-bold uppercase tracking-[0.3em] text-red-500">
+      Le Club
+    </p>
+
+    <h1 className="mt-6 text-5xl font-black uppercase leading-tight text-white sm:text-6xl lg:text-8xl">
+      Red Army
+      <span className="block font-bold text-red-500">
+        & Bénévoles
+      </span>
+    </h1>
+
+    <div className="mt-8 h-1 w-24 bg-red-600" />
+
+    <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-200 md:text-xl">
+      Derrière chaque match, chaque ambiance, chaque événement et chaque moment fort,
+      il y a des femmes et des hommes qui donnent de leur temps pour faire vivre le club.
+    </p>
+
+  </div>
+</section>
+
 
       {/* FIL D'ARIANE + INTRO */}
       <section className="mx-auto max-w-7xl px-6 py-16">
