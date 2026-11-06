@@ -23,7 +23,8 @@ function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const isHomePage = location.pathname === "/";
   const isTeamRosterPage = /^\/equipes\/[^/]+\/effectif\/?$/.test(location.pathname);
-  const hasTransparentNavbar = isHomePage || isTeamRosterPage;
+  const isRedArmyPage =location.pathname.replace(/\/$/, "") === "/club/red-army-benevoles";
+  const hasTransparentNavbar = isHomePage || isTeamRosterPage || isRedArmyPage;
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     handleScroll();
