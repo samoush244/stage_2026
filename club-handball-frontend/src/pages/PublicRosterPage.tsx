@@ -35,20 +35,8 @@ type RosterState = {
   staff: PublicMember[];
 };
 
-const playerPositionOrder = [
-  "Gardien",
-  "Gardienne",
-  "Ailier gauche",
-  "Ailière gauche",
-  "Ailier droit",
-  "Ailière droite",
-  "Arrière gauche",
-  "Arrière droit",
-  "Arrière droite",
-  "Demi-centre",
-  "Pivot",
-  "Non renseigné",
-];
+// Les postes individuels restent inchangés dans la base de données.
+const playerPositionOrder = ["Gardiens", "Base arrière", "Ailiers", "Pivots", "Non renseigné"];
 
 const staffPositionOrder = [
   "Entraîneur principal",
@@ -62,35 +50,17 @@ const staffPositionOrder = [
   "Non renseigné",
 ];
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "").replace(/\/$/, "");
 
-/* =========================================================
-   OPTIMISATION DES IMAGES CLOUDINARY
-========================================================= */
-
 function optimizeCloudinaryImage(url: string, width = 900) {
-  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
-    return url;
-  }
-
-  return url.replace(
-    "/upload/",
-    `/upload/f_auto,q_auto,c_limit,w_${width}/`
-  );
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+  return url.replace("/upload/", `/upload/f_auto,q_auto,c_limit,w_${width}/`);
 }
-
-/* =========================================================
-   CONSTRUCTION DE L'URL D'UNE IMAGE
-========================================================= */
 
 function getBackendImageUrl(image?: string | null, width = 900) {
   if (!image || image.trim() === "") return null;
-
   let finalUrl = image;
-
   if (image.startsWith("http://") || image.startsWith("https://")) {
     finalUrl = image;
   } else if (image.startsWith("/")) {
@@ -98,82 +68,33 @@ function getBackendImageUrl(image?: string | null, width = 900) {
   } else {
     finalUrl = `${SERVER_URL}/${image}`;
   }
-
   return optimizeCloudinaryImage(finalUrl, width);
 }
 
-/* =========================================================
-   CALCUL DE L'ÂGE
-========================================================= */
-
 function getAgeFromBirthDate(birthDate?: string) {
   if (!birthDate) return null;
-
   const birth = new Date(birthDate);
-
   if (Number.isNaN(birth.getTime())) return null;
-
   const today = new Date();
-
   let age = today.getFullYear() - birth.getFullYear();
-
   const monthDiff = today.getMonth() - birth.getMonth();
   const dayDiff = today.getDate() - birth.getDate();
-
-  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-    age -= 1;
-  }
-
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age -= 1;
   return age;
 }
 
-/* =========================================================
-   NUMÉRO DU JOUEUR
-========================================================= */
-
 function getPlayerNumber(player: PublicMember) {
-  if (player.number !== null && player.number !== undefined) {
-    return player.number;
-  }
-
-  if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) {
-    return player.jerseyNumber;
-  }
-
+  if (player.number !== null && player.number !== undefined) return player.number;
+  if (player.jerseyNumber !== null && player.jerseyNumber !== undefined) return player.jerseyNumber;
   return null;
 }
-
-/* =========================================================
-   RÉCUPÉRATION DE LA PHOTO D'UN MEMBRE
-========================================================= */
 
 function getMemberImage(member: PublicMember) {
-  if (member.photoUrl && member.photoUrl.trim() !== "") {
-    return getBackendImageUrl(member.photoUrl, 700);
-  }
-
-  if (member.photo && member.photo.trim() !== "") {
-    return getBackendImageUrl(member.photo, 700);
-  }
-
-  if (member.imageUrl && member.imageUrl.trim() !== "") {
-    return getBackendImageUrl(member.imageUrl, 700);
-  }
-
+  if (member.photoUrl?.trim()) return getBackendImageUrl(member.photoUrl, 700);
+  if (member.photo?.trim()) return getBackendImageUrl(member.photo, 700);
+  if (member.imageUrl?.trim()) return getBackendImageUrl(member.imageUrl, 700);
   return null;
 }
-
-/* =========================================================
-   COMPOSANT PHOTO + PICTOGRAMME PAR DÉFAUT
-
-   Si :
-   - aucune photo n'est renseignée
-   - l'URL ne fonctionne plus
-   - Cloudinary renvoie une erreur
-   - le serveur renvoie une 404
-
-   Alors on affiche automatiquement le pictogramme.
-========================================================= */
 
 function MemberPhoto({
   member,
@@ -187,7 +108,6 @@ function MemberPhoto({
   fallbackClassName?: string;
 }) {
   const [imageError, setImageError] = useState(false);
-
   const imageUrl = getMemberImage(member);
 
   if (!imageUrl || imageError) {
@@ -197,28 +117,9 @@ function MemberPhoto({
         role="img"
         aria-label={alt}
       >
-        <svg
-          viewBox="0 0 120 120"
-          className="h-[38%] w-[38%] max-h-36 max-w-36 text-zinc-400"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          {/* Tête */}
+        <svg viewBox="0 0 120 120" className="h-[38%] w-[38%] max-h-36 max-w-36 text-zinc-400" fill="currentColor" aria-hidden="true">
           <circle cx="60" cy="36" r="24" />
-
-          {/* Épaules / corps */}
-          <path
-            d="
-              M22 77
-              C22 68 29 62 38 62
-              H82
-              C91 62 98 68 98 77
-              V82
-              C98 100 82 108 60 108
-              C38 108 22 100 22 82
-              Z
-            "
-          />
+          <path d="M22 77 C22 68 29 62 38 62 H82 C91 62 98 68 98 77 V82 C98 100 82 108 60 108 C38 108 22 100 22 82 Z" />
         </svg>
       </div>
     );
@@ -236,82 +137,70 @@ function MemberPhoto({
   );
 }
 
-/* =========================================================
-   REGROUPEMENT PAR POSTE
-========================================================= */
+// Normalisation des accents, majuscules et variantes orthographiques.
+function normalizePosition(position?: string | null) {
+  return (position || "")
+    .trim()
+    .toLocaleLowerCase("fr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, " ")
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-function groupMembersByPosition(members: PublicMember[]) {
+function getPlayerPositionGroup(position?: string | null) {
+  const normalized = normalizePosition(position);
+  if (!normalized || normalized === "non renseigne") return "Non renseigné";
+  if (/^gardien(?:ne)?(?: de but)?s?$/.test(normalized)) return "Gardiens";
+  if (/^demi centre?s?$/.test(normalized) || /^arriere(?:s)? (?:gauche|droit|droite)s?$/.test(normalized)) {
+    return "Base arrière";
+  }
+  if (/^ailier(?:e)?s? (?:gauche|droit|droite)s?$/.test(normalized)) return "Ailiers";
+  if (/^pivots?$/.test(normalized)) return "Pivots";
+  // Tout poste inattendu reste visible, au lieu de perdre le joueur.
+  return position?.trim() || "Non renseigné";
+}
+
+function groupMembersByPosition(members: PublicMember[], groupPlayers = false) {
   return members.reduce<Record<string, PublicMember[]>>((groups, member) => {
-    const position = member.position?.trim() || "Non renseigné";
-
-    if (!groups[position]) {
-      groups[position] = [];
-    }
-
+    const position = groupPlayers
+      ? getPlayerPositionGroup(member.position)
+      : member.position?.trim() || "Non renseigné";
+    if (!groups[position]) groups[position] = [];
     groups[position].push(member);
-
     return groups;
   }, {});
 }
 
-/* =========================================================
-   TRI DES POSTES
-========================================================= */
-
 function sortPositions(positions: string[], order: string[]) {
-  return positions.sort((a, b) => {
+  return [...positions].sort((a, b) => {
     const indexA = order.indexOf(a);
     const indexB = order.indexOf(b);
-
-    if (indexA === -1 && indexB === -1) {
-      return a.localeCompare(b);
-    }
-
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
     if (indexA === -1) return 1;
     if (indexB === -1) return -1;
-
     return indexA - indexB;
   });
 }
-
-/* =========================================================
-   TRI DES MEMBRES
-========================================================= */
 
 function sortMembers(members: PublicMember[]) {
   return [...members].sort((a, b) => {
     const orderA = a.displayOrder ?? 0;
     const orderB = b.displayOrder ?? 0;
-
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
-
+    if (orderA !== orderB) return orderA - orderB;
     return `${a.lastName || ""} ${a.firstName || ""}`.localeCompare(
       `${b.lastName || ""} ${b.firstName || ""}`
     );
   });
 }
 
-/* =========================================================
-   PAGE EFFECTIF
-========================================================= */
-
 export default function PublicRosterPage() {
   const { teamSlug } = useParams();
-
-  const [roster, setRoster] = useState<RosterState>({
-    team: null,
-    players: [],
-    staff: [],
-  });
-
+  const [roster, setRoster] = useState<RosterState>({ team: null, players: [], staff: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  /* =======================================================
-     RÉCUPÉRATION DE L'EFFECTIF
-  ======================================================= */
 
   useEffect(() => {
     const fetchRoster = async () => {
@@ -320,120 +209,58 @@ export default function PublicRosterPage() {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
         setError("");
-
-        const response = await API.get(
-          `/players/public/team/${teamSlug}/roster`
-        );
-
+        const response = await API.get(`/players/public/team/${teamSlug}/roster`);
         setRoster({
           team: response.data.team || null,
-          players: Array.isArray(response.data.players)
-            ? response.data.players
-            : [],
-          staff: Array.isArray(response.data.staff)
-            ? response.data.staff
-            : [],
+          players: Array.isArray(response.data.players) ? response.data.players : [],
+          staff: Array.isArray(response.data.staff) ? response.data.staff : [],
         });
       } catch (err) {
         console.error("Erreur récupération effectif :", err);
-
-        setRoster({
-          team: null,
-          players: [],
-          staff: [],
-        });
-
+        setRoster({ team: null, players: [], staff: [] });
         setError("Impossible de récupérer l'effectif pour le moment.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchRoster();
   }, [teamSlug]);
 
-  const rawPlayers = Array.isArray(roster.players) ? roster.players : [];
-  const rawStaff = Array.isArray(roster.staff) ? roster.staff : [];
+  const rawPlayers = roster.players;
+  const rawStaff = roster.staff;
 
-  /* =======================================================
-     JOUEURS
-  ======================================================= */
-
-  const players = useMemo(() => {
-    return sortMembers(
-      rawPlayers.filter((member) => member.memberType !== "staff")
-    );
-  }, [rawPlayers]);
-
-  /* =======================================================
-     STAFF
-  ======================================================= */
-
+  const players = useMemo(
+    () => sortMembers(rawPlayers.filter((member) => member.memberType !== "staff")),
+    [rawPlayers]
+  );
   const staff = useMemo(() => {
-    const separatedStaff =
-      rawStaff.length > 0
-        ? rawStaff
-        : rawPlayers.filter((member) => member.memberType === "staff");
-
+    const separatedStaff = rawStaff.length > 0
+      ? rawStaff
+      : rawPlayers.filter((member) => member.memberType === "staff");
     return sortMembers(separatedStaff);
   }, [rawStaff, rawPlayers]);
 
-  /* =======================================================
-     REGROUPEMENT JOUEURS
-  ======================================================= */
-
-  const groupedPlayers = useMemo(() => {
-    return groupMembersByPosition(players);
-  }, [players]);
-
-  const sortedPlayerPositions = useMemo(() => {
-    return sortPositions(
-      Object.keys(groupedPlayers),
-      playerPositionOrder
-    );
-  }, [groupedPlayers]);
-
-  /* =======================================================
-     REGROUPEMENT STAFF
-  ======================================================= */
-
-  const groupedStaff = useMemo(() => {
-    return groupMembersByPosition(staff);
-  }, [staff]);
-
-  const sortedStaffPositions = useMemo(() => {
-    return sortPositions(
-      Object.keys(groupedStaff),
-      staffPositionOrder
-    );
-  }, [groupedStaff]);
-
-  /* =======================================================
-     PHOTO DE L'ÉQUIPE
-  ======================================================= */
-
-  const teamImageUrl = getBackendImageUrl(
-    roster.team?.imageUrl || roster.team?.image,
-    1600
+  const groupedPlayers = useMemo(() => groupMembersByPosition(players, true), [players]);
+  const sortedPlayerPositions = useMemo(
+    () => sortPositions(Object.keys(groupedPlayers), playerPositionOrder),
+    [groupedPlayers]
   );
-
-  /* =======================================================
-     CHARGEMENT
-  ======================================================= */
+  const groupedStaff = useMemo(() => groupMembersByPosition(staff), [staff]);
+  const sortedStaffPositions = useMemo(
+    () => sortPositions(Object.keys(groupedStaff), staffPositionOrder),
+    [groupedStaff]
+  );
+  const teamImageUrl = getBackendImageUrl(roster.team?.imageUrl || roster.team?.image, 1600);
 
   if (loading) {
     return (
       <main className="min-h-screen bg-black px-6 py-24 text-white">
         <div className="mx-auto max-w-7xl">
           <div className="h-2 w-24 bg-red-600" />
-
-          <p className="mt-8 text-lg font-bold uppercase tracking-wide">
-            Chargement de l'effectif...
-          </p>
+          <p className="mt-8 text-lg font-bold uppercase tracking-wide">Chargement de l'effectif...</p>
         </div>
       </main>
     );
@@ -441,333 +268,159 @@ export default function PublicRosterPage() {
 
   return (
     <main className="min-h-screen bg-white text-black">
+      {/* Bannière de l'équipe */}
+      <section className="relative flex min-h-screen items-end overflow-hidden bg-zinc-950 text-white">
+        {teamImageUrl ? (
+          <img
+            src={teamImageUrl}
+            alt={roster.team?.name || "Photo de l'équipe"}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            fetchPriority="high"
+            decoding="async"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-red-950" />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/85" />
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-44 md:pb-24 md:pt-52">
+          <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">Effectif</p>
+          <h1 className="mt-6 max-w-5xl text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
+            {roster.team?.name || "Effectif"}
+          </h1>
+          <div className="mt-8 h-1 w-24 bg-red-600" />
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-200 md:text-xl">
+            Retrouvez les joueurs de l'équipe, leurs postes, numéros et informations principales.
+          </p>
+        </div>
+      </section>
 
-      
-{/* ===================================================
-    HERO - BANNIÈRE ÉQUIPE
-=================================================== */}
-
-<section className="relative flex min-h-screen items-end overflow-hidden bg-zinc-950 text-white">
-
-  {/* Photo de l'équipe en arrière-plan */}
-  {teamImageUrl ? (
-    <img
-      src={teamImageUrl}
-      alt={roster.team?.name || "Photo de l'équipe"}
-      className="absolute inset-0 h-full w-full object-cover object-center"
-      fetchPriority="high"
-      decoding="async"
-    />
-  ) : (
-    <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-red-950" />
-  )}
-
-  {/* Voile sombre pour la lisibilité */}
-  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/85" />
-
-  {/* Contenu de la bannière */}
-  <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-44 md:pb-24 md:pt-52">
-
-    <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-      Effectif
-    </p>
-
-    <h1 className="mt-6 max-w-5xl text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
-      {roster.team?.name || "Effectif"}
-    </h1>
-
-    <div className="mt-8 h-1 w-24 bg-red-600" />
-
-    <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-200 md:text-xl">
-      Retrouvez les joueurs de l'équipe, leurs postes, numéros et informations principales.
-    </p>
-
-  </div>
-</section>
-
-
-      {/* ===================================================
-          JOUEURS
-      =================================================== */}
-
+      {/* Effectif joueurs, regroupé en quatre grands postes */}
       <section className="bg-white px-6 py-20">
         <div className="mx-auto max-w-7xl">
-
           {error && (
             <div className="mb-10 rounded-xl border border-red-200 bg-red-50 p-6 font-semibold text-red-700">
               {error}
             </div>
           )}
-
           {players.length === 0 ? (
-
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-10 text-center">
-
-              <h3 className="text-2xl font-black uppercase">
-                Aucun joueur affiché
-              </h3>
-
-              <p className="mt-3 text-zinc-600">
-                L'effectif de cette équipe n'est pas encore disponible.
-              </p>
-
+              <h3 className="text-2xl font-black uppercase">Aucun joueur affiché</h3>
+              <p className="mt-3 text-zinc-600">L'effectif de cette équipe n'est pas encore disponible.</p>
             </div>
-
           ) : (
-
             <div className="space-y-20">
-
               {sortedPlayerPositions.map((position) => (
-
                 <section key={position}>
-
-                  {/* TITRE DU POSTE */}
-
                   <div className="mb-8 flex items-center gap-4">
-
                     <div className="h-12 w-2 bg-red-600" />
-
                     <div>
-
-                      <p className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
-                        Poste
-                      </p>
-
-                      <h3 className="text-3xl font-black uppercase">
-                        {position}
-                      </h3>
-
+                      <p className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">Poste</p>
+                      <h3 className="text-3xl font-black uppercase">{position}</h3>
                     </div>
                   </div>
-
-                  {/* CARTES JOUEURS */}
-
                   <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-
                     {groupedPlayers[position].map((player) => {
-
                       const number = getPlayerNumber(player);
-
-                      const age =
-                        player.age !== null &&
-                        player.age !== undefined
-                          ? player.age
-                          : getAgeFromBirthDate(player.birthDate);
-
+                      const age = player.age !== null && player.age !== undefined
+                        ? player.age
+                        : getAgeFromBirthDate(player.birthDate);
                       return (
-
                         <article
                           key={player._id}
                           className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
                         >
-
-                          {/* PHOTO */}
-
                           <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-100">
-
-                            {/* BARRE ROUGE */}
-
                             <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
-
-                            {/* PHOTO OU PICTOGRAMME */}
-
                             <MemberPhoto
                               member={player}
-                              alt={`${player.firstName || ""} ${
-                                player.lastName || ""
-                              }`}
+                              alt={`${player.firstName || ""} ${player.lastName || ""}`}
                               className="transition duration-500 group-hover:scale-105"
                               fallbackClassName="bg-zinc-100"
                             />
-
-                            {/* NUMÉRO */}
-
                             {number !== null && (
-
                               <div className="absolute right-4 top-4 z-20 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
                                 {number}
                               </div>
-
                             )}
-
                           </div>
-
-                          {/* INFORMATIONS */}
-
                           <div className="p-6">
-
-                            <h4 className="text-2xl font-black uppercase leading-tight">
-                              {player.lastName || ""}
-                            </h4>
-
-                            <p className="text-lg font-bold text-red-600">
-                              {player.firstName || ""}
-                            </p>
-
+                            <h4 className="text-2xl font-black uppercase leading-tight">{player.lastName || ""}</h4>
+                            <p className="text-lg font-bold text-red-600">{player.firstName || ""}</p>
                             <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
-
-                              <p>
-                                Poste :{" "}
-                                {player.position || "Non renseigné"}
-                              </p>
-
-                              {age !== null && (
-                                <p>
-                                  Âge : {age} ans
-                                </p>
-                              )}
-
+                              <p>Poste : {player.position || "Non renseigné"}</p>
+                              {age !== null && <p>Âge : {age} ans</p>}
                             </div>
                           </div>
-
                         </article>
-
                       );
                     })}
-
                   </div>
-
                 </section>
-
               ))}
-
             </div>
-
           )}
-
         </div>
       </section>
 
-      {/* ===================================================
-          STAFF
-      =================================================== */}
-
+      {/* Staff inchangé */}
       <section className="bg-zinc-950 px-6 py-20 text-white">
-
         <div className="mx-auto max-w-7xl">
-
           <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-
             <div>
-
-              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-                Encadrement
-              </p>
-
-              <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">
-                Le staff
-              </h2>
-
+              <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">Encadrement</p>
+              <h2 className="mt-3 text-4xl font-black uppercase md:text-5xl">Le staff</h2>
             </div>
-
           </div>
-
           {staff.length === 0 ? (
-
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-10 text-center">
-
-              <h3 className="text-2xl font-black uppercase">
-                Aucun membre du staff affiché
-              </h3>
-
+              <h3 className="text-2xl font-black uppercase">Aucun membre du staff affiché</h3>
               <p className="mt-3 text-zinc-400">
-                Le staff apparaîtra ici dès qu'il sera ajouté depuis
-                l'administration.
+                Le staff apparaîtra ici dès qu'il sera ajouté depuis l'administration.
               </p>
-
             </div>
-
           ) : (
-
             <div className="space-y-14">
-
               {sortedStaffPositions.map((position) => (
-
                 <section key={position}>
-
-                  {/* TITRE DU POSTE */}
-
                   <div className="mb-8 flex items-center gap-4">
-
                     <div className="h-10 w-2 bg-red-600" />
-
-                    <h3 className="text-2xl font-black uppercase">
-                      {position}
-                    </h3>
-
+                    <h3 className="text-2xl font-black uppercase">{position}</h3>
                   </div>
-
-                  {/* CARTES STAFF */}
-
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
                     {groupedStaff[position].map((member) => (
-
                       <article
                         key={member._id}
                         className="group rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 transition duration-300 hover:-translate-y-1 hover:border-red-600/60 hover:bg-white/[0.07]"
                       >
-
                         <div className="flex gap-5">
-
-                          {/* PHOTO STAFF */}
-
                           <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-zinc-800">
-
                             <MemberPhoto
                               member={member}
-                              alt={`${member.firstName || ""} ${
-                                member.lastName || ""
-                              }`}
+                              alt={`${member.firstName || ""} ${member.lastName || ""}`}
                               className="transition duration-500 group-hover:scale-105"
                               fallbackClassName="bg-zinc-800"
                             />
-
                           </div>
-
-                          {/* INFORMATIONS STAFF */}
-
                           <div className="flex min-w-0 flex-1 flex-col justify-center">
-
-                            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-500">
-                              Staff
-                            </p>
-
+                            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-500">Staff</p>
                             <h4 className="mt-2 text-xl font-black uppercase leading-tight text-white">
                               {member.lastName || ""}
                             </h4>
-
-                            <p className="text-lg font-bold text-zinc-300">
-                              {member.firstName || ""}
-                            </p>
-
+                            <p className="text-lg font-bold text-zinc-300">{member.firstName || ""}</p>
                             <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-                              {member.position ||
-                                "Fonction non renseignée"}
+                              {member.position || "Fonction non renseignée"}
                             </p>
-
                           </div>
-
                         </div>
-
                       </article>
-
                     ))}
-
                   </div>
-
                 </section>
-
               ))}
-
             </div>
-
           )}
-
         </div>
-
       </section>
-
     </main>
   );
 }
