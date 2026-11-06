@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { SiTiktok } from "react-icons/si";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import API from "../services/api";
 import type { Team } from "../types/team";
-
 type OpenMenu =
   | "club"
   | "maleTeam"
@@ -14,27 +13,32 @@ type OpenMenu =
   | "equipes-women"
   | "equipes-mixed"
   | null;
-
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [openSubMenu, setOpenSubMenu] = useState<"men" | "women" | "mixed" | null>(null);
   const [mobileMenuTop, setMobileMenuTop] = useState(0);
-
+  const location = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const isHomePage = location.pathname === "/";
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location.pathname]);
+  const isTransparent = isHomePage && !isScrolled && !isMenuOpen;
   const headerRef = useRef<HTMLElement>(null);
-
   const closeMobileMenu = () => {
     setIsMenuOpen(false);
     setOpenMenu(null);
     setOpenSubMenu(null);
   };
-
   const closeAll = () => {
     setOpenMenu(null);
     setOpenSubMenu(null);
   };
-
   // Ferme les menus desktop quand on clique en dehors
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -43,12 +47,9 @@ function Navbar() {
         setOpenSubMenu(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   // Récupération des équipes pour la navbar
   useEffect(() => {
     const fetchTeams = async () => {
@@ -60,84 +61,70 @@ function Navbar() {
         console.error("Erreur récupération équipes navbar :", error);
       }
     };
-
     fetchTeams();
   }, []);
-
   // Calcule la position exacte du menu mobile sous la navbar
   useEffect(() => {
     if (!isMenuOpen) return;
-
     const updateMobileMenuPosition = () => {
       const headerBottom = headerRef.current?.getBoundingClientRect().bottom || 0;
       setMobileMenuTop(headerBottom);
     };
-
     updateMobileMenuPosition();
-
     const resizeObserver = new ResizeObserver(updateMobileMenuPosition);
-
     if (headerRef.current) {
       resizeObserver.observe(headerRef.current);
     }
-
     window.addEventListener("resize", updateMobileMenuPosition);
-
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", updateMobileMenuPosition);
     };
   }, [isMenuOpen]);
-
   // Bloque le scroll de la page derrière quand le menu mobile est ouvert
   useEffect(() => {
     if (!isMenuOpen) return;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.overflow = previousOverflow;
     };
   }, [isMenuOpen]);
-
   const activeTeams = teams.filter((team) => team.isActive !== false);
-
   const firstMaleTeam = activeTeams.find(
     (team) => team.teamType === "premiere" && team.gender === "masculin"
   );
-
   const firstFemaleTeam = activeTeams.find(
     (team) => team.teamType === "premiere" && team.gender === "feminin"
   );
-
   const maleTeams = activeTeams
     .filter((team) => team.teamType === "autre" && team.gender === "masculin")
     .sort((a, b) => a.order - b.order);
-
   const femaleTeams = activeTeams
     .filter((team) => team.teamType === "autre" && team.gender === "feminin")
     .sort((a, b) => a.order - b.order);
-
   const mixedTeams = activeTeams
     .filter((team) => team.teamType === "autre" && team.gender === "mixte")
     .sort((a, b) => a.order - b.order);
-
   const toggleMenu = (menu: OpenMenu) => {
     setOpenMenu((prev) => (prev === menu ? null : menu));
     setOpenSubMenu(null);
   };
-
   const toggleSubMenu = (sub: "men" | "women" | "mixed") => {
     setOpenSubMenu((prev) => (prev === sub ? null : sub));
   };
-
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-[9999] bg-zinc-950 text-white"
+      className={`z-[9999] w-full text-white transition-colors duration-500 ease-in-out ${
+        isHomePage ? "fixed inset-x-0 top-0" : "sticky top-0"
+      } ${isTransparent ? "bg-transparent" : "bg-zinc-950"}`}
     >
-      <div className="border-b border-red-900 bg-zinc-950 px-8 py-2">
+      <div className={`px-8 py-2 transition-colors duration-500 ${
+          isTransparent
+            ? "border-b border-white/20 bg-transparent"
+            : "border-b border-red-900 bg-zinc-950"
+        }`}>
         <div className="mx-auto flex max-w-7xl justify-end gap-4 text-sm text-gray-200">
           <a
             href="https://www.facebook.com/redswans2016"
@@ -148,7 +135,6 @@ function Navbar() {
           >
             <FaFacebook className="h-5 w-5" />
           </a>
-
           <a
             href="https://www.instagram.com/valenciennes_handball_club/"
             target="_blank"
@@ -158,7 +144,6 @@ function Navbar() {
           >
             <FaInstagram className="h-5 w-5" />
           </a>
-
           <a
             href="https://www.tiktok.com/@valencienneshandballclub"
             target="_blank"
@@ -168,16 +153,17 @@ function Navbar() {
           >
             <SiTiktok className="h-5 w-5" />
           </a>
-
           <span className="h-5 w-px bg-zinc-700" />
-
           <Link to="/contact" className="hover:text-red-500">
             Contact
           </Link>
         </div>
       </div>
-
-      <nav className="border-b border-zinc-800 px-5 py-4 md:px-8">
+      <nav className={`px-5 py-4 md:px-8 transition-colors duration-500 ${
+          isTransparent
+            ? "border-b border-transparent bg-transparent"
+            : "border-b border-zinc-800 bg-zinc-950"
+        }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link to="/" className="flex items-center gap-3" onClick={closeAll}>
             <img
@@ -186,7 +172,6 @@ function Navbar() {
               className="h-22.5 w-22.5 object-contain"
             />
           </Link>
-
           {/* ── Desktop menu ── */}
           <div className="hidden items-center gap-5 navbar-font lg:flex">
             {/* LE CLUB */}
@@ -199,7 +184,6 @@ function Navbar() {
               >
                 LE CLUB
               </button>
-
               {openMenu === "club" && (
                 <div className="absolute left-0 top-full z-50 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
                   <Link
@@ -209,7 +193,6 @@ function Navbar() {
                   >
                     Histoire
                   </Link>
-
                   <Link
                     to="/club/organigramme"
                     onClick={closeAll}
@@ -217,7 +200,6 @@ function Navbar() {
                   >
                     Organigramme
                   </Link>
-
                   <Link
                     to="/club/informations-pratiques"
                     onClick={closeAll}
@@ -225,7 +207,6 @@ function Navbar() {
                   >
                     Informations pratiques
                   </Link>
-
                   <Link
                     to="/club/red-army-benevoles"
                     onClick={closeAll}
@@ -233,7 +214,6 @@ function Navbar() {
                   >
                     La Red Army & Les bénévoles
                   </Link>
-
                   <Link
                     to="/club/ecole-arbitrage"
                     onClick={closeAll}
@@ -241,19 +221,16 @@ function Navbar() {
                   >
                     École d'arbitrage
                   </Link>
-
                   <Link
                     to="/club/engagement-durable-et-citoyen"
                     onClick={closeAll}
                     className="block px-3 py-2 hover:text-red-500"
                   >
-                     Engagement durable et citoyen 
+                     Engagement durable et citoyen&#x20;
                   </Link>
-                  
                 </div>
               )}
             </div>
-
             {/* Première équipe masculine */}
             {firstMaleTeam && (
               <div className="relative">
@@ -265,7 +242,6 @@ function Navbar() {
                 >
                   {firstMaleTeam.name.toUpperCase()}
                 </button>
-
                 {openMenu === "maleTeam" && (
                   <div className="absolute left-0 top-full z-50 w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
                     {firstMaleTeam.hasRosterPage && (
@@ -277,7 +253,6 @@ function Navbar() {
                         Effectifs
                       </Link>
                     )}
-
                     {firstMaleTeam.hasResultsPage && (
                       <Link
                         to={`/equipes/${firstMaleTeam.slug}/calendrier-resultats`}
@@ -291,7 +266,6 @@ function Navbar() {
                 )}
               </div>
             )}
-
             {/* Première équipe féminine */}
             {firstFemaleTeam && (
               <div className="relative">
@@ -303,7 +277,6 @@ function Navbar() {
                 >
                   {firstFemaleTeam.name.toUpperCase()}
                 </button>
-
                 {openMenu === "femaleTeam" && (
                   <div className="absolute left-0 top-full z-50 w-60 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
                     {firstFemaleTeam.hasRosterPage && (
@@ -315,7 +288,6 @@ function Navbar() {
                         Effectifs
                       </Link>
                     )}
-
                     {firstFemaleTeam.hasResultsPage && (
                       <Link
                         to={`/equipes/${firstFemaleTeam.slug}/calendrier-resultats`}
@@ -329,7 +301,6 @@ function Navbar() {
                 )}
               </div>
             )}
-
             {/* ÉQUIPES */}
             <div className="relative">
               <button
@@ -340,7 +311,6 @@ function Navbar() {
               >
                 ÉQUIPES
               </button>
-
               {openMenu === "equipes" && (
                 <div className="absolute left-0 top-full z-50 pt-3">
                   <div className="w-64 rounded-md border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
@@ -361,7 +331,6 @@ function Navbar() {
                           ›
                         </span>
                       </button>
-
                       {openSubMenu === "men" && (
                         <div className="mt-1 ml-3 rounded-md border border-zinc-800 bg-zinc-900 p-2 shadow-xl">
                           {maleTeams.length > 0 ? (
@@ -383,7 +352,6 @@ function Navbar() {
                         </div>
                       )}
                     </div>
-
                     {/* Sous-menu Équipes féminines */}
                     <div className="relative">
                       <button
@@ -401,7 +369,6 @@ function Navbar() {
                           ›
                         </span>
                       </button>
-
                       {openSubMenu === "women" && (
                         <div className="mt-1 ml-3 rounded-md border border-zinc-800 bg-zinc-900 p-2 shadow-xl">
                           {femaleTeams.length > 0 ? (
@@ -423,7 +390,6 @@ function Navbar() {
                         </div>
                       )}
                     </div>
-
                     {/* Sous-menu Mixte */}
                     <div className="relative">
                       <button
@@ -441,7 +407,6 @@ function Navbar() {
                           ›
                         </span>
                       </button>
-
                       {openSubMenu === "mixed" && (
                         <div className="mt-1 ml-3 rounded-md border border-zinc-800 bg-zinc-900 p-2 shadow-xl">
                           {mixedTeams.length > 0 ? (
@@ -467,7 +432,6 @@ function Navbar() {
                 </div>
               )}
             </div>
-
             <Link
               to="/actualites"
               onClick={closeAll}
@@ -475,7 +439,6 @@ function Navbar() {
             >
               ACTUALITÉS
             </Link>
-
             <Link
               to="/événements"
               onClick={closeAll}
@@ -484,7 +447,6 @@ function Navbar() {
               ÉVÉNEMENTS
             </Link>
           </div>
-
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -494,7 +456,6 @@ function Navbar() {
             {isMenuOpen ? "×" : "☰"}
           </button>
         </div>
-
         {/* ── Mobile menu ── */}
         {isMenuOpen && (
           <div
@@ -507,7 +468,6 @@ function Navbar() {
                   <summary className="cursor-pointer hover:text-red-500">
                     Le club
                   </summary>
-
                   <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
                     <Link
                       to="/club/histoire"
@@ -516,7 +476,6 @@ function Navbar() {
                     >
                       Histoire
                     </Link>
-
                     <Link
                       to="/club/organigramme"
                       onClick={closeMobileMenu}
@@ -524,7 +483,6 @@ function Navbar() {
                     >
                       Organigramme
                     </Link>
-
                     <Link
                       to="/club/informations-pratiques"
                       onClick={closeMobileMenu}
@@ -532,7 +490,6 @@ function Navbar() {
                     >
                       Informations pratiques
                     </Link>
-
                     <Link
                       to="/club/red-army-benevoles"
                       onClick={closeMobileMenu}
@@ -540,7 +497,6 @@ function Navbar() {
                     >
                       La Red Army & Les bénévoles
                     </Link>
-
                     <Link
                       to="/club/ecole-arbitrage"
                       onClick={closeMobileMenu}
@@ -548,23 +504,20 @@ function Navbar() {
                     >
                       École d'arbitrage
                     </Link>
-
                     <Link
                       to="/club/engagement-durable-et-citoyen"
                       onClick={closeMobileMenu}
                       className="hover:text-red-500"
                     >
-                      Engagement durable et citoyen 
+                      Engagement durable et citoyen&#x20;
                     </Link>
                   </div>
                 </details>
-
                 {firstMaleTeam && (
                   <details className="rounded-lg bg-zinc-900 p-4">
                     <summary className="cursor-pointer hover:text-red-500">
                       {firstMaleTeam.name}
                     </summary>
-
                     <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
                       {firstMaleTeam.hasRosterPage && (
                         <Link
@@ -575,7 +528,6 @@ function Navbar() {
                           Effectifs
                         </Link>
                       )}
-
                       {firstMaleTeam.hasResultsPage && (
                         <Link
                           to={`/equipes/${firstMaleTeam.slug}/calendrier-resultats`}
@@ -588,13 +540,11 @@ function Navbar() {
                     </div>
                   </details>
                 )}
-
                 {firstFemaleTeam && (
                   <details className="rounded-lg bg-zinc-900 p-4">
                     <summary className="cursor-pointer hover:text-red-500">
                       {firstFemaleTeam.name}
                     </summary>
-
                     <div className="mt-3 flex flex-col gap-3 pl-3 text-gray-200">
                       {firstFemaleTeam.hasRosterPage && (
                         <Link
@@ -605,7 +555,6 @@ function Navbar() {
                           Effectifs
                         </Link>
                       )}
-
                       {firstFemaleTeam.hasResultsPage && (
                         <Link
                           to={`/equipes/${firstFemaleTeam.slug}/calendrier-resultats`}
@@ -618,18 +567,15 @@ function Navbar() {
                     </div>
                   </details>
                 )}
-
                 <details className="rounded-lg bg-zinc-900 p-4">
                   <summary className="cursor-pointer hover:text-red-500">
                     Équipes
                   </summary>
-
                   <div className="mt-3 flex flex-col gap-5 pl-3 text-gray-200">
                     <div>
                       <p className="font-bold text-red-500">
                         Équipes masculines
                       </p>
-
                       <div className="mt-2 flex flex-col gap-2 pl-3 text-gray-400">
                         {maleTeams.length > 0 ? (
                           maleTeams.map((team) => (
@@ -649,12 +595,10 @@ function Navbar() {
                         )}
                       </div>
                     </div>
-
                     <div>
                       <p className="font-bold text-red-500">
                         Équipes féminines
                       </p>
-
                       <div className="mt-2 flex flex-col gap-2 pl-3 text-gray-400">
                         {femaleTeams.length > 0 ? (
                           femaleTeams.map((team) => (
@@ -674,10 +618,8 @@ function Navbar() {
                         )}
                       </div>
                     </div>
-
                     <div>
                       <p className="font-bold text-red-500">Mixte</p>
-
                       <div className="mt-2 flex flex-col gap-2 pl-3 text-gray-400">
                         {mixedTeams.length > 0 ? (
                           mixedTeams.map((team) => (
@@ -699,7 +641,6 @@ function Navbar() {
                     </div>
                   </div>
                 </details>
-
                 <Link
                   to="/actualites"
                   onClick={closeMobileMenu}
@@ -707,7 +648,6 @@ function Navbar() {
                 >
                   Actualités
                 </Link>
-
                 <Link
                   to="/événements"
                   onClick={closeMobileMenu}
@@ -723,5 +663,4 @@ function Navbar() {
     </header>
   );
 }
-
 export default Navbar;
