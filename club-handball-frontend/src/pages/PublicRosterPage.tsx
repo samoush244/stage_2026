@@ -327,28 +327,38 @@ export default function PublicRosterPage() {
                       return (
                         <article
                           key={player._id}
-                          className="group overflow-hidden rounded-[1.7rem] border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                          className="group relative aspect-square overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-zinc-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
                         >
-                          <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-100">
-                            <div className="absolute left-0 top-0 z-10 h-full w-2 bg-red-600" />
+                          {/* Photo plein cadre : carte carrée */}
+                          <div className="absolute inset-0">
                             <MemberPhoto
                               member={player}
                               alt={`${player.firstName || ""} ${player.lastName || ""}`}
                               className="transition duration-500 group-hover:scale-105"
-                              fallbackClassName="bg-zinc-100"
+                              fallbackClassName="bg-zinc-200"
                             />
-                            {number !== null && (
-                              <div className="absolute right-4 top-4 z-20 flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-xl ring-4 ring-red-600">
-                                {number}
-                              </div>
-                            )}
                           </div>
-                          <div className="p-6">
-                            <h4 className="text-2xl font-black uppercase leading-tight">{player.lastName || ""}</h4>
-                            <p className="text-lg font-bold text-red-600">{player.firstName || ""}</p>
-                            <div className="mt-6 space-y-2 border-t border-zinc-200 pt-5 text-sm font-bold uppercase tracking-wide text-zinc-600">
-                              <p>Poste : {player.position || "Non renseigné"}</p>
-                              {age !== null && <p>Âge : {age} ans</p>}
+
+                          {/* Identité lisible, même sur une photo claire */}
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
+                          <div className="absolute left-0 top-0 h-full w-1.5 bg-red-600" />
+
+                          {number !== null && (
+                            <div className="absolute right-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black/90 text-xl font-black text-white shadow-lg ring-[3px] ring-red-600 sm:h-14 sm:w-14 sm:text-2xl">
+                              {number}
+                            </div>
+                          )}
+
+                          <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
+                            <h4 className="break-words text-xl font-black uppercase leading-tight sm:text-2xl">
+                              {player.lastName || ""}
+                            </h4>
+                            <p className="mt-0.5 break-words text-base font-bold text-red-400 sm:text-lg">
+                              {player.firstName || ""}
+                            </p>
+                            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/25 pt-3 text-xs font-bold uppercase tracking-wide text-zinc-100 sm:text-sm">
+                              <span>{player.position || "Non renseigné"}</span>
+                              {age !== null && <span>{age} ans</span>}
                             </div>
                           </div>
                         </article>
