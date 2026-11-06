@@ -201,6 +201,7 @@ export default function PublicRosterPage() {
   const [roster, setRoster] = useState<RosterState>({ team: null, players: [], staff: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRoster = async () => {
@@ -212,6 +213,7 @@ export default function PublicRosterPage() {
       try {
         setLoading(true);
         setError("");
+        setActivePlayerId(null);
         const response = await API.get(`/players/public/team/${teamSlug}/roster`);
         setRoster({
           team: response.data.team || null,
@@ -318,49 +320,70 @@ export default function PublicRosterPage() {
                       <h3 className="text-3xl font-black uppercase">{position}</h3>
                     </div>
                   </div>
-                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {groupedPlayers[position].map((player) => {
                       const number = getPlayerNumber(player);
                       const age = player.age !== null && player.age !== undefined
                         ? player.age
                         : getAgeFromBirthDate(player.birthDate);
+                      const isActive = activePlayerId === player._id;
+                      const playerName = `${player.firstName || ""} ${player.lastName || ""}`.trim();
+
                       return (
                         <article
                           key={player._id}
-                          className="group relative aspect-square overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-zinc-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                          className="group relative overflow-hidden rounded-[1.5rem] bg-zinc-100 shadow-sm transition-shadow duration-300 hover:shadow-2xl"
                         >
-                          {/* Photo plein cadre : carte carrée */}
-                          <div className="absolute inset-0">
-                            <MemberPhoto
-                              member={player}
-                              alt={`${player.firstName || ""} ${player.lastName || ""}`}
-                              className="transition duration-500 group-hover:scale-105"
-                              fallbackClassName="bg-zinc-200"
+                          {/* Bouton accessible au clavier, à la souris et au toucher */}
+                          <button
+                            type="button"
+                            aria-label={`${isActive ? "Masquer" : "Afficher"} les informations de ${playerName || "ce joueur"}`}
+                            aria-expanded={isActive}
+                            onClick={() => setActivePlayerId(isActive ? null : player._id)}
+                            className="relative block aspect-[4/5] w-full overflow-hidden text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-red-600"
+                          >
+                            <div className="absolute inset-0">
+                              <MemberPhoto
+                                member={player}
+                                alt={playerName || "Photo du joueur"}
+                                className="transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-105"
+                                fallbackClassName="bg-zinc-100"
+                              />
+                            </div>
+
+                            {/* Numéro toujours visible */}
+                            {number !== null && (
+                              <div className="pointer-events-none absolute right-4 top-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-black/90 text-xl font-black text-white shadow-lg ring-[3px] ring-red-600">
+                                {number}
+                              </div>
+                            )}
+
+                            {/* Informations au survol sur ordinateur et au toucher sur mobile */}
+                            <div
+                              aria-hidden="true"
+                              className={`pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/75 to-black/20 transition-opacity duration-300 ${
+                                isActive ? "opacity-100" : "opacity-0 [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:opacity-100"
+                              }`}
                             />
-                          </div>
-
-                          {/* Identité lisible, même sur une photo claire */}
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
-                          <div className="absolute left-0 top-0 h-full w-1.5 bg-red-600" />
-
-                          {number !== null && (
-                            <div className="absolute right-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black/90 text-xl font-black text-white shadow-lg ring-[3px] ring-red-600 sm:h-14 sm:w-14 sm:text-2xl">
-                              {number}
+                            <div
+                              className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 translate-y-3 p-5 text-white transition-all duration-300 sm:p-6 ${
+                                isActive
+                                  ? "translate-y-0 opacity-100"
+                                  : "opacity-0 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+                              }`}
+                            >
+                              <h4 className="break-words text-2xl font-black uppercase leading-tight">
+                                {player.lastName || ""}
+                              </h4>
+                              <p className="mt-1 break-words text-lg font-bold text-red-400">
+                                {player.firstName || ""}
+                              </p>
+                              <div className="mt-4 space-y-1 border-t border-white/30 pt-3 text-sm font-semibold uppercase tracking-wide text-zinc-100">
+                                <p>Poste : {player.position || "Non renseigné"}</p>
+                                {age !== null && <p>Âge : {age} ans</p>}
+                              </div>
                             </div>
-                          )}
-
-                          <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
-                            <h4 className="break-words text-xl font-black uppercase leading-tight sm:text-2xl">
-                              {player.lastName || ""}
-                            </h4>
-                            <p className="mt-0.5 break-words text-base font-bold text-red-400 sm:text-lg">
-                              {player.firstName || ""}
-                            </p>
-                            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/25 pt-3 text-xs font-bold uppercase tracking-wide text-zinc-100 sm:text-sm">
-                              <span>{player.position || "Non renseigné"}</span>
-                              {age !== null && <span>{age} ans</span>}
-                            </div>
-                          </div>
+                          </button>
                         </article>
                       );
                     })}
