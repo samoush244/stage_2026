@@ -442,47 +442,49 @@ export default function PublicRosterPage() {
   return (
     <main className="min-h-screen bg-white text-black">
 
-      {/* ===================================================
-          HERO
-      =================================================== */}
+      
+{/* ===================================================
+    HERO - BANNIÈRE ÉQUIPE
+=================================================== */}
 
-      <section className="bg-black px-6 py-16 text-white">
-        <div className="mx-auto max-w-7xl">
+<section className="relative flex min-h-screen items-end overflow-hidden bg-zinc-950 text-white">
 
-          <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
-            Effectif
-          </p>
+  {/* Photo de l'équipe en arrière-plan */}
+  {teamImageUrl ? (
+    <img
+      src={teamImageUrl}
+      alt={roster.team?.name || "Photo de l'équipe"}
+      className="absolute inset-0 h-full w-full object-cover object-center"
+      fetchPriority="high"
+      decoding="async"
+    />
+  ) : (
+    <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-red-950" />
+  )}
 
-          <h1 className="mt-6 text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
-            {roster.team?.name || "Effectif"}
-          </h1>
+  {/* Voile sombre pour la lisibilité */}
+  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/85" />
 
-          <p className="mt-6 max-w-4xl text-lg leading-relaxed text-zinc-300">
-            Retrouvez les joueurs de l'équipe, leurs postes, numéros et
-            informations principales.
-          </p>
+  {/* Contenu de la bannière */}
+  <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-44 md:pb-24 md:pt-52">
 
-          <div className="mt-6 w-full overflow-hidden bg-black">
+    <p className="text-sm font-black uppercase tracking-[0.35em] text-red-500">
+      Effectif
+    </p>
 
-            {teamImageUrl ? (
-              <img
-                src={teamImageUrl}
-                alt={roster.team?.name || "Photo de l'équipe"}
-                className="max-h-[680px] w-full object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="flex min-h-[420px] items-center justify-center bg-zinc-900">
-                <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-                  Photo d'équipe à venir
-                </p>
-              </div>
-            )}
+    <h1 className="mt-6 max-w-5xl text-5xl font-black uppercase leading-none md:text-7xl lg:text-8xl">
+      {roster.team?.name || "Effectif"}
+    </h1>
 
-          </div>
-        </div>
-      </section>
+    <div className="mt-8 h-1 w-24 bg-red-600" />
+
+    <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-200 md:text-xl">
+      Retrouvez les joueurs de l'équipe, leurs postes, numéros et informations principales.
+    </p>
+
+  </div>
+</section>
+
 
       {/* ===================================================
           JOUEURS

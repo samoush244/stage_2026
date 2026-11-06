@@ -22,13 +22,15 @@ function Navbar() {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const isHomePage = location.pathname === "/";
+  const isTeamRosterPage = /^\/equipes\/[^/]+\/effectif\/?$/.test(location.pathname);
+  const hasTransparentNavbar = isHomePage || isTeamRosterPage;
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
-  const isTransparent = isHomePage && !isScrolled && !isMenuOpen;
+  const isTransparent = hasTransparentNavbar && !isScrolled && !isMenuOpen;
   const headerRef = useRef<HTMLElement>(null);
   const closeMobileMenu = () => {
     setIsMenuOpen(false);
@@ -117,7 +119,7 @@ function Navbar() {
     <header
       ref={headerRef}
       className={`z-[9999] w-full text-white transition-colors duration-500 ease-in-out ${
-        isHomePage ? "fixed inset-x-0 top-0" : "sticky top-0"
+        hasTransparentNavbar ? "fixed inset-x-0 top-0" : "sticky top-0"
       } ${isTransparent ? "bg-transparent" : "bg-zinc-950"}`}
     >
       <div className={`px-8 py-2 transition-colors duration-500 ${
@@ -451,7 +453,8 @@ function Navbar() {
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className="rounded border border-zinc-700 px-4 py-2 text-2xl font-bold hover:border-red-500 hover:text-red-500 lg:hidden"
-            aria-label="Ouvrir le menu"
+            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? "×" : "☰"}
           </button>
